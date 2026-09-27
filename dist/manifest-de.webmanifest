@@ -1,7 +1,7 @@
 {
   "name": "Rechnen mit Kapi",
   "short_name": "Kapi-Rechnen",
-  "description": "Plus- und Minusaufgaben bis 20 üben",
+  "description": "Plus- und Minusaufgaben bis 10.000 üben",
   "lang": "de",
   "start_url": "./",
   "display": "standalone",

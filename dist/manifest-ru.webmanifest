@@ -1,7 +1,7 @@
 {
   "name": "Считаем с Капи",
   "short_name": "Капи-счёт",
-  "description": "Тренажёр сложения и вычитания до 20",
+  "description": "Тренажёр сложения и вычитания до 10 000",
   "lang": "ru",
   "start_url": "./",
   "display": "standalone",
