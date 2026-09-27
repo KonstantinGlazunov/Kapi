@@ -155,7 +155,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .primary-button:active { transform: translateY(7px); box-shadow: 0 3px 0 var(--teal-dark); }
 .primary-button span { margin-left: 8px; }
 
-.update-button, .share-button, .setting-toggle {
+.update-button, .share-button, .setting-toggle, .install-home-button {
   min-height: 48px;
   padding: 11px 17px;
   border: 2px solid rgba(15,118,110,.24);
@@ -166,6 +166,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
   cursor: pointer;
 }
 .update-button { display: block; margin: 20px 0 0; border-color: #d59b00; background: var(--yellow-soft); color: #684b00; }
+.install-home-button { display: block; margin: 13px 0 0; border-color: #78bdb4; background: rgba(255,255,255,.76); color: var(--teal-dark); }
 .share-button { display: block; width: min(100%, 330px); margin: 20px auto 0; }
 
 .text-button, .danger-text-button {
@@ -406,10 +407,10 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
   .app-shell { padding-left: 14px; padding-right: 14px; }
   .start-screen { flex-direction: column-reverse; justify-content: flex-start; text-align: center; gap: clamp(4px, 1vh, 10px); padding: clamp(4px, 1vh, 10px) 0; }
   .start-copy { width: 100%; min-height: 0; flex: 1 1 auto; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; }
-  .start-copy h1, .start-copy p, .speech-bubble, .home-stats, .start-copy .text-button, .update-button { margin-top: 0; margin-bottom: 0; }
+  .start-copy h1, .start-copy p, .speech-bubble, .home-stats, .start-copy .text-button, .update-button, .install-home-button { margin-top: 0; margin-bottom: 0; }
   .start-copy p { font-size: 1rem; }
   .home-stats { justify-content: center; }
-  .update-button, .start-copy .text-button { margin-left: auto; margin-right: auto; }
+  .update-button, .install-home-button, .start-copy .text-button { margin-left: auto; margin-right: auto; }
   .mascot-stage { width: min(65vw, 290px); flex: 0 0 auto; }
   .speech-bubble { font-size: .86rem; }
   h1 { font-size: clamp(2.25rem, 12vw, 3.4rem); }

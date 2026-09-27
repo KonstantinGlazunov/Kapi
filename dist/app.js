@@ -6,6 +6,7 @@
   const SETTINGS_KEY = "capy-count-settings-v1";
   const PROFILE_KEY = "capy-count-profile-v1";
   const INSTALL_DISMISS_KEY = "capy-count-install-dismissed-v1";
+  const INSTALLED_KEY = "capy-count-installed-v1";
   let language = "de";
   const APP_URL = "https://schitaem-s-kapi.lsdglider.chatgpt.site";
   const INVITE_URL = `${APP_URL}/?install=1`;
@@ -43,7 +44,7 @@
       rewardFlag: "Капи машет флажком!", rewardParty: "Праздник продолжается!", rewardDance: "Время танцевать!", rewardHandshake: "Капи поздравляет тебя!",
       subtractionUnlocked: "Сложение освоено — начинаем вычитание!",
       operationUnlocked: (name) => `Новое действие: ${name}`,
-      installKicker: "Приложение Капи", installTitle: "Установить на телефон?", installText: "Капи появится на главном экране и будет открываться без панели браузера.", installNow: "Установить", continueBrowser: "Продолжить в браузере", iosInstallText: "На iPhone нажмите «Поделиться», затем «На экран Домой».",
+      installKicker: "Приложение Капи", installTitle: "Установить на телефон?", installText: "Капи появится на главном экране и будет открываться без панели браузера.", installNow: "Установить", installHome: "Установить приложение", continueBrowser: "Продолжить в браузере", iosInstallText: "На iPhone нажмите «Поделиться», затем «На экран Домой».",
       settings: "Настройки", settingsHint: "Параметры тренировки сохраняются на этом устройстве.", language: "Язык", examples: "Количество примеров", mode: "Режим", automatic: "Автоматически: от простого к сложному", range: "Диапазон чисел", operations: "Действия", sound: "Звук", soundEnabled: "Включён", soundDisabled: "Выключен", update: "Обновить приложение", updateReady: "Доступно обновление", share: "Поделиться результатом", shareText: "Попробуйте тренажёр «Считаем с Капи»", shareDone: "Готово", closeSettings: "Закрыть настройки", genericHint: "Разбери пример по шагам и попробуй ещё раз.", startDescriptionFor: (count) => `${count} коротких примеров. Капи постепенно повышает сложность.`, correctOfTotal: (count) => `верно из ${count}`, rangeNames: { auto: "Без ограничений", 10: "До 10", 20: "До 20", 100: "До 100", above100: "Выше 100" }, operationNames: { add: "Сложение +", subtract: "Вычитание −", multiply: "Умножение ×", divide: "Деление ÷", negative: "Отрицательные числа", decimal: "Десятичные дроби", fraction: "Обыкновенные дроби", power: "Степени", root: "Корни" },
       stageNames: ["сложение до 10", "вычитание до 10", "сложение до 20", "вычитание до 20", "вычитание через 10", "счёт до 50", "счёт до 50 с переходом", "счёт до 100", "счёт до 100 с переходом", "счёт до 200", "счёт до 500", "счёт до 1 000", "счёт до 2 000", "счёт до 5 000", "счёт до 10 000"],
       messages: {
@@ -83,7 +84,7 @@
       rewardFlag: "Kapi schwenkt die Fahne!", rewardParty: "Die Feier geht weiter!", rewardDance: "Zeit zum Tanzen!", rewardHandshake: "Kapi gratuliert dir!",
       subtractionUnlocked: "Addition geschafft – jetzt beginnt die Subtraktion!",
       operationUnlocked: (name) => `Neu freigeschaltet: ${name}`,
-      installKicker: "Kapi-App", installTitle: "Auf dem Handy installieren?", installText: "Kapi erscheint auf dem Startbildschirm und öffnet sich ohne Browserleiste.", installNow: "Installieren", continueBrowser: "Im Browser fortfahren", iosInstallText: "Tippe auf dem iPhone auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
+      installKicker: "Kapi-App", installTitle: "Auf dem Handy installieren?", installText: "Kapi erscheint auf dem Startbildschirm und öffnet sich ohne Browserleiste.", installNow: "Installieren", installHome: "App installieren", continueBrowser: "Im Browser fortfahren", iosInstallText: "Tippe auf dem iPhone auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
       settings: "Einstellungen", settingsHint: "Die Trainingsoptionen werden auf diesem Gerät gespeichert.", language: "Sprache", examples: "Anzahl der Aufgaben", mode: "Modus", automatic: "Automatisch: von leicht zu schwer", range: "Zahlenbereich", operations: "Rechenarten", sound: "Ton", soundEnabled: "Ein", soundDisabled: "Aus", update: "App aktualisieren", updateReady: "Update verfügbar", share: "Ergebnis teilen", shareText: "Probiere „Rechnen mit Kapi“ aus", shareDone: "Fertig", closeSettings: "Einstellungen schließen", genericHint: "Löse die Aufgabe Schritt für Schritt und versuche es noch einmal.", startDescriptionFor: (count) => `${count} kurze Aufgaben. Kapi erhöht die Schwierigkeit Schritt für Schritt.`, correctOfTotal: (count) => `richtig von ${count}`, rangeNames: { auto: "Ohne Begrenzung", 10: "Bis 10", 20: "Bis 20", 100: "Bis 100", above100: "Über 100" }, operationNames: { add: "Addition +", subtract: "Subtraktion −", multiply: "Multiplikation ×", divide: "Division ÷", negative: "Negative Zahlen", decimal: "Dezimalzahlen", fraction: "Brüche", power: "Potenzen", root: "Wurzeln" },
       stageNames: ["Addition bis 10", "Subtraktion bis 10", "einfache Addition bis 20", "Subtraktion bis 20", "Subtraktion über den Zehner", "Rechnen bis 50", "Rechnen bis 50 mit Übergang", "Rechnen bis 100", "Rechnen bis 100 mit Übergang", "Rechnen bis 200", "Rechnen bis 500", "Rechnen bis 1.000", "Rechnen bis 2.000", "Rechnen bis 5.000", "Rechnen bis 10.000"],
       messages: {
@@ -161,6 +162,7 @@
     $("installTitle").textContent = copy.installTitle;
     $("installText").textContent = installPlatform === "ios" ? copy.iosInstallText : copy.installText;
     $("installButton").textContent = copy.installNow;
+    $("installHomeButton").textContent = copy.installHome;
     $("installContinue").textContent = copy.continueBrowser;
     renderSettingsContent();
     updateSoundButton();
@@ -1325,6 +1327,12 @@
     return window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone === true;
   }
 
+  function updateInstallHomeButton() {
+    const isIosBrowser = /iphone|ipad|ipod/i.test(navigator.userAgent) && !runsStandalone();
+    const installed = runsStandalone() || (localStorage.getItem(INSTALLED_KEY) === "1" && !deferredInstallPrompt);
+    $("installHomeButton").classList.toggle("hidden", installed || (!deferredInstallPrompt && !isIosBrowser));
+  }
+
   function shouldOfferInstall() {
     if (runsStandalone()) return false;
     const forced = new URLSearchParams(window.location.search).get("install") === "1";
@@ -1346,19 +1354,27 @@
     if (remember) localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
   }
 
-  async function installApp() {
+  async function installApp(sourceButton = $("installButton")) {
     if (!deferredInstallPrompt) return;
-    const button = $("installButton");
-    button.disabled = true;
+    sourceButton.disabled = true;
     try {
       await deferredInstallPrompt.prompt();
       const choice = await deferredInstallPrompt.userChoice;
-      if (choice.outcome === "accepted") dismissInstallPrompt(false);
+      if (choice.outcome === "accepted") {
+        localStorage.setItem(INSTALLED_KEY, "1");
+        dismissInstallPrompt(false);
+      }
       else dismissInstallPrompt(true);
     } finally {
       deferredInstallPrompt = null;
-      button.disabled = false;
+      sourceButton.disabled = false;
+      updateInstallHomeButton();
     }
+  }
+
+  function installFromHome() {
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) showInstallPrompt("ios");
+    else installApp($("installHomeButton"));
   }
 
   function handleSettingsChange(event) {
@@ -1489,18 +1505,26 @@
     event.preventDefault();
     dismissMotivation(true);
   });
-  $("installButton").addEventListener("click", installApp);
+  $("installButton").addEventListener("click", () => installApp($("installButton")));
+  $("installHomeButton").addEventListener("click", installFromHome);
   $("installContinue").addEventListener("click", () => dismissInstallPrompt(true));
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
-    showInstallPrompt("android");
+    updateInstallHomeButton();
+    if (new URLSearchParams(window.location.search).get("install") === "1") showInstallPrompt("android");
   });
-  window.addEventListener("appinstalled", () => dismissInstallPrompt(false));
+  window.addEventListener("appinstalled", () => {
+    localStorage.setItem(INSTALLED_KEY, "1");
+    dismissInstallPrompt(false);
+    updateInstallHomeButton();
+  });
 
   loadSettings();
   applyLanguage();
   updateHomeStats();
+  if (runsStandalone()) localStorage.setItem(INSTALLED_KEY, "1");
+  updateInstallHomeButton();
   document.body.classList.add("start-active");
   if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !runsStandalone()) showInstallPrompt("ios");
   registerWebMcp();
