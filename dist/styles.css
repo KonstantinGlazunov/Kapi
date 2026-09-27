@@ -298,9 +298,10 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .empty-state { padding: 38px 20px; text-align: center; color: var(--muted); }
 .trouble-note { margin: 16px 0 0; padding: 12px 14px; border-radius: 14px; background: #fff4c8; color: #694f06; font-size: .86rem; line-height: 1.45; }
 
-.motivation-pop { position: fixed; z-index: 20; left: 50%; top: 44%; width: min(calc(100% - 48px), 360px); padding: 24px 18px; border: 4px solid white; border-radius: 26px; background: var(--yellow); color: #5d4300; box-shadow: 0 22px 60px rgba(78,55,0,.26); text-align: center; transform: translate(-50%, -50%); animation: reward-pop .85s cubic-bezier(.2,1.4,.4,1) both; pointer-events: none; }
-.motivation-pop strong { display: block; font-size: 2.15rem; line-height: 1; text-transform: uppercase; letter-spacing: -.03em; }
-.motivation-pop span { display: block; margin-top: 7px; font-weight: 900; }
+.motivation-pop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(15, 67, 62, .08); touch-action: manipulation; }
+.motivation-card { width: min(100%, 360px); padding: 24px 18px; border: 4px solid white; border-radius: 26px; background: var(--yellow); color: #5d4300; box-shadow: 0 22px 60px rgba(78,55,0,.26); text-align: center; animation: reward-pop .45s cubic-bezier(.2,1.4,.4,1) both; }
+.motivation-card strong { display: block; font-size: 2.15rem; line-height: 1; text-transform: uppercase; letter-spacing: -.03em; }
+.motivation-card span { display: block; margin-top: 7px; font-weight: 900; }
 
 @keyframes float { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-11px) rotate(1deg); } }
 @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.035); } }
@@ -310,7 +311,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 @keyframes twinkle { 0%,100% { transform: scale(.7) rotate(0); opacity: .55; } 50% { transform: scale(1.2) rotate(30deg); opacity: 1; } }
 @keyframes pop-in { from { transform: scale(.5) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 @keyframes confetti-fall { to { transform: translateY(105vh) rotate(720deg); } }
-@keyframes reward-pop { 0% { transform: translate(-50%, -50%) scale(.45) rotate(-5deg); opacity: 0; } 45% { transform: translate(-50%, -50%) scale(1.08) rotate(2deg); opacity: 1; } 75% { transform: translate(-50%, -50%) scale(1) rotate(0); opacity: 1; } 100% { transform: translate(-50%, -58%) scale(.96); opacity: 0; } }
+@keyframes reward-pop { 0% { transform: scale(.45) rotate(-5deg); opacity: 0; } 65% { transform: scale(1.08) rotate(2deg); opacity: 1; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
 
 @media (max-width: 680px) {
   .app-shell { padding-left: 14px; padding-right: 14px; }

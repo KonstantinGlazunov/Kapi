@@ -414,9 +414,9 @@
       $("feedback").textContent = `${text} +${earned} ★`;
       setMascot("happy");
       sound(state.streak > 0 && state.streak % 3 === 0 ? "streak" : "correct");
-      if (adaptiveMessage) showMotivation(adaptiveMessage, copy.adaptiveAdjusted);
-      else if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, copy.rightInRow(state.streak));
-      window.setTimeout(advance, 850);
+      if (adaptiveMessage) showMotivation(adaptiveMessage, copy.adaptiveAdjusted, advance);
+      else if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, copy.rightInRow(state.streak), advance);
+      else window.setTimeout(advance, 850);
       return;
     }
 
@@ -761,15 +761,30 @@
     ).join("");
   }
 
-  function showMotivation(title, subtitle) {
+  let motivationTimer = 0;
+  let motivationAction = null;
+
+  function showMotivation(title, subtitle, action = null) {
+    dismissMotivation(false);
     const pop = $("motivationPop");
     $("motivationText").textContent = title;
     $("motivationSubtext").textContent = subtitle;
     pop.classList.remove("hidden");
-    pop.style.animation = "none";
-    void pop.offsetWidth;
-    pop.style.animation = "";
-    window.setTimeout(() => pop.classList.add("hidden"), 850);
+    const card = pop.querySelector(".motivation-card");
+    card.style.animation = "none";
+    void card.offsetWidth;
+    card.style.animation = "";
+    motivationAction = action;
+    motivationTimer = window.setTimeout(() => dismissMotivation(true), 2500);
+  }
+
+  function dismissMotivation(continueTraining) {
+    if (motivationTimer) window.clearTimeout(motivationTimer);
+    motivationTimer = 0;
+    $("motivationPop").classList.add("hidden");
+    const action = motivationAction;
+    motivationAction = null;
+    if (continueTraining && action) action();
   }
 
   let audioContext;
@@ -843,6 +858,10 @@
     saveSettings();
     updateSoundButton();
     if (state.sound) sound("correct");
+  });
+  $("motivationPop").addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    dismissMotivation(true);
   });
 
   applyLanguage();
