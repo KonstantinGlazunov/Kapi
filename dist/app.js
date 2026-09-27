@@ -9,6 +9,7 @@
   let language = "de";
   const APP_URL = "https://schitaem-s-kapi.lsdglider.chatgpt.site";
   const INVITE_URL = `${APP_URL}/?install=1`;
+  const UNIVERSAL_FAST_TIME = 4;
   const OPERATION_ORDER = ["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"];
   const appSettings = { language: "de", problemCount: 20, automatic: true, range: "above100", operations: ["add", "subtract"], sound: true };
   const translations = {
@@ -227,7 +228,7 @@
         ? profile.adaptiveRecentResults.filter((value) => value === 0 || value === 1).slice(-5)
         : [];
       profile.personalFastTime = Number.isFinite(Number(profile.personalFastTime)) && Number(profile.personalFastTime) > 0
-        ? Math.min(60, Math.max(.2, Number(profile.personalFastTime)))
+        ? Math.min(60, Math.max(UNIVERSAL_FAST_TIME, Number(profile.personalFastTime)))
         : null;
       profile.paceCalibration = validPaceSamples(profile.paceCalibration);
       profile.fasterPaceSamples = validPaceSamples(profile.fasterPaceSamples);
@@ -853,10 +854,10 @@
       profile.paceCalibration.push(elapsed);
       profile.paceCalibration = profile.paceCalibration.slice(-3);
       if (profile.paceCalibration.length < 3) return false;
-      profile.personalFastTime = median(profile.paceCalibration);
+      profile.personalFastTime = Math.max(UNIVERSAL_FAST_TIME, median(profile.paceCalibration));
       profile.paceCalibration = [];
       profile.fasterPaceSamples = [];
-      return elapsed <= profile.personalFastTime;
+      return isPersonallyFast(elapsed, profile.personalFastTime);
     }
 
     const currentThreshold = profile.personalFastTime;
@@ -864,12 +865,18 @@
       profile.fasterPaceSamples.push(elapsed);
       profile.fasterPaceSamples = profile.fasterPaceSamples.slice(-3);
       if (profile.fasterPaceSamples.length === 3) {
-        const newThreshold = median(profile.fasterPaceSamples);
+        const newThreshold = Math.max(UNIVERSAL_FAST_TIME, median(profile.fasterPaceSamples));
         if (newThreshold < currentThreshold) profile.personalFastTime = newThreshold;
         profile.fasterPaceSamples = [];
       }
     }
-    return elapsed <= currentThreshold;
+    return isPersonallyFast(elapsed, currentThreshold);
+  }
+
+  function isPersonallyFast(elapsed, personalThreshold) {
+    return personalThreshold <= UNIVERSAL_FAST_TIME
+      ? elapsed < UNIVERSAL_FAST_TIME
+      : elapsed <= personalThreshold;
   }
 
   function median(values) {
