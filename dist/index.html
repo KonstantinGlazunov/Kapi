@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0f766e">
   <meta name="description" content="Адаптивный тренажёр сложения и вычитания до 20 для детей.">
   <title>Считаем с Капи</title>
-  <link rel="manifest" href="manifest.webmanifest">
+  <link id="manifestLink" rel="manifest" href="manifest-ru.webmanifest">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,18 +14,18 @@
   <main class="app-shell">
     <header class="topbar">
       <button class="icon-button hidden" id="homeButton" type="button" aria-label="Вернуться в начало">⌂</button>
-      <div class="brand"><span class="brand-star">★</span> Считаем с Капи</div>
+      <div class="brand"><span class="brand-star">★</span> <span id="brandName">Считаем с Капи</span></div>
       <button class="icon-button" id="soundButton" type="button" aria-label="Выключить звук" aria-pressed="true">♪</button>
     </header>
 
     <section class="screen start-screen active" id="startScreen" aria-labelledby="startTitle">
       <div class="start-copy">
-        <span class="eyebrow">Счёт до 20</span>
+        <span class="eyebrow" id="startEyebrow">Счёт до 20</span>
         <h1 id="startTitle">Готовы считать?</h1>
-        <p>20 коротких примеров. Капи подберёт сложность сама.</p>
-        <div class="home-stats" aria-label="Игровой прогресс">
-          <div><span aria-hidden="true">🔥</span><strong id="dayStreakValue">0</strong><small>дней подряд</small></div>
-          <div><span aria-hidden="true">⚡</span><strong id="totalXpValue">0</strong><small>всего XP</small></div>
+        <p id="startDescription">20 коротких примеров. Капи подберёт сложность сама.</p>
+        <div class="home-stats" id="homeStats" aria-label="Игровой прогресс">
+          <div><span aria-hidden="true">🔥</span><strong id="dayStreakValue">0</strong><small id="dayStreakLabel">дней подряд</small></div>
+          <div><span aria-hidden="true">⚡</span><strong id="totalXpValue">0</strong><small id="totalXpLabel">всего XP</small></div>
         </div>
         <button class="primary-button" id="startButton" type="button">Начать тренировку <span aria-hidden="true">→</span></button>
         <button class="text-button" id="statsButton" type="button">История занятий</button>
@@ -34,19 +34,19 @@
         <div class="spark spark-one">✦</div>
         <div class="spark spark-two">✦</div>
         <img src="assets/capybara.webp" alt="" width="700" height="700">
-        <div class="speech-bubble">У тебя получится!</div>
+        <div class="speech-bubble" id="speechBubble">У тебя получится!</div>
       </div>
     </section>
 
     <section class="screen game-screen" id="gameScreen" aria-labelledby="problemText">
       <div class="game-status">
         <div>
-          <span class="status-label">Пример</span>
+          <span class="status-label" id="problemLabel">Пример</span>
           <strong><span id="problemNumber">1</span> / 20</strong>
         </div>
         <div class="game-badges">
           <div class="streak-pill hidden" id="streakPill" aria-label="Серия правильных ответов">🔥 <strong id="streakValue">0</strong></div>
-          <div class="score-pill" aria-label="Набранные очки опыта"><span aria-hidden="true">⚡</span> <strong id="scoreValue">0</strong> XP</div>
+          <div class="score-pill" id="scorePill" aria-label="Набранные очки опыта"><span aria-hidden="true">⚡</span> <strong id="scoreValue">0</strong> XP</div>
         </div>
       </div>
       <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
@@ -68,13 +68,13 @@
         <div class="result-mascot mascot-celebrate" aria-hidden="true">
           <img src="assets/capybara.webp" alt="" width="700" height="700">
         </div>
-        <span class="eyebrow">Тренировка завершена</span>
+        <span class="eyebrow" id="resultEyebrow">Тренировка завершена</span>
         <h1 id="resultTitle">Отличная работа!</h1>
-        <div class="grade-badge"><span>Оценка</span><strong id="gradeValue">5</strong></div>
+        <div class="grade-badge"><span id="gradeLabel">Оценка</span><strong id="gradeValue">5</strong></div>
         <div class="result-grid">
-          <div><strong id="correctValue">18</strong><span>верно из 20</span></div>
-          <div><strong id="averageValue">6,2 c</strong><span>в среднем</span></div>
-          <div><strong id="starsValue">48 XP</strong><span>опыта</span></div>
+          <div><strong id="correctValue">18</strong><span id="correctLabel">верно из 20</span></div>
+          <div><strong id="averageValue">6,2 c</strong><span id="averageLabel">в среднем</span></div>
+          <div><strong id="starsValue">48 XP</strong><span id="xpLabel">опыта</span></div>
         </div>
         <p class="result-note" id="resultNote"></p>
         <button class="primary-button" id="againButton" type="button">Ещё раз</button>
@@ -85,7 +85,7 @@
 
   <dialog class="stats-dialog" id="statsDialog">
     <div class="dialog-head">
-      <div><span class="eyebrow">Для родителей</span><h2>История занятий</h2></div>
+      <div><span class="eyebrow" id="parentEyebrow">Для родителей</span><h2 id="historyTitle">История занятий</h2></div>
       <button class="icon-button" id="closeStatsButton" type="button" aria-label="Закрыть">×</button>
     </div>
     <div id="statsContent"></div>

@@ -1,0 +1,13 @@
+{
+  "name": "Считаем с Капи",
+  "short_name": "Капи-счёт",
+  "description": "Тренажёр сложения и вычитания до 20",
+  "lang": "ru",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#dff7f3",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

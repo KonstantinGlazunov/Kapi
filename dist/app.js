@@ -5,12 +5,61 @@
   const HISTORY_KEY = "capy-count-history-v1";
   const SETTINGS_KEY = "capy-count-settings-v1";
   const PROFILE_KEY = "capy-count-profile-v1";
-  const messages = {
-    correct: ["Точно!", "Умница!", "Так держать!", "Супер!", "Верно!"],
-    streak: ["Вот это серия!", "Три подряд!", "Капи в восторге!", "Ты разогналась!"],
-    tryAgain: ["Почти! Смотри подсказку", "Давай ещё раз", "Не спеши — получится"],
-    complete: ["Отличная работа!", "Капи гордится тобой!", "Тренировка пройдена!"]
+  const language = ((navigator.languages?.[0] || navigator.language || "de").toLowerCase().startsWith("ru")) ? "ru" : "de";
+  const translations = {
+    ru: {
+      locale: "ru-RU", appName: "Считаем с Капи", description: "Адаптивный тренажёр сложения и вычитания до 20 для детей.",
+      startEyebrow: "Счёт до 20", startTitle: "Готовы считать?", startDescription: "20 коротких примеров. Капи подберёт сложность сама.",
+      dayStreak: "дней подряд", totalXp: "всего XP", start: "Начать тренировку", history: "История занятий", speech: "У тебя получится!",
+      home: "Вернуться в начало", soundOn: "Выключить звук", soundOff: "Включить звук", gameProgress: "Игровой прогресс",
+      problem: "Пример", answerStreak: "Серия правильных ответов", xpEarned: "Набранные очки опыта", careful: "Считай внимательно", next: "Следующий пример",
+      answer: "Ответ", numberPad: "Цифровая клавиатура", clear: "Очистить", backspace: "Удалить последнюю цифру", check: "Проверить",
+      rightInRow: (value) => `${value} верных подряд`, finalAnswer: (value) => `Ответ: ${value}. Запомним!`,
+      subtractionHint: (a, b) => `Было ${a}. Зачеркни ${b}. Сколько осталось?`,
+      additionHint: (a, b) => `Соедини ${a} и ${b}. Посчитай все кружки.`,
+      additionAria: (a, b) => `Первая группа: ${a}. Вторая группа: ${b}.`,
+      resultEyebrow: "Тренировка завершена", grade: "Оценка", correctOf20: "верно из 20", average: "в среднем", experience: "опыта",
+      resultTitles: { 5: "Отличная работа!", 4: "Очень хорошо!", 3: "Хорошая тренировка!", 2: "Сегодня стало понятнее!" },
+      goodResult: "Продолжай в том же темпе.", practiceResult: "Капи повторит трудные примеры в следующий раз.", again: "Ещё раз", viewHistory: "Посмотреть историю",
+      forParents: "Для родителей", close: "Закрыть", clearHistory: "Удалить историю", emptyHistory: "Здесь появятся результаты после первой тренировки.",
+      sessions: "тренировок", averageGrade: "средняя оценка", correctShort: "верно из 20", correctHistory: (correct, seconds) => `${correct}/20 верно · ${seconds} с`,
+      repeat: "Стоит повторить:", deleteConfirm: "Удалить всю историю занятий на этом устройстве?", leaveConfirm: "Закончить текущую тренировку?",
+      seconds: "с", trainingTool: "Начать тренировку", historyTool: "Прочитать историю занятий",
+      messages: {
+        correct: ["Точно!", "Умница!", "Так держать!", "Супер!", "Верно!"],
+        streak: ["Вот это серия!", "Три подряд!", "Капи в восторге!", "Ты разогналась!"],
+        tryAgain: ["Почти! Смотри подсказку", "Давай ещё раз", "Не спеши — получится"],
+        complete: ["Отличная работа!", "Капи гордится тобой!", "Тренировка пройдена!"]
+      }
+    },
+    de: {
+      locale: "de-DE", appName: "Rechnen mit Kapi", description: "Adaptives Rechentraining mit Plus und Minus bis 20 für Kinder.",
+      startEyebrow: "Rechnen bis 20", startTitle: "Bereit zum Rechnen?", startDescription: "20 kurze Aufgaben. Kapi passt die Schwierigkeit an.",
+      dayStreak: "Tage in Folge", totalXp: "XP insgesamt", start: "Training starten", history: "Trainingsverlauf", speech: "Du schaffst das!",
+      home: "Zur Startseite", soundOn: "Ton ausschalten", soundOff: "Ton einschalten", gameProgress: "Spielfortschritt",
+      problem: "Aufgabe", answerStreak: "Richtige Antworten in Folge", xpEarned: "Gesammelte Erfahrungspunkte", careful: "Rechne in Ruhe", next: "Nächste Aufgabe",
+      answer: "Antwort", numberPad: "Zahlentastatur", clear: "Löschen", backspace: "Letzte Ziffer löschen", check: "Prüfen",
+      rightInRow: (value) => `${value} richtige in Folge`, finalAnswer: (value) => `Die Antwort ist ${value}. Das merken wir uns!`,
+      subtractionHint: (a, b) => `Es waren ${a}. Streiche ${b} weg. Wie viele bleiben übrig?`,
+      additionHint: (a, b) => `Verbinde ${a} und ${b}. Zähle alle Kreise.`,
+      additionAria: (a, b) => `Erste Gruppe: ${a}. Zweite Gruppe: ${b}.`,
+      resultEyebrow: "Training beendet", grade: "Note", correctOf20: "richtig von 20", average: "im Durchschnitt", experience: "Erfahrung",
+      resultTitles: { 5: "Klasse gemacht!", 4: "Sehr gut!", 3: "Gut geübt!", 2: "Heute hast du etwas gelernt!" },
+      goodResult: "Weiter so!", practiceResult: "Kapi wiederholt schwierige Aufgaben beim nächsten Mal.", again: "Noch einmal", viewHistory: "Verlauf ansehen",
+      forParents: "Für Eltern", close: "Schließen", clearHistory: "Verlauf löschen", emptyHistory: "Nach dem ersten Training erscheinen hier die Ergebnisse.",
+      sessions: "Trainings", averageGrade: "Durchschnittsnote", correctShort: "richtig von 20", correctHistory: (correct, seconds) => `${correct}/20 richtig · ${seconds} s`,
+      repeat: "Noch einmal üben:", deleteConfirm: "Den gesamten Trainingsverlauf auf diesem Gerät löschen?", leaveConfirm: "Das aktuelle Training beenden?",
+      seconds: "s", trainingTool: "Training starten", historyTool: "Trainingsverlauf lesen",
+      messages: {
+        correct: ["Richtig!", "Klasse!", "Weiter so!", "Super!", "Genau!"],
+        streak: ["Starke Serie!", "Drei hintereinander!", "Kapi freut sich!", "Du bist im Rechenfluss!"],
+        tryAgain: ["Fast! Schau auf den Tipp", "Versuch es noch einmal", "Lass dir Zeit – du schaffst das"],
+        complete: ["Klasse gemacht!", "Kapi ist stolz auf dich!", "Training geschafft!"]
+      }
+    }
   };
+  const copy = translations[language];
+  const messages = copy.messages;
 
   const state = {
     index: 0,
@@ -30,6 +79,39 @@
 
   const $ = (id) => document.getElementById(id);
   const screens = [$("startScreen"), $("gameScreen"), $("resultScreen")];
+
+  function applyLanguage() {
+    document.documentElement.lang = language;
+    document.title = copy.appName;
+    document.querySelector('meta[name="description"]').setAttribute("content", copy.description);
+    $("manifestLink").setAttribute("href", `manifest-${language}.webmanifest`);
+    $("brandName").textContent = copy.appName;
+    $("startEyebrow").textContent = copy.startEyebrow;
+    $("startTitle").textContent = copy.startTitle;
+    $("startDescription").textContent = copy.startDescription;
+    $("dayStreakLabel").textContent = copy.dayStreak;
+    $("totalXpLabel").textContent = copy.totalXp;
+    $("startButton").innerHTML = `${copy.start} <span aria-hidden="true">→</span>`;
+    $("statsButton").textContent = copy.history;
+    $("speechBubble").textContent = copy.speech;
+    $("homeStats").setAttribute("aria-label", copy.gameProgress);
+    $("homeButton").setAttribute("aria-label", copy.home);
+    $("problemLabel").textContent = copy.problem;
+    $("streakPill").setAttribute("aria-label", copy.answerStreak);
+    $("scorePill").setAttribute("aria-label", copy.xpEarned);
+    $("feedback").textContent = copy.careful;
+    $("resultEyebrow").textContent = copy.resultEyebrow;
+    $("gradeLabel").textContent = copy.grade;
+    $("correctLabel").textContent = copy.correctOf20;
+    $("averageLabel").textContent = copy.average;
+    $("xpLabel").textContent = copy.experience;
+    $("againButton").textContent = copy.again;
+    $("resultStatsButton").textContent = copy.viewHistory;
+    $("parentEyebrow").textContent = copy.forParents;
+    $("historyTitle").textContent = copy.history;
+    $("closeStatsButton").setAttribute("aria-label", copy.close);
+    $("clearStatsButton").textContent = copy.clearHistory;
+  }
 
   function loadSettings() {
     try {
@@ -58,7 +140,7 @@
     const button = $("soundButton");
     button.textContent = state.sound ? "♪" : "×";
     button.setAttribute("aria-pressed", String(state.sound));
-    button.setAttribute("aria-label", state.sound ? "Выключить звук" : "Включить звук");
+    button.setAttribute("aria-label", state.sound ? copy.soundOn : copy.soundOff);
   }
 
   function showScreen(target) {
@@ -112,7 +194,7 @@
       attempt: 1, problem: null, results: [], recent: [], locked: false, enteredAnswer: ""
     });
     showScreen($("gameScreen"));
-    $("feedback").textContent = "Считай внимательно";
+    $("feedback").textContent = copy.careful;
     nextProblem();
     sound("start");
   }
@@ -132,7 +214,7 @@
     $("problemText").textContent = `${state.problem.a} ${state.problem.operator} ${state.problem.b} = ?`;
     $("hint").classList.add("hidden");
     $("hint").innerHTML = "";
-    $("feedback").textContent = state.index === 0 ? "Считай внимательно" : "Следующий пример";
+    $("feedback").textContent = state.index === 0 ? copy.careful : copy.next;
     setMascot("idle");
     renderAnswer();
   }
@@ -156,14 +238,14 @@
       const keypad = document.createElement("div");
       keypad.className = "number-entry";
       keypad.innerHTML = `
-        <div class="keypad-answer empty" id="numberAnswer" role="status" aria-live="polite" aria-label="Введённый ответ">Ответ</div>
-        <div class="number-pad" aria-label="Цифровая клавиатура">
+        <div class="keypad-answer empty" id="numberAnswer" role="status" aria-live="polite" aria-label="${copy.answer}">${copy.answer}</div>
+        <div class="number-pad" aria-label="${copy.numberPad}">
           ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => `<button class="number-key" type="button" data-digit="${digit}">${digit}</button>`).join("")}
-          <button class="number-key number-key-action" type="button" data-action="clear" aria-label="Очистить">C</button>
+          <button class="number-key number-key-action" type="button" data-action="clear" aria-label="${copy.clear}">C</button>
           <button class="number-key" type="button" data-digit="0">0</button>
-          <button class="number-key number-key-action" type="button" data-action="backspace" aria-label="Удалить последнюю цифру">⌫</button>
+          <button class="number-key number-key-action" type="button" data-action="backspace" aria-label="${copy.backspace}">⌫</button>
         </div>
-        <button class="submit-button" type="button" data-action="submit">Проверить</button>`;
+        <button class="submit-button" type="button" data-action="submit">${copy.check}</button>`;
       keypad.addEventListener("click", handleKeypadClick);
       area.appendChild(keypad);
       updateKeypadDisplay();
@@ -192,7 +274,7 @@
   function updateKeypadDisplay() {
     const display = $("numberAnswer");
     if (!display) return;
-    display.textContent = state.enteredAnswer || "Ответ";
+    display.textContent = state.enteredAnswer || copy.answer;
     display.classList.toggle("empty", state.enteredAnswer === "");
   }
 
@@ -225,7 +307,7 @@
       $("feedback").textContent = `${text} +${earned} ★`;
       setMascot("happy");
       sound(state.streak > 0 && state.streak % 3 === 0 ? "streak" : "correct");
-      if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, `${state.streak} верных подряд`);
+      if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, copy.rightInRow(state.streak));
       window.setTimeout(advance, 850);
       return;
     }
@@ -245,7 +327,7 @@
 
     state.locked = true;
     recordResult(false, elapsed, 2);
-    $("feedback").textContent = `Ответ: ${state.problem.answer}. Запомним!`;
+    $("feedback").textContent = copy.finalAnswer(state.problem.answer);
     window.setTimeout(advance, 1300);
   }
 
@@ -286,13 +368,13 @@
     let dots = "";
     if (operator === "−") {
       for (let i = 0; i < a; i += 1) dots += `<span class="counter${i >= a - b ? " removed" : ""}"></span>`;
-      hint.innerHTML = `<span>Было ${a}. Зачеркни ${b}. Сколько осталось?</span><div class="counter-line" aria-hidden="true">${dots}</div>`;
+      hint.innerHTML = `<span>${copy.subtractionHint(a, b)}</span><div class="counter-line" aria-hidden="true">${dots}</div>`;
     } else {
       const firstGroup = Array.from({ length: a }, () => `<span class="counter"></span>`).join("");
       const secondGroup = Array.from({ length: b }, () => `<span class="counter addend-two"></span>`).join("");
       hint.innerHTML = `
-        <span>Соедини ${a} и ${b}. Посчитай все кружки.</span>
-        <div class="addition-groups" aria-label="Первая группа: ${a}. Вторая группа: ${b}.">
+        <span>${copy.additionHint(a, b)}</span>
+        <div class="addition-groups" aria-label="${copy.additionAria(a, b)}">
           <div class="addend-card"><strong>${a}</strong><div class="addend-dots">${firstGroup}</div></div>
           <span class="hint-plus" aria-hidden="true">+</span>
           <div class="addend-card addend-card-two"><strong>${b}</strong><div class="addend-dots">${secondGroup}</div></div>
@@ -348,6 +430,10 @@
     return 2;
   }
 
+  function displayGrade(grade) {
+    return language === "de" ? 6 - grade : grade;
+  }
+
   function finishTraining() {
     const average = state.results.length
       ? state.results.reduce((sum, item) => sum + item.seconds, 0) / state.results.length
@@ -363,12 +449,12 @@
       trouble: state.results.filter((item) => !item.firstTry).map((item) => item.key).slice(0, 5)
     };
     saveSession(session);
-    $("gradeValue").textContent = String(grade);
+    $("gradeValue").textContent = String(displayGrade(grade));
     $("correctValue").textContent = String(state.correct);
-    $("averageValue").textContent = `${formatSeconds(average)} c`;
+    $("averageValue").textContent = `${formatSeconds(average)} ${copy.seconds}`;
     $("starsValue").textContent = `${state.score} XP`;
-    $("resultTitle").textContent = grade === 5 ? "Отличная работа!" : grade === 4 ? "Очень хорошо!" : grade === 3 ? "Хорошая тренировка!" : "Сегодня стало понятнее!";
-    $("resultNote").textContent = grade >= 4 ? "Продолжай в том же темпе." : "Капи повторит трудные примеры в следующий раз.";
+    $("resultTitle").textContent = copy.resultTitles[grade];
+    $("resultNote").textContent = grade >= 4 ? copy.goodResult : copy.practiceResult;
     $("progressFill").style.width = "100%";
     makeConfetti();
     showMotivation(pick(messages.complete), `+${state.score} XP`);
@@ -406,24 +492,24 @@
     const content = $("statsContent");
     $("clearStatsButton").classList.toggle("hidden", history.length === 0);
     if (!history.length) {
-      content.innerHTML = `<div class="empty-state">Здесь появятся результаты после первой тренировки.</div>`;
+      content.innerHTML = `<div class="empty-state">${copy.emptyHistory}</div>`;
     } else {
-      const avgGrade = history.reduce((sum, item) => sum + item.grade, 0) / history.length;
+      const avgGrade = history.reduce((sum, item) => sum + displayGrade(item.grade), 0) / history.length;
       const avgCorrect = history.reduce((sum, item) => sum + item.correct, 0) / history.length;
       const commonTrouble = mostCommon(history.flatMap((item) => item.trouble || []));
       content.innerHTML = `
         <div class="summary-stats">
-          <div><strong>${history.length}</strong><span>тренировок</span></div>
-          <div><strong>${avgGrade.toFixed(1).replace(".", ",")}</strong><span>средняя оценка</span></div>
-          <div><strong>${avgCorrect.toFixed(1).replace(".", ",")}</strong><span>верно из 20</span></div>
+          <div><strong>${history.length}</strong><span>${copy.sessions}</span></div>
+          <div><strong>${formatNumber(avgGrade)}</strong><span>${copy.averageGrade}</span></div>
+          <div><strong>${formatNumber(avgCorrect)}</strong><span>${copy.correctShort}</span></div>
         </div>
         <div class="history-list">${history.slice(0, 10).map((item) => `
           <div class="history-row">
             <strong>${formatDate(item.date)}</strong>
-            <span>${item.correct}/20 верно · ${formatSeconds(item.average)} c</span>
-            <span class="history-grade">${item.grade}</span>
+            <span>${copy.correctHistory(item.correct, formatSeconds(item.average))}</span>
+            <span class="history-grade">${displayGrade(item.grade)}</span>
           </div>`).join("")}</div>
-        ${commonTrouble ? `<p class="trouble-note"><strong>Стоит повторить:</strong> ${commonTrouble.map(prettyKey).join(", ")}</p>` : ""}`;
+        ${commonTrouble ? `<p class="trouble-note"><strong>${copy.repeat}</strong> ${commonTrouble.map(prettyKey).join(", ")}</p>` : ""}`;
     }
     $("statsDialog").showModal();
   }
@@ -434,9 +520,10 @@
   }
 
   function prettyKey(key) { return key.replace("−", " − ").replace("+", " + "); }
-  function formatSeconds(value) { return Number(value || 0).toFixed(1).replace(".", ","); }
+  function formatNumber(value) { return new Intl.NumberFormat(copy.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(value || 0)); }
+  function formatSeconds(value) { return formatNumber(value); }
   function formatDate(value) {
-    return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+    return new Intl.DateTimeFormat(copy.locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
   }
 
   function makeConfetti() {
@@ -492,7 +579,7 @@
     try {
       context.registerTool({
         name: "start_arithmetic_training",
-        title: "Начать тренировку",
+        title: copy.trainingTool,
         description: "Starts a new visible 20-problem arithmetic training session.",
         inputSchema: { type: "object", properties: {}, additionalProperties: false },
         annotations: { readOnlyHint: false, untrustedContentHint: false },
@@ -500,7 +587,7 @@
       });
       context.registerTool({
         name: "read_training_history",
-        title: "Прочитать историю занятий",
+        title: copy.historyTool,
         description: "Returns locally stored arithmetic training summary data.",
         inputSchema: { type: "object", properties: {}, additionalProperties: false },
         annotations: { readOnlyHint: true, untrustedContentHint: false },
@@ -515,12 +602,12 @@
   $("resultStatsButton").addEventListener("click", showStats);
   $("closeStatsButton").addEventListener("click", () => $("statsDialog").close());
   $("clearStatsButton").addEventListener("click", () => {
-    if (!window.confirm("Удалить всю историю занятий на этом устройстве?")) return;
+    if (!window.confirm(copy.deleteConfirm)) return;
     localStorage.removeItem(HISTORY_KEY);
     showStats();
   });
   $("homeButton").addEventListener("click", () => {
-    if (state.index > 0 && state.index < TOTAL && !window.confirm("Закончить текущую тренировку?")) return;
+    if (state.index > 0 && state.index < TOTAL && !window.confirm(copy.leaveConfirm)) return;
     showScreen($("startScreen"));
   });
   $("soundButton").addEventListener("click", () => {
@@ -530,6 +617,7 @@
     if (state.sound) sound("correct");
   });
 
+  applyLanguage();
   loadSettings();
   updateHomeStats();
   registerWebMcp();

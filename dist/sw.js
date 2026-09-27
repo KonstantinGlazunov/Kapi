@@ -1,5 +1,5 @@
-const CACHE = "capy-count-v4";
-const ASSETS = ["./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "favicon.svg", "assets/capybara.webp"];
+const CACHE = "capy-count-v5";
+const ASSETS = ["./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "manifest-ru.webmanifest", "manifest-de.webmanifest", "favicon.svg", "assets/capybara.webp"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
