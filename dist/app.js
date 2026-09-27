@@ -213,7 +213,7 @@
   function getProfile() {
     const defaults = {
       totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [],
-      adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveRecentResults: [],
+      adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveCorrectStreak: 0, adaptiveRecentResults: [],
       personalFastTime: null, paceCalibration: [], fasterPaceSamples: [], operationStats: {}
     };
     try {
@@ -222,6 +222,7 @@
       profile.errorQueue = Array.isArray(profile.errorQueue) ? profile.errorQueue : [];
       profile.adaptiveOperand = Math.min(9, Math.max(1, Number(profile.adaptiveOperand) || 1));
       profile.adaptiveFastStreak = Math.min(2, Math.max(0, Number(profile.adaptiveFastStreak) || 0));
+      profile.adaptiveCorrectStreak = Math.min(4, Math.max(0, Number(profile.adaptiveCorrectStreak) || 0));
       profile.adaptiveRecentResults = Array.isArray(profile.adaptiveRecentResults)
         ? profile.adaptiveRecentResults.filter((value) => value === 0 || value === 1).slice(-5)
         : [];
@@ -503,13 +504,20 @@
     return String(Number(value.toFixed(2))).replace(".", language === "de" || language === "ru" ? "," : ".");
   }
 
+  function reviewOperation(item) {
+    if (item.operation) return item.operation;
+    return ({ "+": "add", "−": "subtract", "×": "multiply", "÷": "divide", "^": "power", "√": "root", "∛": "root" })[item.operator] || null;
+  }
+
   function selectProblem(stage, index) {
     const profile = getProfile();
     const queue = profile.errorQueue;
+    const allowedOperations = new Set(activeOperations(profile));
+    const eligibleReviews = queue.filter((item) => allowedOperations.has(reviewOperation(item)));
     const remaining = TOTAL - index;
-    const shouldReview = queue.length > 0 && (index % 3 === 2 || remaining <= queue.length * 2);
+    const shouldReview = eligibleReviews.length > 0 && (index % 3 === 2 || remaining <= eligibleReviews.length * 2);
     if (shouldReview) {
-      const sorted = [...queue].sort((left, right) => (left.lastShown || 0) - (right.lastShown || 0));
+      const sorted = [...eligibleReviews].sort((left, right) => (left.lastShown || 0) - (right.lastShown || 0));
       const review = sorted.find((item) => item.key !== state.problem?.key) || sorted[0];
       const stored = queue.find((item) => item.key === review.key);
       stored.lastShown = Date.now();
@@ -517,7 +525,7 @@
       return {
         ...review,
         text: review.text || `${review.a} ${review.operator} ${review.b} = ?`,
-        operation: review.operation || (review.operator === "+" ? "add" : "subtract"),
+        operation: reviewOperation(review),
         mode: index % 2 === 0 ? "choice" : "input",
         isReview: true
       };
@@ -792,6 +800,7 @@
     if (profile.adaptiveRecentResults.length === 5 && errorCount / 5 > .2) {
       const label = lowerAdaptiveDifficulty(profile);
       profile.adaptiveFastStreak = 0;
+      profile.adaptiveCorrectStreak = 0;
       profile.adaptiveRecentResults = [];
       saveProfile(profile);
       return label ? copy.easierStep(label) : "";
@@ -799,12 +808,14 @@
 
     const isFast = isCorrect ? updatePersonalPace(profile, elapsed) : false;
     profile.adaptiveFastStreak = isFast ? profile.adaptiveFastStreak + 1 : 0;
-    if (profile.adaptiveFastStreak < 3) {
+    profile.adaptiveCorrectStreak = isCorrect ? profile.adaptiveCorrectStreak + 1 : 0;
+    if (profile.adaptiveFastStreak < 3 && profile.adaptiveCorrectStreak < 5) {
       saveProfile(profile);
       return "";
     }
 
     profile.adaptiveFastStreak = 0;
+    profile.adaptiveCorrectStreak = 0;
     profile.adaptiveRecentResults = [];
     if (profile.currentStage <= 2 && profile.adaptiveOperand < 9) {
       const operator = profile.currentStage === 1 ? "+" : "−";
