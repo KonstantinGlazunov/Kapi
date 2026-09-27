@@ -12,7 +12,9 @@
   const INVITE_URL = `${APP_URL}/?install=1`;
   const UNIVERSAL_FAST_TIME = 4;
   const OPERATION_ORDER = ["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"];
-  const appSettings = { language: "de", problemCount: 20, automatic: true, range: "above100", operations: ["add", "subtract"], sound: true };
+  const CURRICULUM_VERSION = 2;
+  const CURRICULUM_STAGE_COUNT = 28;
+  const appSettings = { language: "de", problemCount: 20, automatic: true, range: "above100", operations: ["add", "subtract"], sound: true, curriculumVersion: CURRICULUM_VERSION };
   const translations = {
     ru: {
       locale: "ru-RU", appName: "Считаем с Капи", description: "Адаптивный тренажёр арифметики для детей — от сложения до корней.",
@@ -24,6 +26,9 @@
       rightInRow: (value) => `${value} верных подряд`, finalAnswer: (value) => `Ответ: ${value}. Запомним!`,
       subtractionHint: (a, b) => `Было ${a}. Зачеркни ${b}. Сколько осталось?`,
       additionHint: (a, b) => `Соедини ${a} и ${b}. Посчитай все кружки.`,
+      countHint: "Посчитай кружки.",
+      countQuestion: "Сколько кружков?",
+      sharingQuestion: (total, groups) => `${total} предметов разделили поровну на ${groups} группы. Сколько в каждой группе?`,
       additionAria: (a, b) => `Первая группа: ${a}. Вторая группа: ${b}.`,
       largeAdditionHint: (a, b) => `Сложи по частям: ${a} + ${b}. Сначала крупные разряды, затем единицы.`,
       largeSubtractionHint: (a, b) => `Вычитай по частям: ${a} − ${b}. Сначала крупные разряды, затем единицы.`,
@@ -46,7 +51,7 @@
       operationUnlocked: (name) => `Новое действие: ${name}`,
       installKicker: "Приложение Капи", installTitle: "Установить на телефон?", installText: "Капи появится на главном экране и будет открываться без панели браузера.", installNow: "Установить", installHome: "Установить приложение", continueBrowser: "Продолжить в браузере", iosInstallText: "На iPhone нажмите «Поделиться», затем «На экран Домой».",
       settings: "Настройки", settingsHint: "Параметры тренировки сохраняются на этом устройстве.", language: "Язык", examples: "Количество примеров", mode: "Режим", automatic: "Автоматически: от простого к сложному", range: "Диапазон чисел", operations: "Действия", sound: "Звук", soundEnabled: "Включён", soundDisabled: "Выключен", update: "Обновить приложение", updateReady: "Доступно обновление", share: "Поделиться результатом", shareText: "Попробуйте тренажёр «Считаем с Капи»", shareDone: "Готово", closeSettings: "Закрыть настройки", genericHint: "Разбери пример по шагам и попробуй ещё раз.", startDescriptionFor: (count) => `${count} коротких примеров. Капи постепенно повышает сложность.`, correctOfTotal: (count) => `верно из ${count}`, rangeNames: { auto: "Без ограничений", 10: "До 10", 20: "До 20", 100: "До 100", above100: "Выше 100" }, operationNames: { add: "Сложение +", subtract: "Вычитание −", multiply: "Умножение ×", divide: "Деление ÷", negative: "Отрицательные числа", decimal: "Десятичные дроби", fraction: "Обыкновенные дроби", power: "Степени", root: "Корни" },
-      stageNames: ["сложение до 10", "вычитание до 10", "сложение до 20", "вычитание до 20", "вычитание через 10", "счёт до 50", "счёт до 50 с переходом", "счёт до 100", "счёт до 100 с переходом", "счёт до 200", "счёт до 500", "счёт до 1 000", "счёт до 2 000", "счёт до 5 000", "счёт до 10 000"],
+      stageNames: ["количества от 0 до 5", "+0 и +1 до 5", "сложение до 5", "состав числа до 10", "сложение до 10", "−1 и −2 до 5", "вычитание до 10", "+ и − до 10", "числа от 11 до 20", "сложение до 20 без перехода", "вычитание до 20 без перехода", "сложение через 10", "вычитание через 10", "+ и − до 20", "шаги 1, 2 и 10 до 100", "счёт до 100 без перехода", "счёт до 100 с переходом", "+ и − до 100", "одинаковые группы", "умножение на 1, 2, 5 и 10", "деление на равные группы", "точное деление", "таблица умножения", "умножение и деление", "счёт до 1 000 без перехода", "счёт до 1 000 с переходом", "счёт до 10 000 без перехода", "счёт до 10 000 с переходом"],
       messages: {
         correct: ["Точно!", "Умница!", "Так держать!", "Супер!", "Верно!"],
         streak: ["Вот это серия!", "Три подряд!", "Капи в восторге!", "Ты разогналась!"],
@@ -64,6 +69,9 @@
       rightInRow: (value) => `${value} richtige in Folge`, finalAnswer: (value) => `Die Antwort ist ${value}. Das merken wir uns!`,
       subtractionHint: (a, b) => `Es waren ${a}. Streiche ${b} weg. Wie viele bleiben übrig?`,
       additionHint: (a, b) => `Verbinde ${a} und ${b}. Zähle alle Kreise.`,
+      countHint: "Zähle die Kreise.",
+      countQuestion: "Wie viele Kreise?",
+      sharingQuestion: (total, groups) => `${total} Dinge werden gleichmäßig auf ${groups} Gruppen verteilt. Wie viele sind in jeder Gruppe?`,
       additionAria: (a, b) => `Erste Gruppe: ${a}. Zweite Gruppe: ${b}.`,
       largeAdditionHint: (a, b) => `Addiere in Schritten: ${a} + ${b}. Zuerst die großen Stellen, dann die Einer.`,
       largeSubtractionHint: (a, b) => `Subtrahiere in Schritten: ${a} − ${b}. Zuerst die großen Stellen, dann die Einer.`,
@@ -86,7 +94,7 @@
       operationUnlocked: (name) => `Neu freigeschaltet: ${name}`,
       installKicker: "Kapi-App", installTitle: "Auf dem Handy installieren?", installText: "Kapi erscheint auf dem Startbildschirm und öffnet sich ohne Browserleiste.", installNow: "Installieren", installHome: "App installieren", continueBrowser: "Im Browser fortfahren", iosInstallText: "Tippe auf dem iPhone auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
       settings: "Einstellungen", settingsHint: "Die Trainingsoptionen werden auf diesem Gerät gespeichert.", language: "Sprache", examples: "Anzahl der Aufgaben", mode: "Modus", automatic: "Automatisch: von leicht zu schwer", range: "Zahlenbereich", operations: "Rechenarten", sound: "Ton", soundEnabled: "Ein", soundDisabled: "Aus", update: "App aktualisieren", updateReady: "Update verfügbar", share: "Ergebnis teilen", shareText: "Probiere „Rechnen mit Kapi“ aus", shareDone: "Fertig", closeSettings: "Einstellungen schließen", genericHint: "Löse die Aufgabe Schritt für Schritt und versuche es noch einmal.", startDescriptionFor: (count) => `${count} kurze Aufgaben. Kapi erhöht die Schwierigkeit Schritt für Schritt.`, correctOfTotal: (count) => `richtig von ${count}`, rangeNames: { auto: "Ohne Begrenzung", 10: "Bis 10", 20: "Bis 20", 100: "Bis 100", above100: "Über 100" }, operationNames: { add: "Addition +", subtract: "Subtraktion −", multiply: "Multiplikation ×", divide: "Division ÷", negative: "Negative Zahlen", decimal: "Dezimalzahlen", fraction: "Brüche", power: "Potenzen", root: "Wurzeln" },
-      stageNames: ["Addition bis 10", "Subtraktion bis 10", "einfache Addition bis 20", "Subtraktion bis 20", "Subtraktion über den Zehner", "Rechnen bis 50", "Rechnen bis 50 mit Übergang", "Rechnen bis 100", "Rechnen bis 100 mit Übergang", "Rechnen bis 200", "Rechnen bis 500", "Rechnen bis 1.000", "Rechnen bis 2.000", "Rechnen bis 5.000", "Rechnen bis 10.000"],
+      stageNames: ["Mengen von 0 bis 5", "+0 und +1 bis 5", "Addition bis 5", "Zahlzerlegung bis 10", "Addition bis 10", "−1 und −2 bis 5", "Subtraktion bis 10", "+ und − bis 10", "Zahlen von 11 bis 20", "Addition bis 20 ohne Übergang", "Subtraktion bis 20 ohne Übergang", "Addition über den Zehner", "Subtraktion über den Zehner", "+ und − bis 20", "Schritte 1, 2 und 10 bis 100", "Rechnen bis 100 ohne Übergang", "Rechnen bis 100 mit Übergang", "+ und − bis 100", "Gleiche Gruppen", "Malnehmen mit 1, 2, 5 und 10", "Teilen in gleiche Gruppen", "Division ohne Rest", "Einmaleins", "Multiplikation und Division", "Rechnen bis 1.000 ohne Übergang", "Rechnen bis 1.000 mit Übergang", "Rechnen bis 10.000 ohne Übergang", "Rechnen bis 10.000 mit Übergang"],
       messages: {
         correct: ["Richtig!", "Klasse!", "Weiter so!", "Super!", "Genau!"],
         streak: ["Starke Serie!", "Drei hintereinander!", "Kapi freut sich!", "Du bist im Rechenfluss!"],
@@ -174,13 +182,16 @@
       const value = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
       appSettings.language = value.language === "ru" ? "ru" : "de";
       appSettings.problemCount = [10, 20, 30].includes(Number(value.problemCount)) ? Number(value.problemCount) : 20;
-      appSettings.automatic = value.automatic !== false;
-      appSettings.range = ["10", "20", "100", "above100"].includes(String(value.range)) ? String(value.range) : "above100";
-      appSettings.operations = Array.isArray(value.operations)
+      const currentCurriculum = value.curriculumVersion === CURRICULUM_VERSION;
+      appSettings.automatic = currentCurriculum ? value.automatic !== false : true;
+      appSettings.range = currentCurriculum && ["10", "20", "100", "above100"].includes(String(value.range)) ? String(value.range) : "above100";
+      appSettings.operations = currentCurriculum && Array.isArray(value.operations)
         ? OPERATION_ORDER.filter((operation) => value.operations.includes(operation))
         : ["add", "subtract"];
       if (!appSettings.operations.length) appSettings.operations = ["add"];
       appSettings.sound = value.sound !== false;
+      appSettings.curriculumVersion = CURRICULUM_VERSION;
+      if (!currentCurriculum) localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
     } catch { /* Keep defaults. */ }
     language = appSettings.language;
     TOTAL = appSettings.problemCount;
@@ -221,11 +232,26 @@
     const defaults = {
       totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [],
       adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveCorrectStreak: 0, adaptiveRecentResults: [],
-      personalFastTime: null, paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {}
+      personalFastTime: null, paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {},
+      curriculumVersion: CURRICULUM_VERSION, curriculumStats: {}
     };
     try {
-      const profile = { ...defaults, ...JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}") };
-      profile.currentStage = Math.min(15, Math.max(1, Number(profile.currentStage) || 1));
+      const stored = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}");
+      const profile = { ...defaults, ...stored };
+      if (stored.curriculumVersion !== CURRICULUM_VERSION) {
+        profile.currentStage = 1;
+        profile.errorQueue = [];
+        profile.adaptiveOperand = 1;
+        profile.adaptiveFastStreak = 0;
+        profile.adaptiveCorrectStreak = 0;
+        profile.adaptiveRecentResults = [];
+        profile.accelerationWindow = [];
+        profile.operationStats = {};
+        profile.curriculumStats = {};
+        profile.curriculumVersion = CURRICULUM_VERSION;
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      }
+      profile.currentStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(profile.currentStage) || 1));
       profile.errorQueue = Array.isArray(profile.errorQueue) ? profile.errorQueue : [];
       profile.adaptiveOperand = Math.min(9, Math.max(1, Number(profile.adaptiveOperand) || 1));
       profile.adaptiveFastStreak = Math.min(2, Math.max(0, Number(profile.adaptiveFastStreak) || 0));
@@ -242,6 +268,12 @@
         ? profile.accelerationWindow.filter((item) => item && (item.correct === true || item.correct === false) && Number.isFinite(Number(item.seconds))).slice(-10).map((item) => ({ correct: item.correct, seconds: Math.max(.2, Number(item.seconds)) }))
         : [];
       profile.operationStats = profile.operationStats && typeof profile.operationStats === "object" ? profile.operationStats : {};
+      profile.curriculumStats = profile.curriculumStats && typeof profile.curriculumStats === "object" ? profile.curriculumStats : {};
+      Object.keys(profile.curriculumStats).forEach((stage) => {
+        profile.curriculumStats[stage] = Array.isArray(profile.curriculumStats[stage])
+          ? profile.curriculumStats[stage].filter((value) => value === 0 || value === 1).slice(-20)
+          : [];
+      });
       OPERATION_ORDER.forEach((operation) => {
         const values = Array.isArray(profile.operationStats[operation]) ? profile.operationStats[operation] : [];
         profile.operationStats[operation] = values.filter((value) => value === 0 || value === 1).slice(-10);
@@ -264,9 +296,7 @@
     const profile = getProfile();
     $("dayStreakValue").textContent = String(profile.dayStreak);
     $("totalXpValue").textContent = String(profile.totalXp);
-    const stageName = profile.currentStage <= 2
-      ? copy.adaptiveLevel(copy.stageNames[profile.currentStage - 1], profile.currentStage === 1 ? "+" : "−", profile.adaptiveOperand)
-      : copy.stageNames[profile.currentStage - 1];
+    const stageName = copy.stageNames[profile.currentStage - 1];
     $("startEyebrow").textContent = copy.levelLabel(profile.currentStage, stageName);
   }
 
@@ -292,7 +322,7 @@
 
   function pick(list) { return list[randomInt(0, list.length - 1)]; }
 
-  const stageLimits = [10, 10, 20, 20, 20, 50, 50, 100, 100, 200, 500, 1000, 2000, 5000, 10000];
+  const stageLimits = [5, 5, 5, 10, 10, 5, 10, 10, 20, 20, 20, 20, 20, 20, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 1000, 1000, 10000, 10000];
 
   function hasCarry(a, b) {
     while (a > 0 || b > 0) {
@@ -323,18 +353,23 @@
   }
 
   function activeOperations(profile) {
-    const selected = appSettings.automatic ? OPERATION_ORDER : OPERATION_ORDER.filter((operation) => appSettings.operations.includes(operation));
-    if (!appSettings.automatic) return selected.length ? selected : ["add"];
-    const active = [];
-    for (const operation of selected.length ? selected : ["add"]) {
-      active.push(operation);
-      if (!operationMastered(profile, operation)) break;
+    if (!appSettings.automatic) {
+      const selected = OPERATION_ORDER.filter((operation) => appSettings.operations.includes(operation));
+      return selected.length ? selected : ["add"];
     }
-    return active;
+    const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, profile.currentStage));
+    if (stage === 1) return ["count"];
+    if (stage <= 5 || stage === 9 || stage === 10 || stage === 12) return ["add"];
+    if (stage === 6 || stage === 7 || stage === 11 || stage === 13) return ["subtract"];
+    if ([8, 14, 15, 16, 17, 18, 25, 26, 27, 28].includes(stage)) return ["add", "subtract"];
+    if (stage === 19 || stage === 20 || stage === 23) return ["multiply"];
+    if (stage === 21 || stage === 22) return ["divide"];
+    return ["multiply", "divide"];
   }
 
   function chooseOperation(profile) {
     const operations = activeOperations(profile);
+    if (appSettings.automatic) return pick(operations);
     const weighted = operations.map((operation) => {
       const values = profile.operationStats[operation] || [];
       const errorRate = values.length ? 1 - operationAccuracy(profile, operation) : .65;
@@ -357,31 +392,21 @@
   }
 
   function maximumAllowedStage() {
-    if (appSettings.automatic) return 15;
-    return ({ "10": 2, "20": 5, "100": 9, above100: 15 })[appSettings.range] || 15;
+    if (appSettings.automatic) return CURRICULUM_STAGE_COUNT;
+    return ({ "10": 8, "20": 14, "100": 24, above100: CURRICULUM_STAGE_COUNT })[appSettings.range] || CURRICULUM_STAGE_COUNT;
   }
 
   function promoteToNextRange(profile) {
-    const ranges = [
-      { end: 2, next: 3 },
-      { end: 5, next: 6 },
-      { end: 9, next: 10 },
-      { end: 15, next: null }
-    ];
-    const range = ranges.find((item) => profile.currentStage <= item.end);
-    if (!range?.next || range.next > maximumAllowedStage()) return "";
-    profile.currentStage = range.next;
-    profile.adaptiveOperand = 1;
-    profile.adaptiveFastStreak = 0;
-    profile.adaptiveCorrectStreak = 0;
-    profile.adaptiveRecentResults = [];
+    if (profile.currentStage >= maximumAllowedStage()) return "";
+    profile.currentStage += 1;
     profile.accelerationWindow = [];
     state.stage = profile.currentStage;
     state.stageAdvancedDuringSession = true;
-    return copy.fastTrack(copy.stageNames[profile.currentStage - 1]);
+    return copy.adaptiveStage(copy.stageNames[profile.currentStage - 1]);
   }
 
   function makeGeneratedProblem(stage, index, profile) {
+    if (appSettings.automatic) return makeCurriculumProblem(stage, index, profile);
     const operation = chooseOperation(profile);
     const max = Math.max(10, effectiveMax(stage));
     const mode = index % 2 === 0 ? "choice" : "input";
@@ -399,8 +424,158 @@
     problem.operation = operation;
     problem.mode = mode;
     problem.isReview = false;
+    problem.key = `${operation}:${problem.a}:${problem.b}:${problem.answer}:${problem.text}`.replace(/\s+/g, "");
+    return problem;
+  }
+
+  function finishProblem(problem, operation, index) {
+    problem.operation = operation;
+    problem.mode = index % 2 === 0 ? "choice" : "input";
+    problem.isReview = false;
+    problem.curriculumStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, state.stage || 1));
     problem.key = problem.text.replace(/\s+/g, "");
     return problem;
+  }
+
+  function makeCurriculumProblem(stage, index, profile) {
+    const current = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, stage));
+    let a;
+    let b;
+    let problem;
+    let operation = pick(activeOperations(profile));
+    if (current === 1) {
+      const answer = randomInt(0, 5);
+      return finishProblem({ a: answer, b: 0, answer, operator: "", text: copy.countQuestion, visualCount: answer }, "count", index);
+    }
+    if (current === 2) {
+      operation = "add";
+      b = Math.random() < .35 ? 0 : 1;
+      a = randomInt(0, 5 - b);
+      problem = { a, b, answer: a + b, operator: "+", text: `${a} + ${b} = ?` };
+    } else if (current === 3) {
+      operation = "add";
+      do { a = randomInt(1, 4); b = randomInt(1, 4); } while (a + b > 5);
+      problem = { a, b, answer: a + b, operator: "+", text: `${a} + ${b} = ?` };
+    } else if (current === 4) {
+      operation = "add";
+      if (Math.random() < .5) { a = randomInt(1, 5); b = a; }
+      else { const total = pick([5, 10]); a = randomInt(1, total - 1); b = total - a; }
+      problem = { a, b, answer: a + b, operator: "+", text: `${a} + ${b} = ?` };
+    } else if (current === 5) {
+      operation = "add";
+      do { a = randomInt(2, 8); b = randomInt(2, 8); } while (a + b > 10);
+      problem = { a, b, answer: a + b, operator: "+", text: `${a} + ${b} = ?` };
+    } else if (current === 6) {
+      operation = "subtract";
+      b = randomInt(1, 2); a = randomInt(b, 5);
+      problem = { a, b, answer: a - b, operator: "−", text: `${a} − ${b} = ?` };
+    } else if (current === 7) {
+      operation = "subtract";
+      a = randomInt(4, 10); b = randomInt(2, a);
+      problem = { a, b, answer: a - b, operator: "−", text: `${a} − ${b} = ?` };
+    } else if (current === 8) {
+      if (operation === "add") {
+        do { a = randomInt(2, 8); b = randomInt(2, 8); } while (a + b > 10);
+        problem = { a, b, answer: a + b, operator: "+", text: `${a} + ${b} = ?` };
+      } else {
+        a = randomInt(4, 10); b = randomInt(2, a);
+        problem = { a, b, answer: a - b, operator: "−", text: `${a} − ${b} = ?` };
+      }
+    } else if (current === 9) {
+      operation = "add";
+      b = randomInt(1, 9); a = 10;
+      problem = { a, b, answer: a + b, operator: "+", text: `${a} + ${b} = ?` };
+    } else if (current === 10) {
+      operation = "add";
+      do { a = randomInt(11, 18); b = randomInt(1, 9); } while (a + b > 20 || hasCarry(a, b));
+      problem = { a, b, answer: a + b, operator: "+", text: `${a} + ${b} = ?` };
+    } else if (current === 11) {
+      operation = "subtract";
+      do { a = randomInt(11, 20); b = randomInt(1, 9); } while (b >= a || hasBorrow(a, b));
+      problem = { a, b, answer: a - b, operator: "−", text: `${a} − ${b} = ?` };
+    } else if (current === 12) {
+      operation = "add";
+      do { a = randomInt(3, 9); b = randomInt(2, 9); } while (a + b <= 10 || a + b > 20);
+      problem = { a, b, answer: a + b, operator: "+", text: `${a} + ${b} = ?` };
+    } else if (current === 13) {
+      operation = "subtract";
+      do { a = randomInt(11, 19); b = randomInt(2, 9); } while (!hasBorrow(a, b));
+      problem = { a, b, answer: a - b, operator: "−", text: `${a} − ${b} = ?` };
+    } else if (current === 14) {
+      const sourceStage = operation === "add" ? pick([10, 12]) : pick([11, 13]);
+      return makeCurriculumProblemForStage(sourceStage, index, profile);
+    } else if (current === 15) {
+      const step = pick([1, 2, 10]);
+      if (operation === "add") { a = randomInt(20, 100 - step); b = step; }
+      else { a = randomInt(20, 100); b = Math.min(step, a); }
+      problem = { a, b, answer: operation === "add" ? a + b : a - b, operator: operation === "add" ? "+" : "−", text: `${a} ${operation === "add" ? "+" : "−"} ${b} = ?` };
+    } else if (current >= 16 && current <= 18) {
+      const transition = current === 17 ? true : current === 16 ? false : Math.random() < .55;
+      problem = makePlaceValueProblem(operation, 100, transition);
+    } else if (current === 19) {
+      const groups = randomInt(2, 5); const size = randomInt(1, 5);
+      const text = Array.from({ length: groups }, () => String(size)).join(" + ") + " = ?";
+      problem = { a: groups, b: size, answer: groups * size, operator: "+", text, groupCount: groups, groupSize: size, conceptVisual: true };
+      operation = "multiply";
+    } else if (current === 20) {
+      a = pick([1, 2, 5, 10]); b = randomInt(1, 10);
+      problem = { a, b, answer: a * b, operator: "×", text: `${a} × ${b} = ?` };
+      operation = "multiply";
+    } else if (current === 21) {
+      const groups = pick([2, 5, 10]); const each = randomInt(1, 10); const total = groups * each;
+      problem = { a: total, b: groups, answer: each, operator: ":", text: copy.sharingQuestion(total, groups), groupCount: groups, groupSize: each, conceptVisual: true };
+      operation = "divide";
+    } else if (current === 22) {
+      const divisor = pick([2, 5, 10]); const answer = randomInt(1, 10); a = divisor * answer;
+      problem = { a, b: divisor, answer, operator: ":", text: `${a} : ${divisor} = ?` };
+      operation = "divide";
+    } else if (current === 23) {
+      a = randomInt(2, 10); b = randomInt(2, 10);
+      problem = { a, b, answer: a * b, operator: "×", text: `${a} × ${b} = ?` };
+      operation = "multiply";
+    } else if (current === 24) {
+      if (operation === "multiply") {
+        a = randomInt(2, 10); b = randomInt(2, 10);
+        problem = { a, b, answer: a * b, operator: "×", text: `${a} × ${b} = ?` };
+      } else {
+        b = randomInt(2, 10); const answer = randomInt(2, 10); a = b * answer;
+        problem = { a, b, answer, operator: ":", text: `${a} : ${b} = ?` };
+      }
+    } else {
+      const max = current <= 26 ? 1000 : 10000;
+      const transition = current === 26 || current === 28;
+      problem = makePlaceValueProblem(operation, max, transition);
+    }
+    return finishProblem(problem, operation, index);
+  }
+
+  function makeCurriculumProblemForStage(stage, index, profile) {
+    const previousStage = state.stage;
+    state.stage = stage;
+    const result = makeCurriculumProblem(stage, index, profile);
+    state.stage = previousStage;
+    result.curriculumStage = previousStage;
+    return result;
+  }
+
+  function makePlaceValueProblem(operation, max, transition) {
+    let a;
+    let b;
+    const addition = operation === "add";
+    for (let tries = 0; tries < 500; tries += 1) {
+      if (addition) {
+        a = randomInt(Math.max(11, Math.floor(max * .15)), Math.floor(max * .8));
+        b = randomInt(2, Math.max(2, max - a));
+        if (hasCarry(a, b) === transition) return { a, b, answer: a + b, operator: "+", text: `${a} + ${b} = ?` };
+      } else {
+        a = randomInt(Math.max(12, Math.floor(max * .25)), max);
+        b = randomInt(2, a - 1);
+        if (hasBorrow(a, b) === transition) return { a, b, answer: a - b, operator: "−", text: `${a} − ${b} = ?` };
+      }
+    }
+    return addition
+      ? { a: 20, b: 10, answer: 30, operator: "+", text: "20 + 10 = ?" }
+      : { a: 30, b: 10, answer: 20, operator: "−", text: "30 − 10 = ?" };
   }
 
   function makeAddSubtractProblem(operation, stage, max, profile) {
@@ -541,14 +716,14 @@
 
   function reviewOperation(item) {
     if (item.operation) return item.operation;
-    return ({ "+": "add", "−": "subtract", "×": "multiply", "÷": "divide", "^": "power", "√": "root", "∛": "root" })[item.operator] || null;
+    return ({ "+": "add", "−": "subtract", "×": "multiply", "÷": "divide", ":": "divide", "^": "power", "√": "root", "∛": "root" })[item.operator] || null;
   }
 
   function selectProblem(stage, index) {
     const profile = getProfile();
     const queue = profile.errorQueue;
     const allowedOperations = new Set(activeOperations(profile));
-    const eligibleReviews = queue.filter((item) => allowedOperations.has(reviewOperation(item)));
+    const eligibleReviews = queue.filter((item) => allowedOperations.has(reviewOperation(item)) && (!appSettings.automatic || item.curriculumStage === profile.currentStage));
     const remaining = TOTAL - index;
     const shouldReview = eligibleReviews.length > 0 && (index % 3 === 2 || remaining <= eligibleReviews.length * 2);
     if (shouldReview) {
@@ -603,6 +778,7 @@
     $("feedback").textContent = state.index === 0 ? copy.careful : copy.next;
     setMascot("idle");
     renderAnswer();
+    if (state.problem.operation === "count" || state.problem.conceptVisual) showHint();
   }
 
   function renderAnswer() {
@@ -698,6 +874,12 @@
 
   function makeChoices(problem) {
     const answer = problem.answer;
+    if (problem.operation === "count") {
+      const values = new Set([answer]);
+      [answer - 1, answer + 1, answer - 2, answer + 2, 0, 5].filter((value) => value >= 0 && value <= 5).forEach((value) => values.add(value));
+      while (values.size < 4) values.add(randomInt(0, 5));
+      return [...values].slice(0, 4).sort(() => Math.random() - .5);
+    }
     if (problem.answerType === "fraction") return makeFractionChoices(answer);
     const values = new Set([answer]);
     const absolute = Math.abs(answer);
@@ -799,24 +981,21 @@
   }
 
   function recordOperationAttempt(operation, isCorrect) {
-    if (!operation) return "";
+    if (!operation || operation === "count") return "";
     const profile = getProfile();
     const wasMastered = operationMastered(profile, operation);
     profile.operationStats[operation] ||= [];
     profile.operationStats[operation].push(isCorrect ? 1 : 0);
     profile.operationStats[operation] = profile.operationStats[operation].slice(-10);
     saveProfile(profile);
-    const index = OPERATION_ORDER.indexOf(operation);
-    return appSettings.automatic && !wasMastered && operationMastered(profile, operation) && index >= 0 && index < OPERATION_ORDER.length - 1
-      ? copy.operationUnlocked(copy.operationNames[OPERATION_ORDER[index + 1]])
-      : "";
+    return "";
   }
 
   function registerProblemError(problem) {
     const profile = getProfile();
     let item = profile.errorQueue.find((entry) => entry.key === problem.key);
     if (!item) {
-      item = { key: problem.key, text: problem.text, a: problem.a, b: problem.b, operator: problem.operator, operation: problem.operation, answerType: problem.answerType, answer: problem.answer, correctStreak: 0, lastShown: Date.now() };
+      item = { key: problem.key, text: problem.text, a: problem.a, b: problem.b, operator: problem.operator, operation: problem.operation, answerType: problem.answerType, answer: problem.answer, curriculumStage: state.stage, visualCount: problem.visualCount, groupCount: problem.groupCount, groupSize: problem.groupSize, conceptVisual: problem.conceptVisual, correctStreak: 0, lastShown: Date.now() };
       profile.errorQueue.push(item);
     } else {
       item.correctStreak = 0;
@@ -828,78 +1007,39 @@
   function updateAdaptiveProgress(problem, isFirstAttempt, isCorrect, elapsed) {
     if (problem.isReview || !isFirstAttempt) return "";
     const profile = getProfile();
-    profile.accelerationWindow.push({ correct: isCorrect, seconds: elapsed });
-    profile.accelerationWindow = profile.accelerationWindow.slice(-10);
-    if (profile.accelerationWindow.length === 10 && profile.accelerationWindow.every((item) => item.correct)) {
-      const average = profile.accelerationWindow.reduce((sum, item) => sum + item.seconds, 0) / 10;
-      if (average < UNIVERSAL_FAST_TIME) {
-        const fastTrackMessage = promoteToNextRange(profile);
-        if (fastTrackMessage) {
-          saveProfile(profile);
-          return fastTrackMessage;
-        }
-      }
-    }
-    if (profile.currentStage <= 2 && (problem.operation === "add" || problem.operation === "subtract")) {
-      const expectedOperator = profile.currentStage === 1 ? "+" : "−";
-      if (problem.operator !== expectedOperator || problem.b !== profile.adaptiveOperand) {
-        saveProfile(profile);
-        return "";
-      }
-    }
-
+    const stageKey = String(profile.currentStage);
+    profile.curriculumStats[stageKey] ||= [];
+    profile.curriculumStats[stageKey].push(isCorrect ? 1 : 0);
+    profile.curriculumStats[stageKey] = profile.curriculumStats[stageKey].slice(-20);
     profile.adaptiveRecentResults.push(isCorrect ? 1 : 0);
     profile.adaptiveRecentResults = profile.adaptiveRecentResults.slice(-5);
-    const errorCount = profile.adaptiveRecentResults.filter((value) => value === 0).length;
-    if (profile.adaptiveRecentResults.length === 5 && errorCount / 5 > .2) {
-      const label = lowerAdaptiveDifficulty(profile);
-      profile.adaptiveFastStreak = 0;
-      profile.adaptiveCorrectStreak = 0;
+    if (isCorrect) updatePersonalPace(profile, elapsed);
+
+    const recentFive = profile.adaptiveRecentResults;
+    const errorCount = recentFive.filter((value) => value === 0).length;
+    if (recentFive.length === 5 && errorCount / recentFive.length > .2 && profile.currentStage > 1) {
+      profile.currentStage -= 1;
       profile.adaptiveRecentResults = [];
+      state.stage = profile.currentStage;
       saveProfile(profile);
-      return label ? copy.easierStep(label) : "";
+      return copy.easierStep(copy.stageNames[profile.currentStage - 1]);
     }
 
-    const isFast = isCorrect ? updatePersonalPace(profile, elapsed) : false;
-    profile.adaptiveFastStreak = isFast ? profile.adaptiveFastStreak + 1 : 0;
-    profile.adaptiveCorrectStreak = isCorrect ? profile.adaptiveCorrectStreak + 1 : 0;
-    if (profile.adaptiveFastStreak < 3 && profile.adaptiveCorrectStreak < 5) {
+    const lastTen = profile.curriculumStats[stageKey].slice(-10);
+    const accuracy = lastTen.length ? lastTen.reduce((sum, value) => sum + value, 0) / lastTen.length : 0;
+    const pendingCurrentErrors = profile.errorQueue.some((item) => item.curriculumStage === profile.currentStage);
+    if (lastTen.length < 10 || accuracy < .9 || pendingCurrentErrors || profile.currentStage >= maximumAllowedStage()) {
       saveProfile(profile);
       return "";
     }
 
-    profile.adaptiveFastStreak = 0;
-    profile.adaptiveCorrectStreak = 0;
+    profile.currentStage += 1;
     profile.adaptiveRecentResults = [];
-    if (profile.currentStage <= 2 && profile.adaptiveOperand < 9) {
-      const operator = profile.currentStage === 1 ? "+" : "−";
-      profile.adaptiveOperand += 1;
-      saveProfile(profile);
-      return copy.adaptiveStep(operator, profile.adaptiveOperand);
-    }
-
-    if (profile.currentStage === 1 && !operationMastered(profile, "add")) {
-      saveProfile(profile);
-      return "";
-    }
-    if (profile.currentStage === 2 && !operationMastered(profile, "subtract")) {
-      saveProfile(profile);
-      return "";
-    }
-
-    if (profile.currentStage >= maximumAllowedStage()) {
-      saveProfile(profile);
-      return "";
-    }
-
-    if (profile.currentStage <= 2) profile.adaptiveOperand = 1;
-    profile.currentStage = Math.min(maximumAllowedStage(), profile.currentStage + 1);
+    profile.accelerationWindow = [];
     state.stage = profile.currentStage;
     state.stageAdvancedDuringSession = true;
     saveProfile(profile);
-    return profile.currentStage === 2
-      ? copy.subtractionUnlocked
-      : copy.adaptiveStage(copy.stageNames[profile.currentStage - 1]);
+    return copy.adaptiveStage(copy.stageNames[profile.currentStage - 1]);
   }
 
   function updatePersonalPace(profile, elapsed) {
@@ -983,7 +1123,13 @@
     const { a, b, operator, operation } = state.problem;
     const hint = $("hint");
     let dots = "";
-    if ((operation === "subtract" || operation === "negative") && Number.isInteger(a) && a >= 0 && a <= 20 && b <= a) {
+    if (operation === "count") {
+      for (let i = 0; i < state.problem.visualCount; i += 1) dots += `<span class="counter"></span>`;
+      hint.innerHTML = `<span>${copy.countHint}</span><div class="counter-line" aria-hidden="true">${dots || "0"}</div>`;
+    } else if (state.problem.conceptVisual && state.problem.groupCount && state.problem.groupSize) {
+      const groups = Array.from({ length: state.problem.groupCount }, () => `<div class="addend-card"><div class="addend-dots">${Array.from({ length: state.problem.groupSize }, () => `<span class="counter"></span>`).join("")}</div></div>`).join("");
+      hint.innerHTML = `<span>${operation === "divide" ? copy.sharingQuestion(a, b) : copy.genericHint}</span><div class="addition-groups concept-groups" aria-hidden="true">${groups}</div>`;
+    } else if ((operation === "subtract" || operation === "negative") && Number.isInteger(a) && a >= 0 && a <= 20 && b <= a) {
       for (let i = 0; i < a; i += 1) dots += `<span class="counter${i >= a - b ? " removed" : ""}"></span>`;
       hint.innerHTML = `<span>${copy.subtractionHint(a, b)}</span><div class="counter-line" aria-hidden="true">${dots}</div>`;
     } else if (operation === "add" && Number.isInteger(a) && Number.isInteger(b) && a + b <= 20) {
@@ -1079,12 +1225,7 @@
       ? state.results.reduce((sum, item) => sum + item.seconds, 0) / state.results.length
       : 0;
     const profile = getProfile();
-    const canAdvance = state.stage >= 3 && !state.stageAdvancedDuringSession && state.correct / TOTAL >= .9 && profile.errorQueue.length === 0;
-    const advanced = canAdvance && profile.currentStage < maximumAllowedStage();
-    if (advanced) {
-      profile.currentStage += 1;
-      saveProfile(profile);
-    }
+    const advanced = state.stageAdvancedDuringSession;
     const session = {
       date: new Date().toISOString(),
       correct: state.correct,
@@ -1103,7 +1244,7 @@
     const freshProfile = getProfile();
     $("resultNote").textContent = advanced
       ? copy.levelUpNote(freshProfile.currentStage, copy.stageNames[freshProfile.currentStage - 1])
-      : `${canAdvance && state.stage === 15 ? copy.maxLevelNote : copy.stayNote}${freshProfile.errorQueue.length ? ` ${copy.reviewsLeft(freshProfile.errorQueue.length)}` : ""}`;
+      : `${state.stage === CURRICULUM_STAGE_COUNT ? copy.maxLevelNote : copy.stayNote}${freshProfile.errorQueue.length ? ` ${copy.reviewsLeft(freshProfile.errorQueue.length)}` : ""}`;
     $("progressFill").style.width = "100%";
     makeConfetti();
     showMotivation(advanced ? copy.rewardHandshake : pick(messages.complete), `+${state.score} XP`, null, advanced ? "handshake" : "dance");
