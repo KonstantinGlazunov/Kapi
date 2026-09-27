@@ -288,8 +288,15 @@
       for (let i = 0; i < a; i += 1) dots += `<span class="counter${i >= a - b ? " removed" : ""}"></span>`;
       hint.innerHTML = `<span>Было ${a}. Зачеркни ${b}. Сколько осталось?</span><div class="counter-line" aria-hidden="true">${dots}</div>`;
     } else {
-      for (let i = 0; i < a + b; i += 1) dots += `<span class="counter"></span>`;
-      hint.innerHTML = `<span>Соедини ${a} и ${b}. Посчитай все кружки.</span><div class="counter-line" aria-hidden="true">${dots}</div>`;
+      const firstGroup = Array.from({ length: a }, () => `<span class="counter"></span>`).join("");
+      const secondGroup = Array.from({ length: b }, () => `<span class="counter addend-two"></span>`).join("");
+      hint.innerHTML = `
+        <span>Соедини ${a} и ${b}. Посчитай все кружки.</span>
+        <div class="addition-groups" aria-label="Первая группа: ${a}. Вторая группа: ${b}.">
+          <div class="addend-card"><strong>${a}</strong><div class="addend-dots">${firstGroup}</div></div>
+          <span class="hint-plus" aria-hidden="true">+</span>
+          <div class="addend-card addend-card-two"><strong>${b}</strong><div class="addend-dots">${secondGroup}</div></div>
+        </div>`;
     }
     hint.classList.remove("hidden");
     scheduleFitCheck();
@@ -303,8 +310,6 @@
   function syncViewportSize() {
     const height = visibleHeight();
     document.documentElement.style.setProperty("--app-height", `${height}px`);
-    document.body.classList.toggle("viewport-compact", height < 780);
-    document.body.classList.toggle("viewport-ultra", height < 620);
     scheduleFitCheck();
   }
 
