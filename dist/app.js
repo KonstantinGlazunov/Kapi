@@ -24,7 +24,8 @@
     results: [],
     recent: [],
     locked: false,
-    sound: true
+    sound: true,
+    enteredAnswer: ""
   };
 
   const $ = (id) => document.getElementById(id);
@@ -106,7 +107,7 @@
   function startTraining() {
     Object.assign(state, {
       index: 0, score: 0, correct: 0, streak: 0, level: 1,
-      attempt: 1, problem: null, results: [], recent: [], locked: false
+      attempt: 1, problem: null, results: [], recent: [], locked: false, enteredAnswer: ""
     });
     showScreen($("gameScreen"));
     $("feedback").textContent = "Считай внимательно";
@@ -118,6 +119,7 @@
     if (state.index >= TOTAL) return finishTraining();
     state.attempt = 1;
     state.locked = false;
+    state.enteredAnswer = "";
     state.problem = makeProblem(state.level, state.index);
     state.startedAt = performance.now();
     $("problemNumber").textContent = String(state.index + 1);
@@ -149,17 +151,46 @@
       });
       area.appendChild(wrap);
     } else {
-      const form = document.createElement("form");
-      form.innerHTML = `<label class="hidden" for="numberAnswer">Ответ</label><input id="numberAnswer" class="keypad-answer" type="number" inputmode="numeric" min="0" max="20" autocomplete="off" placeholder="Введи ответ"><button class="submit-button" type="submit">Проверить</button>`;
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const input = form.querySelector("input");
-        if (input.value === "") return;
-        submitAnswer(Number(input.value));
-      });
-      area.appendChild(form);
-      requestAnimationFrame(() => form.querySelector("input").focus({ preventScroll: true }));
+      const keypad = document.createElement("div");
+      keypad.className = "number-entry";
+      keypad.innerHTML = `
+        <div class="keypad-answer empty" id="numberAnswer" role="status" aria-live="polite" aria-label="Введённый ответ">Ответ</div>
+        <div class="number-pad" aria-label="Цифровая клавиатура">
+          ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => `<button class="number-key" type="button" data-digit="${digit}">${digit}</button>`).join("")}
+          <button class="number-key number-key-action" type="button" data-action="clear" aria-label="Очистить">C</button>
+          <button class="number-key" type="button" data-digit="0">0</button>
+          <button class="number-key number-key-action" type="button" data-action="backspace" aria-label="Удалить последнюю цифру">⌫</button>
+        </div>
+        <button class="submit-button" type="button" data-action="submit">Проверить</button>`;
+      keypad.addEventListener("click", handleKeypadClick);
+      area.appendChild(keypad);
+      updateKeypadDisplay();
     }
+  }
+
+  function handleKeypadClick(event) {
+    const button = event.target.closest("button");
+    if (!button || state.locked) return;
+    if (button.dataset.digit !== undefined) {
+      if (state.enteredAnswer.length < 2) state.enteredAnswer += button.dataset.digit;
+      updateKeypadDisplay();
+      sound("tap");
+      return;
+    }
+    if (button.dataset.action === "clear") state.enteredAnswer = "";
+    if (button.dataset.action === "backspace") state.enteredAnswer = state.enteredAnswer.slice(0, -1);
+    if (button.dataset.action === "submit" && state.enteredAnswer !== "") {
+      submitAnswer(Number(state.enteredAnswer));
+      return;
+    }
+    updateKeypadDisplay();
+  }
+
+  function updateKeypadDisplay() {
+    const display = $("numberAnswer");
+    if (!display) return;
+    display.textContent = state.enteredAnswer || "Ответ";
+    display.classList.toggle("empty", state.enteredAnswer === "");
   }
 
   function makeChoices(answer) {
@@ -202,6 +233,7 @@
     sound("wrong");
     if (state.attempt === 1) {
       state.attempt = 2;
+      state.enteredAnswer = "";
       $("feedback").textContent = pick(messages.tryAgain);
       showHint();
       renderAnswer();
@@ -395,6 +427,7 @@
         wrong: [[220, 0, .11], [185, .1, .12]],
         streak: [[520, 0, .07], [660, .08, .07], [880, .16, .14]],
         complete: [[440, 0, .1], [554, .11, .1], [660, .22, .1], [880, .34, .2]]
+        ,tap: [[360, 0, .035]]
       };
       (patterns[type] || patterns.correct).forEach(([frequency, delay, duration]) => {
         const oscillator = audioContext.createOscillator();
