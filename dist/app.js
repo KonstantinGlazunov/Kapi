@@ -31,7 +31,7 @@
       stayNote: "Продолжаем этот уровень, пока он не станет уверенным.", maxLevelNote: "Максимальный уровень освоен — продолжаем закреплять счёт до 10 000.", reviewsLeft: (count) => `Примеров для повторения: ${count}.`, again: "Дальше", viewHistory: "Посмотреть историю",
       forParents: "Для родителей", close: "Закрыть", clearHistory: "Удалить историю", emptyHistory: "Здесь появятся результаты после первой тренировки.",
       sessions: "тренировок", currentLevel: "текущий уровень", correctShort: "средний результат", correctHistory: (correct, total, seconds) => `${correct}/${total} верно · ${seconds} с`,
-      repeat: "Стоит повторить:", deleteConfirm: "Удалить всю историю занятий на этом устройстве?", leaveConfirm: "Закончить текущую тренировку?",
+      repeat: "Стоит повторить:", noErrors: "Ни одной ошибки!", deleteConfirm: "Удалить всю историю занятий на этом устройстве?", leaveConfirm: "Закончить текущую тренировку?",
       seconds: "с", trainingTool: "Начать тренировку", historyTool: "Прочитать историю занятий", levelShort: (level) => `Ур. ${level}`,
       levelLabel: (level, name) => `Уровень ${level} · ${name}`,
       adaptiveLevel: (name, operator, operand) => `${name} · ${operator}${operand}`,
@@ -39,6 +39,8 @@
       adaptiveStage: (name) => `Новый уровень: ${name}`,
       easierStep: (name) => `Сделаем чуть легче: ${name}`,
       adaptiveAdjusted: "Капи подстроил сложность под твой темп",
+      fastTrack: (name) => `Быстрый переход: ${name}`,
+      rewardFlag: "Капи машет флажком!", rewardParty: "Праздник продолжается!", rewardDance: "Время танцевать!", rewardHandshake: "Капи поздравляет тебя!",
       subtractionUnlocked: "Сложение освоено — начинаем вычитание!",
       operationUnlocked: (name) => `Новое действие: ${name}`,
       installKicker: "Приложение Капи", installTitle: "Установить на телефон?", installText: "Капи появится на главном экране и будет открываться без панели браузера.", installNow: "Установить", continueBrowser: "Продолжить в браузере", iosInstallText: "На iPhone нажмите «Поделиться», затем «На экран Домой».",
@@ -69,7 +71,7 @@
       stayNote: "Wir üben diese Stufe weiter, bis sie sicher sitzt.", maxLevelNote: "Die höchste Stufe ist geschafft – jetzt festigen wir das Rechnen bis 10.000.", reviewsLeft: (count) => `Aufgaben zum Wiederholen: ${count}.`, again: "Weiter", viewHistory: "Verlauf ansehen",
       forParents: "Für Eltern", close: "Schließen", clearHistory: "Verlauf löschen", emptyHistory: "Nach dem ersten Training erscheinen hier die Ergebnisse.",
       sessions: "Trainings", currentLevel: "aktuelle Stufe", correctShort: "Durchschnitt", correctHistory: (correct, total, seconds) => `${correct}/${total} richtig · ${seconds} s`,
-      repeat: "Noch einmal üben:", deleteConfirm: "Den gesamten Trainingsverlauf auf diesem Gerät löschen?", leaveConfirm: "Das aktuelle Training beenden?",
+      repeat: "Noch einmal üben:", noErrors: "Kein einziger Fehler!", deleteConfirm: "Den gesamten Trainingsverlauf auf diesem Gerät löschen?", leaveConfirm: "Das aktuelle Training beenden?",
       seconds: "s", trainingTool: "Training starten", historyTool: "Trainingsverlauf lesen", levelShort: (level) => `St. ${level}`,
       levelLabel: (level, name) => `Stufe ${level} · ${name}`,
       adaptiveLevel: (name, operator, operand) => `${name} · ${operator}${operand}`,
@@ -77,6 +79,8 @@
       adaptiveStage: (name) => `Neue Stufe: ${name}`,
       easierStep: (name) => `Etwas leichter: ${name}`,
       adaptiveAdjusted: "Kapi hat die Schwierigkeit an dein Tempo angepasst",
+      fastTrack: (name) => `Schneller Sprung: ${name}`,
+      rewardFlag: "Kapi schwenkt die Fahne!", rewardParty: "Die Feier geht weiter!", rewardDance: "Zeit zum Tanzen!", rewardHandshake: "Kapi gratuliert dir!",
       subtractionUnlocked: "Addition geschafft – jetzt beginnt die Subtraktion!",
       operationUnlocked: (name) => `Neu freigeschaltet: ${name}`,
       installKicker: "Kapi-App", installTitle: "Auf dem Handy installieren?", installText: "Kapi erscheint auf dem Startbildschirm und öffnet sich ohne Browserleiste.", installNow: "Installieren", continueBrowser: "Im Browser fortfahren", iosInstallText: "Tippe auf dem iPhone auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
@@ -215,7 +219,7 @@
     const defaults = {
       totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [],
       adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveCorrectStreak: 0, adaptiveRecentResults: [],
-      personalFastTime: null, paceCalibration: [], fasterPaceSamples: [], operationStats: {}
+      personalFastTime: null, paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {}
     };
     try {
       const profile = { ...defaults, ...JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}") };
@@ -232,6 +236,9 @@
         : null;
       profile.paceCalibration = validPaceSamples(profile.paceCalibration);
       profile.fasterPaceSamples = validPaceSamples(profile.fasterPaceSamples);
+      profile.accelerationWindow = Array.isArray(profile.accelerationWindow)
+        ? profile.accelerationWindow.filter((item) => item && (item.correct === true || item.correct === false) && Number.isFinite(Number(item.seconds))).slice(-10).map((item) => ({ correct: item.correct, seconds: Math.max(.2, Number(item.seconds)) }))
+        : [];
       profile.operationStats = profile.operationStats && typeof profile.operationStats === "object" ? profile.operationStats : {};
       OPERATION_ORDER.forEach((operation) => {
         const values = Array.isArray(profile.operationStats[operation]) ? profile.operationStats[operation] : [];
@@ -345,6 +352,31 @@
     if (appSettings.automatic) return adaptiveMax;
     const limits = { "10": 10, "20": 20, "100": 100, above100: 10000 };
     return Math.min(adaptiveMax, limits[appSettings.range] || 10000);
+  }
+
+  function maximumAllowedStage() {
+    if (appSettings.automatic) return 15;
+    return ({ "10": 2, "20": 5, "100": 9, above100: 15 })[appSettings.range] || 15;
+  }
+
+  function promoteToNextRange(profile) {
+    const ranges = [
+      { end: 2, next: 3 },
+      { end: 5, next: 6 },
+      { end: 9, next: 10 },
+      { end: 15, next: null }
+    ];
+    const range = ranges.find((item) => profile.currentStage <= item.end);
+    if (!range?.next || range.next > maximumAllowedStage()) return "";
+    profile.currentStage = range.next;
+    profile.adaptiveOperand = 1;
+    profile.adaptiveFastStreak = 0;
+    profile.adaptiveCorrectStreak = 0;
+    profile.adaptiveRecentResults = [];
+    profile.accelerationWindow = [];
+    state.stage = profile.currentStage;
+    state.stageAdvancedDuringSession = true;
+    return copy.fastTrack(copy.stageNames[profile.currentStage - 1]);
   }
 
   function makeGeneratedProblem(stage, index, profile) {
@@ -709,13 +741,17 @@
       state.streak = state.attempt === 1 ? state.streak + 1 : 0;
       if (state.attempt === 1) registerCorrectAnswer(state.problem);
       recordResult(true, elapsed, state.attempt);
+      const stageBeforeAnswer = state.stage;
       const adaptiveMessage = updateAdaptiveProgress(state.problem, state.attempt === 1, true, elapsed);
+      const reachedNewStage = state.stage > stageBeforeAnswer;
       const text = state.streak > 0 && state.streak % 3 === 0 ? pick(messages.streak) : pick(messages.correct);
       $("feedback").textContent = `${text} +${earned} ★`;
       setMascot("happy");
       sound(state.streak > 0 && state.streak % 3 === 0 ? "streak" : "correct");
-      if (operationMessage || adaptiveMessage) showMotivation(operationMessage || adaptiveMessage, copy.adaptiveAdjusted, advance);
-      else if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, copy.rightInRow(state.streak), advance);
+      const streakScene = state.streak === 10 ? "dance" : state.streak === 6 ? "party" : state.streak === 3 ? "flag" : "";
+      if (operationMessage || adaptiveMessage) showMotivation(operationMessage || adaptiveMessage, copy.adaptiveAdjusted, advance, reachedNewStage ? "handshake" : (streakScene || "flag"));
+      else if (streakScene) showMotivation(streakScene === "dance" ? copy.rewardDance : streakScene === "party" ? copy.rewardParty : copy.rewardFlag, copy.rightInRow(state.streak), advance, streakScene);
+      else if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, copy.rightInRow(state.streak), advance, "flag");
       else window.setTimeout(advance, 850);
       return;
     }
@@ -790,9 +826,24 @@
   function updateAdaptiveProgress(problem, isFirstAttempt, isCorrect, elapsed) {
     if (problem.isReview || !isFirstAttempt) return "";
     const profile = getProfile();
+    profile.accelerationWindow.push({ correct: isCorrect, seconds: elapsed });
+    profile.accelerationWindow = profile.accelerationWindow.slice(-10);
+    if (profile.accelerationWindow.length === 10 && profile.accelerationWindow.every((item) => item.correct)) {
+      const average = profile.accelerationWindow.reduce((sum, item) => sum + item.seconds, 0) / 10;
+      if (average < UNIVERSAL_FAST_TIME) {
+        const fastTrackMessage = promoteToNextRange(profile);
+        if (fastTrackMessage) {
+          saveProfile(profile);
+          return fastTrackMessage;
+        }
+      }
+    }
     if (profile.currentStage <= 2 && (problem.operation === "add" || problem.operation === "subtract")) {
       const expectedOperator = profile.currentStage === 1 ? "+" : "−";
-      if (problem.operator !== expectedOperator || problem.b !== profile.adaptiveOperand) return "";
+      if (problem.operator !== expectedOperator || problem.b !== profile.adaptiveOperand) {
+        saveProfile(profile);
+        return "";
+      }
     }
 
     profile.adaptiveRecentResults.push(isCorrect ? 1 : 0);
@@ -834,13 +885,13 @@
       return "";
     }
 
-    if (profile.currentStage >= 15) {
+    if (profile.currentStage >= maximumAllowedStage()) {
       saveProfile(profile);
       return "";
     }
 
     if (profile.currentStage <= 2) profile.adaptiveOperand = 1;
-    profile.currentStage += 1;
+    profile.currentStage = Math.min(maximumAllowedStage(), profile.currentStage + 1);
     state.stage = profile.currentStage;
     state.stageAdvancedDuringSession = true;
     saveProfile(profile);
@@ -1027,7 +1078,7 @@
       : 0;
     const profile = getProfile();
     const canAdvance = state.stage >= 3 && !state.stageAdvancedDuringSession && state.correct / TOTAL >= .9 && profile.errorQueue.length === 0;
-    const advanced = canAdvance && profile.currentStage < 15;
+    const advanced = canAdvance && profile.currentStage < maximumAllowedStage();
     if (advanced) {
       profile.currentStage += 1;
       saveProfile(profile);
@@ -1053,7 +1104,7 @@
       : `${canAdvance && state.stage === 15 ? copy.maxLevelNote : copy.stayNote}${freshProfile.errorQueue.length ? ` ${copy.reviewsLeft(freshProfile.errorQueue.length)}` : ""}`;
     $("progressFill").style.width = "100%";
     makeConfetti();
-    showMotivation(pick(messages.complete), `+${state.score} XP`);
+    showMotivation(advanced ? copy.rewardHandshake : pick(messages.complete), `+${state.score} XP`, null, advanced ? "handshake" : "dance");
     showScreen($("resultScreen"));
     sound("complete");
   }
@@ -1105,7 +1156,9 @@
             <span>${copy.correctHistory(item.correct, item.total || 20, formatSeconds(item.average))}</span>
             <span class="history-level">${copy.levelShort(item.stage || 1)}</span>
           </div>`).join("")}</div>
-        ${commonTrouble ? `<p class="trouble-note"><strong>${copy.repeat}</strong> ${commonTrouble.map(prettyKey).join(", ")}</p>` : ""}`;
+        ${commonTrouble.length
+          ? `<p class="trouble-note"><strong>${copy.repeat}</strong> ${commonTrouble.map(prettyKey).join(", ")}</p>`
+          : `<p class="trouble-note no-errors"><strong>${copy.noErrors}</strong></p>`}`;
     }
     $("statsDialog").showModal();
   }
@@ -1132,18 +1185,30 @@
   let motivationTimer = 0;
   let motivationAction = null;
 
-  function showMotivation(title, subtitle, action = null) {
+  const motivationScenes = {
+    flag: "assets/kapi-flag.webp",
+    party: "assets/kapi-party.webp",
+    dance: "assets/kapi-dance.webp",
+    handshake: "assets/kapi-handshake.webp"
+  };
+
+  function showMotivation(title, subtitle, action = null, scene = "flag") {
     dismissMotivation(false);
     const pop = $("motivationPop");
+    const card = pop.querySelector(".motivation-card");
+    card.dataset.scene = scene;
+    $("motivationMascot").src = motivationScenes[scene] || motivationScenes.flag;
+    $("motivationBurst").innerHTML = scene === "dance" || scene === "party"
+      ? Array.from({ length: 9 }, (_, index) => `<i style="--burst-index:${index}"></i>`).join("")
+      : "";
     $("motivationText").textContent = title;
     $("motivationSubtext").textContent = subtitle;
     pop.classList.remove("hidden");
-    const card = pop.querySelector(".motivation-card");
     card.style.animation = "none";
     void card.offsetWidth;
     card.style.animation = "";
     motivationAction = action;
-    motivationTimer = window.setTimeout(() => dismissMotivation(true), 2500);
+    motivationTimer = window.setTimeout(() => dismissMotivation(true), 3000);
   }
 
   function dismissMotivation(continueTraining) {
@@ -1342,16 +1407,21 @@
     };
     window.addEventListener("load", async () => {
       try {
-        const registration = await navigator.serviceWorker.register("sw.js");
-        if (registration.waiting) offerUpdate(registration.waiting);
-        registration.addEventListener("updatefound", () => {
-          const worker = registration.installing;
-          worker?.addEventListener("statechange", () => {
-            if (worker.state === "installed" && navigator.serviceWorker.controller) offerUpdate(worker);
-          });
+        const registration = await navigator.serviceWorker.register("sw.js", { updateViaCache: "none" });
+        const watchWorker = (worker) => worker?.addEventListener("statechange", () => {
+          if (worker.state === "installed" && navigator.serviceWorker.controller) offerUpdate(worker);
         });
+        if (registration.waiting) offerUpdate(registration.waiting);
+        watchWorker(registration.installing);
+        registration.addEventListener("updatefound", () => {
+          watchWorker(registration.installing);
+        });
+        await registration.update();
+        if (registration.waiting) offerUpdate(registration.waiting);
         document.addEventListener("visibilitychange", () => {
-          if (document.visibilityState === "visible") registration.update();
+          if (document.visibilityState === "visible") registration.update().then(() => {
+            if (registration.waiting) offerUpdate(registration.waiting);
+          }).catch(() => {});
         });
       } catch { /* The online app still works without installation. */ }
     });
