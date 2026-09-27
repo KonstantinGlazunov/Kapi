@@ -884,14 +884,27 @@
     const values = new Set([answer]);
     const absolute = Math.abs(answer);
     const scale = problem.answerType === "decimal" ? .1 : absolute < 20 ? 1 : absolute < 100 ? 5 : absolute < 1000 ? 10 : 100;
+    const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(problem.curriculumStage || state.stage) || 1));
+    const limit = appSettings.automatic ? stageLimits[stage - 1] : effectiveMax(stage);
+    const allowNegative = problem.operation === "negative" || Number(answer) < 0;
+    const minimum = allowNegative ? -Math.max(10, limit) : 0;
+    const maximum = Math.max(Number(answer), limit);
     const nearby = [answer - scale, answer + scale, answer - 2 * scale, answer + 2 * scale, answer - 1, answer + 1]
       .map((value) => problem.answerType === "decimal" ? Number(value.toFixed(2)) : value)
-      .filter((value) => value >= -10000 && value <= 10000);
+      .filter((value) => value >= minimum && value <= maximum);
     while (values.size < 4 && nearby.length) {
       const i = randomInt(0, nearby.length - 1);
       values.add(nearby.splice(i, 1)[0]);
     }
-    while (values.size < 4) values.add(Number((answer + randomInt(1, 6) * scale).toFixed(2)));
+    let attempts = 0;
+    while (values.size < 4 && attempts < 50) {
+      const candidate = problem.answerType === "decimal"
+        ? Number((minimum + Math.random() * (maximum - minimum)).toFixed(1))
+        : randomInt(Math.ceil(minimum), Math.floor(maximum));
+      values.add(candidate);
+      attempts += 1;
+    }
+    while (values.size < 4) values.add(Number((answer + values.size * scale).toFixed(2)));
     return [...values].sort(() => Math.random() - .5);
   }
 
