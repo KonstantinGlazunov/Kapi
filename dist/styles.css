@@ -350,6 +350,33 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .motivation-card strong { display: block; font-size: 2.15rem; line-height: 1; text-transform: uppercase; letter-spacing: -.03em; }
 .motivation-card span { display: block; margin-top: 7px; font-weight: 900; }
 
+.install-prompt {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+  background: rgba(8, 55, 51, .58);
+  backdrop-filter: blur(7px);
+}
+.install-card {
+  width: min(100%, 430px);
+  max-height: 100%;
+  overflow: auto;
+  padding: 18px 24px 25px;
+  border: 3px solid rgba(255,255,255,.9);
+  border-radius: 30px;
+  background: linear-gradient(160deg, #fffdf7 0%, #e6faf6 70%, #fff2b3 140%);
+  box-shadow: 0 28px 90px rgba(4,36,33,.35);
+  text-align: center;
+}
+.install-card img { width: 145px; height: 145px; object-fit: contain; filter: drop-shadow(0 12px 15px rgba(90,56,25,.16)); }
+.install-card h2 { margin: 5px 0 10px; font-size: clamp(1.85rem, 8vw, 2.55rem); line-height: 1.02; letter-spacing: -.035em; }
+.install-card p { margin: 0 auto 20px; color: var(--muted); font-size: 1rem; line-height: 1.45; }
+.install-card .primary-button { width: 100%; }
+.install-card .text-button { margin: 18px auto 0; }
+
 @keyframes float { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-11px) rotate(1deg); } }
 @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.035); } }
 @keyframes happy-hop { 0%,100% { transform: translateY(0) rotate(0); } 35% { transform: translateY(-16px) rotate(-5deg); } 65% { transform: translateY(-5px) rotate(5deg); } }
