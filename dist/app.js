@@ -145,7 +145,11 @@
   }
 
   function getProfile() {
-    const defaults = { totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [], adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveRecentResults: [] };
+    const defaults = {
+      totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [],
+      adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveRecentResults: [],
+      personalFastTime: null, paceCalibration: [], fasterPaceSamples: []
+    };
     try {
       const profile = { ...defaults, ...JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}") };
       profile.currentStage = Math.min(15, Math.max(1, Number(profile.currentStage) || 1));
@@ -155,12 +159,23 @@
       profile.adaptiveRecentResults = Array.isArray(profile.adaptiveRecentResults)
         ? profile.adaptiveRecentResults.filter((value) => value === 0 || value === 1).slice(-5)
         : [];
+      profile.personalFastTime = Number.isFinite(Number(profile.personalFastTime)) && Number(profile.personalFastTime) > 0
+        ? Math.min(60, Math.max(.2, Number(profile.personalFastTime)))
+        : null;
+      profile.paceCalibration = validPaceSamples(profile.paceCalibration);
+      profile.fasterPaceSamples = validPaceSamples(profile.fasterPaceSamples);
       return profile;
     } catch { return defaults; }
   }
 
   function saveProfile(profile) {
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  }
+
+  function validPaceSamples(values) {
+    return Array.isArray(values)
+      ? values.map(Number).filter((value) => Number.isFinite(value) && value >= .2 && value <= 60).slice(-3)
+      : [];
   }
 
   function updateHomeStats() {
@@ -474,9 +489,8 @@
       return label ? copy.easierStep(label) : "";
     }
 
-    profile.adaptiveFastStreak = isCorrect && elapsed < 3
-      ? profile.adaptiveFastStreak + 1
-      : 0;
+    const isFast = isCorrect ? updatePersonalPace(profile, elapsed) : false;
+    profile.adaptiveFastStreak = isFast ? profile.adaptiveFastStreak + 1 : 0;
     if (profile.adaptiveFastStreak < 3) {
       saveProfile(profile);
       return "";
@@ -504,6 +518,35 @@
     return profile.currentStage === 2
       ? copy.subtractionUnlocked
       : copy.adaptiveStage(copy.stageNames[profile.currentStage - 1]);
+  }
+
+  function updatePersonalPace(profile, elapsed) {
+    if (profile.personalFastTime === null) {
+      profile.paceCalibration.push(elapsed);
+      profile.paceCalibration = profile.paceCalibration.slice(-3);
+      if (profile.paceCalibration.length < 3) return false;
+      profile.personalFastTime = median(profile.paceCalibration);
+      profile.paceCalibration = [];
+      profile.fasterPaceSamples = [];
+      return elapsed <= profile.personalFastTime;
+    }
+
+    const currentThreshold = profile.personalFastTime;
+    if (elapsed < currentThreshold) {
+      profile.fasterPaceSamples.push(elapsed);
+      profile.fasterPaceSamples = profile.fasterPaceSamples.slice(-3);
+      if (profile.fasterPaceSamples.length === 3) {
+        const newThreshold = median(profile.fasterPaceSamples);
+        if (newThreshold < currentThreshold) profile.personalFastTime = newThreshold;
+        profile.fasterPaceSamples = [];
+      }
+    }
+    return elapsed <= currentThreshold;
+  }
+
+  function median(values) {
+    const sorted = [...values].sort((left, right) => left - right);
+    return Number(sorted[Math.floor(sorted.length / 2)].toFixed(2));
   }
 
   function lowerAdaptiveDifficulty(profile) {
