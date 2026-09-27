@@ -53,6 +53,7 @@
       installKicker: "Приложение Капи", installTitle: "Установить на телефон?", installText: "Капи появится на главном экране и будет открываться без панели браузера.", installNow: "Установить", installHome: "Установить приложение", continueBrowser: "Продолжить в браузере", iosInstallText: "На iPhone нажмите «Поделиться», затем «На экран Домой».",
       settings: "Настройки", settingsHint: "Параметры тренировки сохраняются на этом устройстве.", language: "Язык", examples: "Количество примеров", mode: "Режим", automatic: "Автоматически: от простого к сложному", range: "Диапазон чисел", operations: "Действия", sound: "Звук", soundEnabled: "Включён", soundDisabled: "Выключен", update: "Обновить приложение", updateReady: "Доступно обновление", share: "Поделиться результатом", shareText: "Попробуйте тренажёр «Считаем с Капи»", shareDone: "Готово", closeSettings: "Закрыть настройки", genericHint: "Разбери пример по шагам и попробуй ещё раз.", startDescriptionFor: () => "Капи постепенно повышает сложность.", correctOfTotal: (count) => `верно из ${count}`, rangeNames: { auto: "Без ограничений", 10: "До 10", 20: "До 20", 100: "До 100", above100: "Выше 100" }, operationNames: { add: "Сложение +", subtract: "Вычитание −", multiply: "Умножение ×", divide: "Деление ÷", negative: "Отрицательные числа", decimal: "Десятичные дроби", fraction: "Обыкновенные дроби", power: "Степени", root: "Корни" },
       settingsCounting: "Настройки счёта", settingsGeneral: "Общие", settingsAbout: "О программе", chooseStage: "Учебная ступень", stageInfo: "Подробно о ступени", stageBrief: (name, example) => `${name}. Пример: ${example}.`, stageDetail: (stage, name, example) => `Ступень ${stage}: ${name}. Ребёнок выполняет задания только этого типа. Типичный пример: ${example}. При автоматической сложности переход возможен только после освоения предыдущей ступени.`, aboutText: "«Считаем с Капи» — детский тренажёр арифметики. Он помогает последовательно освоить числа, сложение, вычитание, умножение и деление, подстраивая сложность под результаты ребёнка.", feedbackTitle: "Замечания и предложения", feedbackName: "Имя (необязательно)", feedbackMessage: "Сообщение", feedbackPlaceholder: "Что нужно исправить или добавить?", sendWhatsApp: "Открыть WhatsApp", author: "Автор программы", feedbackIntro: "После нажатия откроется WhatsApp с готовым сообщением. Проверьте его и нажмите «Отправить».",
+      legacyStageInfo: "Это занятие было записано до перехода на новую шкалу. Подробное описание старой ступени недоступно.",
       stageNames: ["количества от 0 до 5", "+0 и +1 до 5", "сложение до 5", "состав числа до 10", "сложение до 10", "−1 и −2 до 5", "вычитание до 10", "+ и − до 10", "числа от 11 до 20", "сложение до 20 без перехода", "вычитание до 20 без перехода", "сложение через 10", "вычитание через 10", "+ и − до 20", "шаги 1, 2 и 10 до 100", "счёт до 100 без перехода", "счёт до 100 с переходом", "+ и − до 100", "одинаковые группы", "умножение на 1, 2, 5 и 10", "деление на равные группы", "точное деление", "таблица умножения", "умножение и деление", "счёт до 1 000 без перехода", "счёт до 1 000 с переходом", "счёт до 10 000 без перехода", "счёт до 10 000 с переходом"],
       messages: {
         correct: ["Точно!", "Умница!", "Так держать!", "Супер!", "Верно!"],
@@ -97,6 +98,7 @@
       installKicker: "Kapi-App", installTitle: "Auf dem Handy installieren?", installText: "Kapi erscheint auf dem Startbildschirm und öffnet sich ohne Browserleiste.", installNow: "Installieren", installHome: "App installieren", continueBrowser: "Im Browser fortfahren", iosInstallText: "Tippe auf dem iPhone auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
       settings: "Einstellungen", settingsHint: "Die Trainingsoptionen werden auf diesem Gerät gespeichert.", language: "Sprache", examples: "Anzahl der Aufgaben", mode: "Modus", automatic: "Automatisch: von leicht zu schwer", range: "Zahlenbereich", operations: "Rechenarten", sound: "Ton", soundEnabled: "Ein", soundDisabled: "Aus", update: "App aktualisieren", updateReady: "Update verfügbar", share: "Ergebnis teilen", shareText: "Probiere „Rechnen mit Kapi“ aus", shareDone: "Fertig", closeSettings: "Einstellungen schließen", genericHint: "Löse die Aufgabe Schritt für Schritt und versuche es noch einmal.", startDescriptionFor: () => "Kapi erhöht die Schwierigkeit Schritt für Schritt.", correctOfTotal: (count) => `richtig von ${count}`, rangeNames: { auto: "Ohne Begrenzung", 10: "Bis 10", 20: "Bis 20", 100: "Bis 100", above100: "Über 100" }, operationNames: { add: "Addition +", subtract: "Subtraktion −", multiply: "Multiplikation ×", divide: "Division ÷", negative: "Negative Zahlen", decimal: "Dezimalzahlen", fraction: "Brüche", power: "Potenzen", root: "Wurzeln" },
       settingsCounting: "Recheneinstellungen", settingsGeneral: "Allgemein", settingsAbout: "Über die App", chooseStage: "Lernstufe", stageInfo: "Details zur Lernstufe", stageBrief: (name, example) => `${name}. Beispiel: ${example}.`, stageDetail: (stage, name, example) => `Stufe ${stage}: ${name}. Das Kind übt ausschließlich Aufgaben dieses Typs. Typisches Beispiel: ${example}. Im automatischen Modus wird diese Stufe erst nach der vorherigen Stufe freigeschaltet.`, aboutText: "„Rechnen mit Kapi“ ist ein Rechentrainer für Kinder. Zahlenverständnis, Addition, Subtraktion, Multiplikation und Division werden Schritt für Schritt aufgebaut. Die Schwierigkeit passt sich an die Ergebnisse des Kindes an.", feedbackTitle: "Hinweise und Vorschläge", feedbackName: "Name (optional)", feedbackMessage: "Nachricht", feedbackPlaceholder: "Was sollen wir verbessern oder ergänzen?", sendWhatsApp: "WhatsApp öffnen", author: "Über den Entwickler", feedbackIntro: "Nach dem Tippen öffnet sich WhatsApp mit einer vorbereiteten Nachricht. Prüfe sie und tippe dort auf „Senden“.",
+      legacyStageInfo: "Dieses Training wurde vor der neuen Lernskala gespeichert. Eine genaue Beschreibung der früheren Stufe ist nicht verfügbar.",
       stageNames: ["Mengen von 0 bis 5", "+0 und +1 bis 5", "Addition bis 5", "Zahlzerlegung bis 10", "Addition bis 10", "−1 und −2 bis 5", "Subtraktion bis 10", "+ und − bis 10", "Zahlen von 11 bis 20", "Addition bis 20 ohne Übergang", "Subtraktion bis 20 ohne Übergang", "Addition über den Zehner", "Subtraktion über den Zehner", "+ und − bis 20", "Schritte 1, 2 und 10 bis 100", "Rechnen bis 100 ohne Übergang", "Rechnen bis 100 mit Übergang", "+ und − bis 100", "Gleiche Gruppen", "Malnehmen mit 1, 2, 5 und 10", "Teilen in gleiche Gruppen", "Division ohne Rest", "Einmaleins", "Multiplikation und Division", "Rechnen bis 1.000 ohne Übergang", "Rechnen bis 1.000 mit Übergang", "Rechnen bis 10.000 ohne Übergang", "Rechnen bis 10.000 mit Übergang"],
       messages: {
         correct: ["Richtig!", "Klasse!", "Weiter so!", "Super!", "Genau!"],
@@ -1293,6 +1295,7 @@
       average: Number(average.toFixed(1)),
       score: state.score,
       stage: state.stage,
+      curriculumVersion: CURRICULUM_VERSION,
       advanced,
       trouble: state.results.filter((item) => !item.firstTry).map((item) => item.key).slice(0, 5)
     };
@@ -1353,12 +1356,21 @@
           <div><strong>${profile.currentStage}</strong><span>${copy.currentLevel}</span></div>
           <div><strong>${formatNumber(avgCorrect)}%</strong><span>${copy.correctShort}</span></div>
         </div>
-        <div class="history-list">${history.slice(0, 10).map((item) => `
-          <div class="history-row">
+        <div class="history-list">${history.slice(0, 10).map((item) => {
+          const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(item.stage) || 1));
+          const currentScale = item.curriculumVersion === CURRICULUM_VERSION || new Date(item.date).getTime() >= Date.parse("2026-09-27T18:11:52Z");
+          const help = currentScale
+            ? copy.stageDetail(stage, copy.stageNames[stage - 1], STAGE_EXAMPLES[stage - 1])
+            : copy.legacyStageInfo;
+          return `<div class="history-row">
             <strong>${formatDate(item.date)}</strong>
             <span>${copy.correctHistory(item.correct, item.total || 20, formatSeconds(item.average))}</span>
-            <span class="history-level">${copy.levelShort(item.stage || 1)}</span>
-          </div>`).join("")}</div>
+            <details class="history-level-details">
+              <summary class="history-level" aria-label="${copy.stageInfo}" title="${copy.stageInfo}">${copy.levelShort(stage)}</summary>
+              <p class="history-stage-help">${help}</p>
+            </details>
+          </div>`;
+        }).join("")}</div>
         ${commonTrouble.length
           ? `<p class="trouble-note"><strong>${copy.repeat}</strong> ${commonTrouble.map(prettyKey).join(", ")}</p>`
           : `<p class="trouble-note no-errors"><strong>${copy.noErrors}</strong></p>`}`;

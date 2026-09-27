@@ -1,4 +1,4 @@
-const CACHE = "capy-count-v21";
+const CACHE = "capy-count-v22";
 const ASSETS = ["./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "manifest-ru.webmanifest", "manifest-de.webmanifest", "favicon.svg", "icon-192.png", "icon-512.png", "assets/capybara.webp", "assets/kapi-flag.webp", "assets/kapi-party.webp", "assets/kapi-dance.webp", "assets/kapi-handshake.webp"];
 
 self.addEventListener("install", (event) => {
