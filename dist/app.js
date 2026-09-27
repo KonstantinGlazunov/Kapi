@@ -148,6 +148,7 @@
     $("closeSettingsButton").setAttribute("aria-label", copy.closeSettings);
     renderSettingsContent();
     updateSoundButton();
+    scheduleFitCheck();
   }
 
   function loadSettings() {
@@ -259,6 +260,7 @@
     screens.forEach((screen) => screen.classList.toggle("active", screen === target));
     $("homeButton").classList.toggle("hidden", target === $("startScreen"));
     document.body.classList.toggle("game-active", target === $("gameScreen"));
+    document.body.classList.toggle("start-active", target === $("startScreen"));
     scheduleFitCheck();
   }
 
@@ -934,12 +936,16 @@
 
   function scheduleFitCheck() {
     window.cancelAnimationFrame(fitFrame);
-    fitFrame = window.requestAnimationFrame(ensureGameFits);
+    fitFrame = window.requestAnimationFrame(ensureScreenFits);
   }
 
-  function ensureGameFits() {
+  function ensureScreenFits() {
+    document.body.classList.remove("force-compact", "force-ultra", "start-compact", "start-ultra");
+    if ($("startScreen").classList.contains("active")) {
+      fitStartScreen();
+      return;
+    }
     if (!$("gameScreen").classList.contains("active")) return;
-    document.body.classList.remove("force-compact", "force-ultra");
     const viewportBottom = visibleHeight() - 6;
     const target = $("answerArea").querySelector(".submit-button") || $("answerArea");
     if (target.getBoundingClientRect().bottom > viewportBottom) {
@@ -949,6 +955,32 @@
       if (target.getBoundingClientRect().bottom > viewportBottom) {
         document.body.classList.add("force-ultra");
       }
+    });
+  }
+
+  function fitStartScreen() {
+    const viewportBottom = visibleHeight() - 6;
+    const screen = $("startScreen");
+    screen.style.removeProperty("--start-fit-scale");
+    const isOverflowing = () => {
+      const shell = document.querySelector(".app-shell");
+      const items = [...screen.querySelectorAll(".start-copy, .mascot-stage, #statsButton")];
+      const contentBottom = Math.max(...items.map((item) => item.getBoundingClientRect().bottom));
+      return contentBottom > viewportBottom || shell.scrollHeight > visibleHeight() + 1 || screen.scrollHeight > screen.clientHeight + 1;
+    };
+    if (isOverflowing()) document.body.classList.add("start-compact");
+    window.requestAnimationFrame(() => {
+      if (!isOverflowing()) return;
+      document.body.classList.add("start-ultra");
+      window.requestAnimationFrame(() => {
+        if (!isOverflowing()) return;
+        const children = [...screen.querySelectorAll(":scope > *")];
+        const top = Math.min(...children.map((item) => item.getBoundingClientRect().top));
+        const bottom = Math.max(...children.map((item) => item.getBoundingClientRect().bottom));
+        const available = Math.max(1, viewportBottom - screen.getBoundingClientRect().top);
+        const scale = Math.min(1, available / Math.max(1, bottom - top));
+        screen.style.setProperty("--start-fit-scale", String(scale));
+      });
     });
   }
 
@@ -1322,6 +1354,7 @@
   loadSettings();
   applyLanguage();
   updateHomeStats();
+  document.body.classList.add("start-active");
   registerWebMcp();
   syncViewportSize();
   window.addEventListener("resize", syncViewportSize, { passive: true });
