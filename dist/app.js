@@ -22,13 +22,19 @@
       largeSubtractionHint: (a, b) => `Вычитай по частям: ${a} − ${b}. Сначала крупные разряды, затем единицы.`,
       resultEyebrow: "Тренировка завершена", correctOf20: "верно из 20", average: "в среднем", experience: "опыта",
       levelUpTitle: "Новый уровень открыт!", completeTitle: "Тренировка завершена!", levelUpNote: (level, name) => `Теперь уровень ${level}: ${name}.`,
-      stayNote: "Продолжаем этот уровень, пока он не станет уверенным.", maxLevelNote: "Максимальный уровень освоен — продолжаем закреплять счёт до 10 000.", reviewsLeft: (count) => `Примеров для повторения: ${count}.`, again: "Ещё раз", viewHistory: "Посмотреть историю",
+      stayNote: "Продолжаем этот уровень, пока он не станет уверенным.", maxLevelNote: "Максимальный уровень освоен — продолжаем закреплять счёт до 10 000.", reviewsLeft: (count) => `Примеров для повторения: ${count}.`, again: "Дальше", viewHistory: "Посмотреть историю",
       forParents: "Для родителей", close: "Закрыть", clearHistory: "Удалить историю", emptyHistory: "Здесь появятся результаты после первой тренировки.",
       sessions: "тренировок", currentLevel: "текущий уровень", correctShort: "верно из 20", correctHistory: (correct, seconds) => `${correct}/20 верно · ${seconds} с`,
       repeat: "Стоит повторить:", deleteConfirm: "Удалить всю историю занятий на этом устройстве?", leaveConfirm: "Закончить текущую тренировку?",
       seconds: "с", trainingTool: "Начать тренировку", historyTool: "Прочитать историю занятий", levelShort: (level) => `Ур. ${level}`,
       levelLabel: (level, name) => `Уровень ${level} · ${name}`,
-      stageNames: ["сложение до 10", "сложение и вычитание до 10", "сложение до 20", "вычитание до 20", "вычитание через 10", "счёт до 50", "счёт до 50 с переходом", "счёт до 100", "счёт до 100 с переходом", "счёт до 200", "счёт до 500", "счёт до 1 000", "счёт до 2 000", "счёт до 5 000", "счёт до 10 000"],
+      adaptiveLevel: (name, operator, operand) => `${name} · ${operator}${operand}`,
+      adaptiveStep: (operator, operand) => `Новый шаг: ${operator}${operand}`,
+      adaptiveStage: (name) => `Новый уровень: ${name}`,
+      easierStep: (name) => `Сделаем чуть легче: ${name}`,
+      adaptiveAdjusted: "Капи подстроил сложность под твой темп",
+      subtractionUnlocked: "Сложение освоено — начинаем вычитание!",
+      stageNames: ["сложение до 10", "вычитание до 10", "сложение до 20", "вычитание до 20", "вычитание через 10", "счёт до 50", "счёт до 50 с переходом", "счёт до 100", "счёт до 100 с переходом", "счёт до 200", "счёт до 500", "счёт до 1 000", "счёт до 2 000", "счёт до 5 000", "счёт до 10 000"],
       messages: {
         correct: ["Точно!", "Умница!", "Так держать!", "Супер!", "Верно!"],
         streak: ["Вот это серия!", "Три подряд!", "Капи в восторге!", "Ты разогналась!"],
@@ -51,13 +57,19 @@
       largeSubtractionHint: (a, b) => `Subtrahiere in Schritten: ${a} − ${b}. Zuerst die großen Stellen, dann die Einer.`,
       resultEyebrow: "Training beendet", correctOf20: "richtig von 20", average: "im Durchschnitt", experience: "Erfahrung",
       levelUpTitle: "Neue Stufe freigeschaltet!", completeTitle: "Training beendet!", levelUpNote: (level, name) => `Jetzt Stufe ${level}: ${name}.`,
-      stayNote: "Wir üben diese Stufe weiter, bis sie sicher sitzt.", maxLevelNote: "Die höchste Stufe ist geschafft – jetzt festigen wir das Rechnen bis 10.000.", reviewsLeft: (count) => `Aufgaben zum Wiederholen: ${count}.`, again: "Noch einmal", viewHistory: "Verlauf ansehen",
+      stayNote: "Wir üben diese Stufe weiter, bis sie sicher sitzt.", maxLevelNote: "Die höchste Stufe ist geschafft – jetzt festigen wir das Rechnen bis 10.000.", reviewsLeft: (count) => `Aufgaben zum Wiederholen: ${count}.`, again: "Weiter", viewHistory: "Verlauf ansehen",
       forParents: "Für Eltern", close: "Schließen", clearHistory: "Verlauf löschen", emptyHistory: "Nach dem ersten Training erscheinen hier die Ergebnisse.",
       sessions: "Trainings", currentLevel: "aktuelle Stufe", correctShort: "richtig von 20", correctHistory: (correct, seconds) => `${correct}/20 richtig · ${seconds} s`,
       repeat: "Noch einmal üben:", deleteConfirm: "Den gesamten Trainingsverlauf auf diesem Gerät löschen?", leaveConfirm: "Das aktuelle Training beenden?",
       seconds: "s", trainingTool: "Training starten", historyTool: "Trainingsverlauf lesen", levelShort: (level) => `St. ${level}`,
       levelLabel: (level, name) => `Stufe ${level} · ${name}`,
-      stageNames: ["Addition bis 10", "Plus und Minus bis 10", "einfache Addition bis 20", "Subtraktion bis 20", "Subtraktion über den Zehner", "Rechnen bis 50", "Rechnen bis 50 mit Übergang", "Rechnen bis 100", "Rechnen bis 100 mit Übergang", "Rechnen bis 200", "Rechnen bis 500", "Rechnen bis 1.000", "Rechnen bis 2.000", "Rechnen bis 5.000", "Rechnen bis 10.000"],
+      adaptiveLevel: (name, operator, operand) => `${name} · ${operator}${operand}`,
+      adaptiveStep: (operator, operand) => `Neuer Schritt: ${operator}${operand}`,
+      adaptiveStage: (name) => `Neue Stufe: ${name}`,
+      easierStep: (name) => `Etwas leichter: ${name}`,
+      adaptiveAdjusted: "Kapi hat die Schwierigkeit an dein Tempo angepasst",
+      subtractionUnlocked: "Addition geschafft – jetzt beginnt die Subtraktion!",
+      stageNames: ["Addition bis 10", "Subtraktion bis 10", "einfache Addition bis 20", "Subtraktion bis 20", "Subtraktion über den Zehner", "Rechnen bis 50", "Rechnen bis 50 mit Übergang", "Rechnen bis 100", "Rechnen bis 100 mit Übergang", "Rechnen bis 200", "Rechnen bis 500", "Rechnen bis 1.000", "Rechnen bis 2.000", "Rechnen bis 5.000", "Rechnen bis 10.000"],
       messages: {
         correct: ["Richtig!", "Klasse!", "Weiter so!", "Super!", "Genau!"],
         streak: ["Starke Serie!", "Drei hintereinander!", "Kapi freut sich!", "Du bist im Rechenfluss!"],
@@ -81,7 +93,8 @@
     results: [],
     locked: false,
     sound: true,
-    enteredAnswer: ""
+    enteredAnswer: "",
+    stageAdvancedDuringSession: false
   };
 
   const $ = (id) => document.getElementById(id);
@@ -132,11 +145,16 @@
   }
 
   function getProfile() {
-    const defaults = { totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [] };
+    const defaults = { totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [], adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveRecentResults: [] };
     try {
       const profile = { ...defaults, ...JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}") };
       profile.currentStage = Math.min(15, Math.max(1, Number(profile.currentStage) || 1));
       profile.errorQueue = Array.isArray(profile.errorQueue) ? profile.errorQueue : [];
+      profile.adaptiveOperand = Math.min(9, Math.max(1, Number(profile.adaptiveOperand) || 1));
+      profile.adaptiveFastStreak = Math.min(2, Math.max(0, Number(profile.adaptiveFastStreak) || 0));
+      profile.adaptiveRecentResults = Array.isArray(profile.adaptiveRecentResults)
+        ? profile.adaptiveRecentResults.filter((value) => value === 0 || value === 1).slice(-5)
+        : [];
       return profile;
     } catch { return defaults; }
   }
@@ -149,7 +167,10 @@
     const profile = getProfile();
     $("dayStreakValue").textContent = String(profile.dayStreak);
     $("totalXpValue").textContent = String(profile.totalXp);
-    $("startEyebrow").textContent = copy.levelLabel(profile.currentStage, copy.stageNames[profile.currentStage - 1]);
+    const stageName = profile.currentStage <= 2
+      ? copy.adaptiveLevel(copy.stageNames[profile.currentStage - 1], profile.currentStage === 1 ? "+" : "−", profile.adaptiveOperand)
+      : copy.stageNames[profile.currentStage - 1];
+    $("startEyebrow").textContent = copy.levelLabel(profile.currentStage, stageName);
   }
 
   function updateSoundButton() {
@@ -192,18 +213,19 @@
     return false;
   }
 
-  function makeGeneratedProblem(stage, index) {
+  function makeGeneratedProblem(stage, index, profile) {
     const max = stageLimits[stage - 1];
     let operator = "+";
     let a = 1;
     let b = 1;
 
     if (stage === 1) {
-      a = randomInt(1, 9); b = randomInt(1, 10 - a);
+      b = profile.adaptiveOperand;
+      a = randomInt(1, 10 - b);
     } else if (stage === 2) {
-      operator = index % 2 === 0 ? "+" : "−";
-      if (operator === "+") { a = randomInt(1, 9); b = randomInt(1, 10 - a); }
-      else { a = randomInt(2, 10); b = randomInt(1, a - 1); }
+      operator = "−";
+      b = profile.adaptiveOperand;
+      a = randomInt(b + 1, 10);
     } else if (stage === 3) {
       do { a = randomInt(10, 19); b = randomInt(1, 20 - a); } while (hasCarry(a, b));
     } else if (stage === 4) {
@@ -246,14 +268,14 @@
       saveProfile(profile);
       return { ...review, mode: index % 2 === 0 ? "choice" : "input", isReview: true };
     }
-    return makeGeneratedProblem(stage, index);
+    return makeGeneratedProblem(stage, index, profile);
   }
 
   function startTraining() {
     const profile = getProfile();
     Object.assign(state, {
       index: 0, score: 0, correct: 0, streak: 0, stage: profile.currentStage,
-      attempt: 1, problem: null, results: [], locked: false, enteredAnswer: ""
+      attempt: 1, problem: null, results: [], locked: false, enteredAnswer: "", stageAdvancedDuringSession: false
     });
     showScreen($("gameScreen"));
     $("feedback").textContent = copy.careful;
@@ -324,6 +346,9 @@
       if (state.enteredAnswer.length < 5) state.enteredAnswer += button.dataset.digit;
       updateKeypadDisplay();
       sound("tap");
+      if (state.enteredAnswer !== "" && Number(state.enteredAnswer) === state.problem.answer) {
+        submitAnswer(Number(state.enteredAnswer));
+      }
       return;
     }
     if (button.dataset.action === "clear") state.enteredAnswer = "";
@@ -369,15 +394,18 @@
       state.streak = state.attempt === 1 ? state.streak + 1 : 0;
       if (state.attempt === 1) registerCorrectAnswer(state.problem);
       recordResult(true, elapsed, state.attempt);
+      const adaptiveMessage = updateAdaptiveProgress(state.problem, state.attempt === 1, true, elapsed);
       const text = state.streak > 0 && state.streak % 3 === 0 ? pick(messages.streak) : pick(messages.correct);
       $("feedback").textContent = `${text} +${earned} ★`;
       setMascot("happy");
       sound(state.streak > 0 && state.streak % 3 === 0 ? "streak" : "correct");
-      if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, copy.rightInRow(state.streak));
+      if (adaptiveMessage) showMotivation(adaptiveMessage, copy.adaptiveAdjusted);
+      else if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, copy.rightInRow(state.streak));
       window.setTimeout(advance, 850);
       return;
     }
 
+    const adaptiveMessage = updateAdaptiveProgress(state.problem, state.attempt === 1, false, elapsed);
     state.streak = 0;
     $("streakPill").classList.add("hidden");
     setMascot("try");
@@ -387,6 +415,7 @@
       state.attempt = 2;
       state.enteredAnswer = "";
       $("feedback").textContent = pick(messages.tryAgain);
+      if (adaptiveMessage) showMotivation(adaptiveMessage, copy.adaptiveAdjusted);
       showHint();
       renderAnswer();
       return;
@@ -424,6 +453,84 @@
       item.lastShown = Date.now();
     }
     saveProfile(profile);
+  }
+
+  function updateAdaptiveProgress(problem, isFirstAttempt, isCorrect, elapsed) {
+    if (problem.isReview || !isFirstAttempt) return "";
+    const profile = getProfile();
+    if (profile.currentStage <= 2) {
+      const expectedOperator = profile.currentStage === 1 ? "+" : "−";
+      if (problem.operator !== expectedOperator || problem.b !== profile.adaptiveOperand) return "";
+    }
+
+    profile.adaptiveRecentResults.push(isCorrect ? 1 : 0);
+    profile.adaptiveRecentResults = profile.adaptiveRecentResults.slice(-5);
+    const errorCount = profile.adaptiveRecentResults.filter((value) => value === 0).length;
+    if (profile.adaptiveRecentResults.length === 5 && errorCount / 5 > .2) {
+      const label = lowerAdaptiveDifficulty(profile);
+      profile.adaptiveFastStreak = 0;
+      profile.adaptiveRecentResults = [];
+      saveProfile(profile);
+      return label ? copy.easierStep(label) : "";
+    }
+
+    profile.adaptiveFastStreak = isCorrect && elapsed < 3
+      ? profile.adaptiveFastStreak + 1
+      : 0;
+    if (profile.adaptiveFastStreak < 3) {
+      saveProfile(profile);
+      return "";
+    }
+
+    profile.adaptiveFastStreak = 0;
+    profile.adaptiveRecentResults = [];
+    if (profile.currentStage <= 2 && profile.adaptiveOperand < 9) {
+      const operator = profile.currentStage === 1 ? "+" : "−";
+      profile.adaptiveOperand += 1;
+      saveProfile(profile);
+      return copy.adaptiveStep(operator, profile.adaptiveOperand);
+    }
+
+    if (profile.currentStage >= 15) {
+      saveProfile(profile);
+      return "";
+    }
+
+    if (profile.currentStage <= 2) profile.adaptiveOperand = 1;
+    profile.currentStage += 1;
+    state.stage = profile.currentStage;
+    state.stageAdvancedDuringSession = true;
+    saveProfile(profile);
+    return profile.currentStage === 2
+      ? copy.subtractionUnlocked
+      : copy.adaptiveStage(copy.stageNames[profile.currentStage - 1]);
+  }
+
+  function lowerAdaptiveDifficulty(profile) {
+    if (profile.currentStage === 1) {
+      if (profile.adaptiveOperand === 1) return "";
+      profile.adaptiveOperand -= 1;
+      return `+${profile.adaptiveOperand}`;
+    }
+
+    if (profile.currentStage === 2 && profile.adaptiveOperand > 1) {
+      profile.adaptiveOperand -= 1;
+      return `−${profile.adaptiveOperand}`;
+    }
+
+    if (profile.currentStage === 2) {
+      profile.currentStage = 1;
+      profile.adaptiveOperand = 9;
+      state.stage = 1;
+      state.stageAdvancedDuringSession = true;
+      return "+9";
+    }
+
+    profile.currentStage -= 1;
+    if (profile.currentStage === 2) profile.adaptiveOperand = 9;
+    state.stage = profile.currentStage;
+    state.stageAdvancedDuringSession = true;
+    return copy.stageNames[profile.currentStage - 1];
   }
 
   function registerCorrectAnswer(problem) {
@@ -509,7 +616,7 @@
       ? state.results.reduce((sum, item) => sum + item.seconds, 0) / state.results.length
       : 0;
     const profile = getProfile();
-    const canAdvance = state.correct >= 18 && average <= 10 && profile.errorQueue.length === 0;
+    const canAdvance = state.stage >= 3 && !state.stageAdvancedDuringSession && state.correct >= 18 && average <= 10 && profile.errorQueue.length === 0;
     const advanced = canAdvance && profile.currentStage < 15;
     if (advanced) {
       profile.currentStage += 1;
