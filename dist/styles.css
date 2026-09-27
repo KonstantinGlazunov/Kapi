@@ -134,6 +134,19 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .primary-button:active { transform: translateY(7px); box-shadow: 0 3px 0 var(--teal-dark); }
 .primary-button span { margin-left: 8px; }
 
+.update-button, .share-button, .setting-toggle {
+  min-height: 48px;
+  padding: 11px 17px;
+  border: 2px solid rgba(15,118,110,.24);
+  border-radius: 15px;
+  background: rgba(255,255,255,.82);
+  color: var(--teal-dark);
+  font-weight: 900;
+  cursor: pointer;
+}
+.update-button { display: block; margin: 20px 0 0; border-color: #d59b00; background: var(--yellow-soft); color: #684b00; }
+.share-button { display: block; width: min(100%, 330px); margin: 20px auto 0; }
+
 .text-button, .danger-text-button {
   display: block;
   margin-top: 24px;
@@ -236,6 +249,8 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 }
 .keypad-answer.empty { color: #8da09d; font-size: 1.05rem; }
 .number-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 11px; }
+.keypad-specials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: -2px 0 11px; }
+.number-key-special { min-height: 43px; background: #f4fbfa; color: var(--teal-dark); }
 .number-key { min-height: 52px; border: 2px solid #b9dfd9; border-radius: 15px; background: white; color: var(--ink); font-size: 1.35rem; font-weight: 1000; box-shadow: 0 4px 0 #b9dfd9; cursor: pointer; touch-action: manipulation; }
 .number-key:active { transform: translateY(3px); box-shadow: 0 1px 0 #b9dfd9; }
 .number-key-action { background: #ecf8f6; color: var(--teal-dark); font-size: 1.05rem; }
@@ -282,8 +297,8 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .confetti-piece { position: absolute; top: -20px; width: 11px; height: 18px; border-radius: 3px; animation: confetti-fall 2.7s linear infinite; }
 
-.stats-dialog { width: min(calc(100% - 28px), 650px); max-height: min(82vh, 780px); border: 0; border-radius: 28px; padding: 24px; color: var(--ink); background: var(--paper); box-shadow: 0 30px 90px rgba(15,55,52,.28); }
-.stats-dialog::backdrop { background: rgba(10,45,42,.48); backdrop-filter: blur(4px); }
+.stats-dialog, .settings-dialog { width: min(calc(100% - 28px), 650px); max-height: min(88vh, 820px); overflow: auto; border: 0; border-radius: 28px; padding: 24px; color: var(--ink); background: var(--paper); box-shadow: 0 30px 90px rgba(15,55,52,.28); }
+.stats-dialog::backdrop, .settings-dialog::backdrop { background: rgba(10,45,42,.48); backdrop-filter: blur(4px); }
 .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
 .dialog-head h2 { margin: 4px 0 18px; font-size: 1.8rem; }
 .summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
@@ -297,6 +312,17 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .history-level { grid-row: 1 / 3; grid-column: 2; align-self: center; min-width: 52px; height: 42px; padding: 0 7px; border-radius: 999px; background: var(--yellow-soft); color: #725200 !important; display: grid; place-content: center; font-size: .82rem !important; font-weight: 1000; }
 .empty-state { padding: 38px 20px; text-align: center; color: var(--muted); }
 .trouble-note { margin: 16px 0 0; padding: 12px 14px; border-radius: 14px; background: #fff4c8; color: #694f06; font-size: .86rem; line-height: 1.45; }
+
+.settings-hint { margin: -6px 0 18px; color: var(--muted); line-height: 1.45; }
+.settings-content { display: grid; gap: 13px; }
+.settings-content fieldset { margin: 0; padding: 13px 14px 15px; border: 1px solid #cfe5e1; border-radius: 16px; display: flex; flex-wrap: wrap; gap: 9px 13px; }
+.settings-content legend { padding: 0 7px; color: var(--teal-dark); font-weight: 1000; }
+.settings-content label { min-height: 36px; display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; border-radius: 11px; background: white; font-weight: 800; cursor: pointer; }
+.settings-content input { width: 19px; height: 19px; accent-color: var(--teal); }
+.settings-content .setting-wide { width: 100%; }
+.operation-settings label { flex: 1 1 175px; }
+.settings-disabled { opacity: .48; }
+.setting-toggle { width: 100%; }
 
 .motivation-pop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(15, 67, 62, .08); touch-action: manipulation; }
 .motivation-card { width: min(100%, 360px); padding: 24px 18px; border: 4px solid white; border-radius: 26px; background: var(--yellow); color: #5d4300; box-shadow: 0 22px 60px rgba(78,55,0,.26); text-align: center; animation: reward-pop .45s cubic-bezier(.2,1.4,.4,1) both; }
@@ -319,6 +345,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
   .start-copy { margin-top: -8px; }
   .start-copy p { font-size: 1rem; margin-bottom: 10px; }
   .home-stats { justify-content: center; margin-bottom: 19px; }
+  .update-button { margin-left: auto; margin-right: auto; }
   .start-copy .text-button { margin-left: auto; margin-right: auto; }
   .mascot-stage { width: min(65vw, 290px); }
   .speech-bubble { margin-bottom: 14px; font-size: .86rem; }
@@ -326,6 +353,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
   .play-card { min-height: calc(100dvh - 150px); border-radius: 26px; margin-top: 12px; }
   .problem { margin-top: 8px; }
   .result-card { border-radius: 26px; }
+  .stats-dialog, .settings-dialog { padding: 18px; }
 }
 
 body.force-compact.game-active .app-shell {
@@ -357,6 +385,8 @@ body.force-compact .addend-card { min-height: 42px; padding: 3px 5px; }
 body.force-compact .addend-dots .counter { width: 10px; height: 10px; }
 body.force-compact .keypad-answer { height: 40px; margin-bottom: 6px; border-width: 2px; border-radius: 13px; font-size: 1.45rem; }
 body.force-compact .number-pad { gap: 5px; margin-bottom: 6px; }
+body.force-compact .keypad-specials { gap: 5px; margin: -1px 0 6px; }
+body.force-compact .number-key-special { min-height: 34px; }
 body.force-compact .number-key { min-height: 40px; border-radius: 12px; font-size: 1.15rem; box-shadow: 0 3px 0 #b9dfd9; }
 body.force-compact .submit-button { min-height: 44px; border-radius: 13px; }
 
@@ -370,6 +400,8 @@ body.force-ultra .addition-groups { margin-top: 3px; }
 body.force-ultra .addend-card { min-height: 36px; }
 body.force-ultra .keypad-answer { height: 36px; margin-bottom: 4px; }
 body.force-ultra .number-pad { gap: 4px; margin-bottom: 5px; }
+body.force-ultra .keypad-specials { gap: 4px; margin-bottom: 5px; }
+body.force-ultra .number-key-special { min-height: 32px; }
 body.force-ultra .number-key { min-height: 38px; }
 body.force-ultra .submit-button { min-height: 42px; }
 
