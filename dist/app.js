@@ -64,6 +64,8 @@
   function showScreen(target) {
     screens.forEach((screen) => screen.classList.toggle("active", screen === target));
     $("homeButton").classList.toggle("hidden", target === $("startScreen"));
+    document.body.classList.toggle("game-active", target === $("gameScreen"));
+    scheduleFitCheck();
   }
 
   function randomInt(min, max) {
@@ -166,6 +168,7 @@
       area.appendChild(keypad);
       updateKeypadDisplay();
     }
+    scheduleFitCheck();
   }
 
   function handleKeypadClick(event) {
@@ -289,6 +292,40 @@
       hint.innerHTML = `<span>Соедини ${a} и ${b}. Посчитай все кружки.</span><div class="counter-line" aria-hidden="true">${dots}</div>`;
     }
     hint.classList.remove("hidden");
+    scheduleFitCheck();
+  }
+
+  let fitFrame = 0;
+  function visibleHeight() {
+    return Math.round(window.visualViewport?.height || window.innerHeight);
+  }
+
+  function syncViewportSize() {
+    const height = visibleHeight();
+    document.documentElement.style.setProperty("--app-height", `${height}px`);
+    document.body.classList.toggle("viewport-compact", height < 780);
+    document.body.classList.toggle("viewport-ultra", height < 620);
+    scheduleFitCheck();
+  }
+
+  function scheduleFitCheck() {
+    window.cancelAnimationFrame(fitFrame);
+    fitFrame = window.requestAnimationFrame(ensureGameFits);
+  }
+
+  function ensureGameFits() {
+    if (!$("gameScreen").classList.contains("active")) return;
+    document.body.classList.remove("force-compact", "force-ultra");
+    const viewportBottom = visibleHeight() - 6;
+    const target = $("answerArea").querySelector(".submit-button") || $("answerArea");
+    if (target.getBoundingClientRect().bottom > viewportBottom) {
+      document.body.classList.add("force-compact");
+    }
+    window.requestAnimationFrame(() => {
+      if (target.getBoundingClientRect().bottom > viewportBottom) {
+        document.body.classList.add("force-ultra");
+      }
+    });
   }
 
   function setMascot(mode) {
@@ -491,5 +528,9 @@
   loadSettings();
   updateHomeStats();
   registerWebMcp();
+  syncViewportSize();
+  window.addEventListener("resize", syncViewportSize, { passive: true });
+  window.visualViewport?.addEventListener("resize", syncViewportSize, { passive: true });
+  window.visualViewport?.addEventListener("scroll", syncViewportSize, { passive: true });
   if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
 })();

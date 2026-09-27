@@ -11,6 +11,7 @@
   --white: #ffffff;
   --coral: #e76555;
   --shadow: 0 20px 60px rgba(19, 77, 71, .14);
+  --app-height: 100dvh;
   font-family: "Nunito", "Avenir Next", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -28,6 +29,28 @@ body {
     radial-gradient(circle at 90% 24%, rgba(255,255,255,.65) 0 7px, transparent 8px),
     linear-gradient(145deg, #eafffa 0%, #cceee8 56%, #fef1ad 130%);
   overscroll-behavior: none;
+}
+
+body.game-active {
+  height: var(--app-height);
+  min-height: 0;
+  overflow: hidden;
+}
+
+body.game-active .app-shell {
+  height: var(--app-height);
+  min-height: 0;
+  overflow: hidden;
+}
+
+body.game-active .game-screen {
+  min-height: 0;
+  overflow: hidden;
+}
+
+body.game-active .play-card {
+  min-height: 0;
+  overflow: hidden;
 }
 
 button, input { font: inherit; }
@@ -307,6 +330,44 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
   .number-pad { gap: 6px; margin-bottom: 8px; }
   .submit-button { min-height: 50px; }
 }
+
+body:is(.viewport-compact, .force-compact).game-active .app-shell {
+  padding-top: max(6px, env(safe-area-inset-top));
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+}
+
+body:is(.viewport-compact, .force-compact) .topbar { min-height: 46px; }
+body:is(.viewport-compact, .force-compact) .icon-button { width: 44px; height: 44px; }
+body:is(.viewport-compact, .force-compact) .brand { font-size: .98rem; }
+body:is(.viewport-compact, .force-compact) .game-screen { padding: 0 0 5px; }
+body:is(.viewport-compact, .force-compact) .game-status { margin: 2px 2px 5px; }
+body:is(.viewport-compact, .force-compact) .status-label { font-size: .72rem; }
+body:is(.viewport-compact, .force-compact) .game-status strong { font-size: 1rem; }
+body:is(.viewport-compact, .force-compact) .score-pill,
+body:is(.viewport-compact, .force-compact) .streak-pill { padding: 7px 11px; font-size: .86rem; }
+body:is(.viewport-compact, .force-compact) .progress-track { height: 7px; }
+body:is(.viewport-compact, .force-compact) .play-card { margin-top: 6px; padding: 4px 12px 8px; border-radius: 24px; }
+body:is(.viewport-compact, .force-compact) .mini-mascot { width: 50px; height: 50px; margin-top: 0; }
+body:is(.viewport-compact, .force-compact) .feedback { min-height: 20px; font-size: .9rem; line-height: 1.2; }
+body:is(.viewport-compact, .force-compact) .problem { margin: 4px 0 8px; font-size: 2.85rem; }
+body:is(.viewport-compact, .force-compact) .hint { margin: 0 0 7px; padding: 7px 8px; border-radius: 13px; font-size: .875rem; line-height: 1.22; }
+body:is(.viewport-compact, .force-compact) .counter-line { gap: 3px; margin-top: 4px; }
+body:is(.viewport-compact, .force-compact) .counter { width: 12px; height: 12px; }
+body:is(.viewport-compact, .force-compact) .counter.removed::after { top: 5px; }
+body:is(.viewport-compact, .force-compact) .keypad-answer { height: 40px; margin-bottom: 6px; border-width: 2px; border-radius: 13px; font-size: 1.45rem; }
+body:is(.viewport-compact, .force-compact) .number-pad { gap: 5px; margin-bottom: 6px; }
+body:is(.viewport-compact, .force-compact) .number-key { min-height: 40px; border-radius: 12px; font-size: 1.15rem; box-shadow: 0 3px 0 #b9dfd9; }
+body:is(.viewport-compact, .force-compact) .submit-button { min-height: 44px; border-radius: 13px; }
+
+body:is(.viewport-ultra, .force-ultra).game-active .topbar { min-height: 44px; }
+body:is(.viewport-ultra, .force-ultra) .mini-mascot { display: none; }
+body:is(.viewport-ultra, .force-ultra) .problem { margin: 3px 0 6px; font-size: 2.45rem; }
+body:is(.viewport-ultra, .force-ultra) .hint { padding: 5px 7px; margin-bottom: 5px; }
+body:is(.viewport-ultra, .force-ultra) .counter-line { margin-top: 3px; }
+body:is(.viewport-ultra, .force-ultra) .keypad-answer { height: 36px; margin-bottom: 4px; }
+body:is(.viewport-ultra, .force-ultra) .number-pad { gap: 4px; margin-bottom: 5px; }
+body:is(.viewport-ultra, .force-ultra) .number-key { min-height: 38px; }
+body:is(.viewport-ultra, .force-ultra) .submit-button { min-height: 42px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }

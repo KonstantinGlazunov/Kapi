@@ -1,4 +1,4 @@
-const CACHE = "capy-count-v2";
+const CACHE = "capy-count-v3";
 const ASSETS = ["./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "favicon.svg", "assets/capybara.webp"];
 
 self.addEventListener("install", (event) => {
