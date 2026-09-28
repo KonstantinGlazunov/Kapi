@@ -1346,8 +1346,17 @@
 
   function syncViewportSize() {
     const height = visibleHeight();
+    const offsetTop = Math.round(window.visualViewport?.offsetTop || 0);
     document.documentElement.style.setProperty("--app-height", `${height}px`);
+    document.documentElement.style.setProperty("--visual-top", `${offsetTop}px`);
     scheduleFitCheck();
+  }
+
+  function keepSettingsFieldVisible(target) {
+    if (!(target instanceof HTMLElement) || !target.closest("#feedbackForm")) return;
+    const reveal = () => target.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+    window.requestAnimationFrame(reveal);
+    window.setTimeout(reveal, 260);
   }
 
   function scheduleFitCheck() {
@@ -1891,6 +1900,7 @@
     }
   });
   $("settingsContent").addEventListener("submit", openFeedbackInWhatsApp);
+  $("settingsContent").addEventListener("focusin", (event) => keepSettingsFieldVisible(event.target));
   $("motivationPop").addEventListener("pointerdown", (event) => {
     event.preventDefault();
     dismissMotivation(true);
