@@ -60,7 +60,7 @@
       operationUnlocked: (name) => `Новое действие: ${name}`,
       installKicker: "Приложение Капи", installTitle: "Установить на телефон?", installText: "Капи появится на главном экране и будет открываться без панели браузера.", installNow: "Установить", installHome: "Установить приложение", continueBrowser: "Продолжить в браузере", iosInstallText: "На iPhone нажмите «Поделиться», затем «На экран Домой».",
       settings: "Настройки", settingsHint: "Параметры тренировки сохраняются на этом устройстве.", language: "Язык", examples: "Количество примеров", mode: "Режим", automatic: "Автоматически: от простого к сложному", range: "Диапазон чисел", operations: "Действия", sound: "Звук", soundEnabled: "Включён", soundDisabled: "Выключен", update: "Обновить приложение", updateReady: "Доступно обновление", share: "Поделиться результатом", shareText: "Попробуйте тренажёр «Считаем с Капи»", shareDone: "Готово", closeSettings: "Закрыть настройки", genericHint: "Разбери пример по шагам и попробуй ещё раз.", startDescriptionFor: () => "Капи постепенно повышает сложность.", correctOfTotal: (count) => `верно из ${count}`, rangeNames: { auto: "Без ограничений", 10: "До 10", 20: "До 20", 100: "До 100", above100: "Выше 100" }, operationNames: { add: "Сложение +", subtract: "Вычитание −", multiply: "Умножение ×", divide: "Деление ÷", negative: "Отрицательные числа", decimal: "Десятичные дроби", fraction: "Обыкновенные дроби", power: "Степени", root: "Корни" },
-      settingsCounting: "Настройки счёта", settingsGeneral: "Общие", settingsAbout: "О программе", chooseStage: "Учебная ступень", stageInfo: "Подробно о ступени", stageBrief: (name, example) => `${name}. Пример: ${example}.`, stageDetail: (stage, name, example) => `Ступень ${stage}: ${name}. Ребёнок выполняет задания только этого типа. Типичный пример: ${example}. При автоматической сложности переход возможен только после освоения предыдущей ступени.`, aboutText: "«Считаем с Капи» — детский тренажёр арифметики. Он помогает последовательно освоить числа, сложение, вычитание, умножение и деление, подстраивая сложность под результаты ребёнка.", feedbackTitle: "Замечания и предложения", feedbackName: "Имя (необязательно)", feedbackMessage: "Сообщение", feedbackPlaceholder: "Что нужно исправить или добавить?", sendWhatsApp: "Открыть WhatsApp", author: "Автор программы", feedbackIntro: "После нажатия откроется WhatsApp с готовым сообщением. Проверьте его и нажмите «Отправить».",
+      settingsCounting: "Настройки счёта", settingsGeneral: "Общие", settingsAbout: "О программе", backToSettings: "Назад к меню", settingsCountingMenu: "Количество примеров, режим, ступень и действия", settingsGeneralMenu: "Язык и звук", settingsAboutMenu: "Описание, автор и обратная связь", chooseStage: "Учебная ступень", stageInfo: "Подробно о ступени", stageBrief: (name, example) => `${name}. Пример: ${example}.`, stageDetail: (stage, name, example) => `Ступень ${stage}: ${name}. Ребёнок выполняет задания только этого типа. Типичный пример: ${example}. При автоматической сложности переход возможен только после освоения предыдущей ступени.`, aboutText: "«Считаем с Капи» — детский тренажёр арифметики. Он помогает последовательно освоить числа, сложение, вычитание, умножение и деление, подстраивая сложность под результаты ребёнка.", feedbackTitle: "Замечания и предложения", feedbackName: "Имя (необязательно)", feedbackMessage: "Сообщение", feedbackPlaceholder: "Что нужно исправить или добавить?", sendWhatsApp: "Открыть WhatsApp", author: "Автор программы", feedbackIntro: "После нажатия откроется WhatsApp с готовым сообщением. Проверьте его и нажмите «Отправить».",
       legacyStageInfo: "Это занятие было записано до перехода на новую шкалу. Подробное описание старой ступени недоступно.",
       multiplicationZero: "Умножение на ноль", multiplicationRow: (factor) => `Таблица на ${factor}`, multiplicationSquares: "Квадраты чисел", multiplicationMixed: "Теперь примеры вперемешку", divisionRow: (divisor) => `Деление на ${divisor}`, divisionMixed: "Теперь деление вперемешку",
       stageNames: ["количества от 0 до 5", "+0 и +1 до 5", "сложение до 5", "состав числа до 10", "сложение до 10", "−1 и −2 до 5", "вычитание до 10", "+ и − до 10", "числа от 11 до 20", "сложение до 20 без перехода", "вычитание до 20 без перехода", "сложение через 10", "вычитание через 10", "+ и − до 20", "шаги 1, 2 и 10 до 100", "счёт до 100 без перехода", "счёт до 100 с переходом", "+ и − до 100", "одинаковые группы", "умножение на 1, 2, 5 и 10", "деление на равные группы", "точное деление", "таблица умножения", "умножение и деление", "счёт до 1 000 без перехода", "счёт до 1 000 с переходом", "счёт до 10 000 без перехода", "счёт до 10 000 с переходом"],
@@ -106,7 +106,7 @@
       operationUnlocked: (name) => `Neu freigeschaltet: ${name}`,
       installKicker: "Kapi-App", installTitle: "Auf dem Handy installieren?", installText: "Kapi erscheint auf dem Startbildschirm und öffnet sich ohne Browserleiste.", installNow: "Installieren", installHome: "App installieren", continueBrowser: "Im Browser fortfahren", iosInstallText: "Tippe auf dem iPhone auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
       settings: "Einstellungen", settingsHint: "Die Trainingsoptionen werden auf diesem Gerät gespeichert.", language: "Sprache", examples: "Anzahl der Aufgaben", mode: "Modus", automatic: "Automatisch: von leicht zu schwer", range: "Zahlenbereich", operations: "Rechenarten", sound: "Ton", soundEnabled: "Ein", soundDisabled: "Aus", update: "App aktualisieren", updateReady: "Update verfügbar", share: "Ergebnis teilen", shareText: "Probiere „Rechnen mit Kapi“ aus", shareDone: "Fertig", closeSettings: "Einstellungen schließen", genericHint: "Löse die Aufgabe Schritt für Schritt und versuche es noch einmal.", startDescriptionFor: () => "Kapi erhöht die Schwierigkeit Schritt für Schritt.", correctOfTotal: (count) => `richtig von ${count}`, rangeNames: { auto: "Ohne Begrenzung", 10: "Bis 10", 20: "Bis 20", 100: "Bis 100", above100: "Über 100" }, operationNames: { add: "Addition +", subtract: "Subtraktion −", multiply: "Multiplikation ×", divide: "Division ÷", negative: "Negative Zahlen", decimal: "Dezimalzahlen", fraction: "Brüche", power: "Potenzen", root: "Wurzeln" },
-      settingsCounting: "Recheneinstellungen", settingsGeneral: "Allgemein", settingsAbout: "Über die App", chooseStage: "Lernstufe", stageInfo: "Details zur Lernstufe", stageBrief: (name, example) => `${name}. Beispiel: ${example}.`, stageDetail: (stage, name, example) => `Stufe ${stage}: ${name}. Das Kind übt ausschließlich Aufgaben dieses Typs. Typisches Beispiel: ${example}. Im automatischen Modus wird diese Stufe erst nach der vorherigen Stufe freigeschaltet.`, aboutText: "„Rechnen mit Kapi“ ist ein Rechentrainer für Kinder. Zahlenverständnis, Addition, Subtraktion, Multiplikation und Division werden Schritt für Schritt aufgebaut. Die Schwierigkeit passt sich an die Ergebnisse des Kindes an.", feedbackTitle: "Hinweise und Vorschläge", feedbackName: "Name (optional)", feedbackMessage: "Nachricht", feedbackPlaceholder: "Was sollen wir verbessern oder ergänzen?", sendWhatsApp: "WhatsApp öffnen", author: "Über den Entwickler", feedbackIntro: "Nach dem Tippen öffnet sich WhatsApp mit einer vorbereiteten Nachricht. Prüfe sie und tippe dort auf „Senden“.",
+      settingsCounting: "Recheneinstellungen", settingsGeneral: "Allgemein", settingsAbout: "Über die App", backToSettings: "Zurück zum Menü", settingsCountingMenu: "Aufgabenanzahl, Modus, Lernstufe und Rechenarten", settingsGeneralMenu: "Sprache und Ton", settingsAboutMenu: "Beschreibung, Entwickler und Feedback", chooseStage: "Lernstufe", stageInfo: "Details zur Lernstufe", stageBrief: (name, example) => `${name}. Beispiel: ${example}.`, stageDetail: (stage, name, example) => `Stufe ${stage}: ${name}. Das Kind übt ausschließlich Aufgaben dieses Typs. Typisches Beispiel: ${example}. Im automatischen Modus wird diese Stufe erst nach der vorherigen Stufe freigeschaltet.`, aboutText: "„Rechnen mit Kapi“ ist ein Rechentrainer für Kinder. Zahlenverständnis, Addition, Subtraktion, Multiplikation und Division werden Schritt für Schritt aufgebaut. Die Schwierigkeit passt sich an die Ergebnisse des Kindes an.", feedbackTitle: "Hinweise und Vorschläge", feedbackName: "Name (optional)", feedbackMessage: "Nachricht", feedbackPlaceholder: "Was sollen wir verbessern oder ergänzen?", sendWhatsApp: "WhatsApp öffnen", author: "Über den Entwickler", feedbackIntro: "Nach dem Tippen öffnet sich WhatsApp mit einer vorbereiteten Nachricht. Prüfe sie und tippe dort auf „Senden“.",
       legacyStageInfo: "Dieses Training wurde vor der neuen Lernskala gespeichert. Eine genaue Beschreibung der früheren Stufe ist nicht verfügbar.",
       multiplicationZero: "Malnehmen mit null", multiplicationRow: (factor) => `${factor}er-Reihe`, multiplicationSquares: "Quadrataufgaben", multiplicationMixed: "Jetzt kommen gemischte Malaufgaben", divisionRow: (divisor) => `Teilen durch ${divisor}`, divisionMixed: "Jetzt kommen gemischte Geteiltaufgaben",
       stageNames: ["Mengen von 0 bis 5", "+0 und +1 bis 5", "Addition bis 5", "Zahlzerlegung bis 10", "Addition bis 10", "−1 und −2 bis 5", "Subtraktion bis 10", "+ und − bis 10", "Zahlen von 11 bis 20", "Addition bis 20 ohne Übergang", "Subtraktion bis 20 ohne Übergang", "Addition über den Zehner", "Subtraktion über den Zehner", "+ und − bis 20", "Schritte 1, 2 und 10 bis 100", "Rechnen bis 100 ohne Übergang", "Rechnen bis 100 mit Übergang", "+ und − bis 100", "Gleiche Gruppen", "Malnehmen mit 1, 2, 5 und 10", "Teilen in gleiche Gruppen", "Division ohne Rest", "Einmaleins", "Multiplikation und Division", "Rechnen bis 1.000 ohne Übergang", "Rechnen bis 1.000 mit Übergang", "Rechnen bis 10.000 ohne Übergang", "Rechnen bis 10.000 mit Übergang"],
@@ -122,7 +122,7 @@
   let messages = copy.messages;
   let deferredInstallPrompt = null;
   let installPlatform = "android";
-  let settingsSection = "counting";
+  let settingsSection = "menu";
 
   const state = {
     index: 0,
@@ -223,10 +223,20 @@
   function renderSettingsContent() {
     const content = $("settingsContent");
     if (!content) return;
-    const navigation = `
-      <nav class="settings-nav" aria-label="${copy.settings}">
-        ${[["counting", copy.settingsCounting], ["general", copy.settingsGeneral], ["about", copy.settingsAbout]].map(([key, label]) => `<button type="button" data-settings-section="${key}" class="${settingsSection === key ? "active" : ""}" aria-current="${settingsSection === key ? "page" : "false"}">${label}</button>`).join("")}
+    $("settingsHint").hidden = settingsSection !== "menu";
+    const items = [
+      ["counting", "±", copy.settingsCounting, copy.settingsCountingMenu],
+      ["general", "A", copy.settingsGeneral, copy.settingsGeneralMenu],
+      ["about", "i", copy.settingsAbout, copy.settingsAboutMenu]
+    ];
+    if (settingsSection === "menu") {
+      content.innerHTML = `<nav class="settings-menu" aria-label="${copy.settings}">
+        ${items.map(([key, icon, label, description]) => `<button type="button" data-settings-section="${key}"><span class="settings-menu-icon" aria-hidden="true">${icon}</span><span class="settings-menu-copy"><strong>${label}</strong><small>${description}</small></span><span class="settings-menu-arrow" aria-hidden="true">›</span></button>`).join("")}
       </nav>`;
+      return;
+    }
+    const sectionLabel = items.find(([key]) => key === settingsSection)?.[2] || copy.settings;
+    const navigation = `<div class="settings-section-head"><button type="button" data-settings-back><span aria-hidden="true">←</span> ${copy.backToSettings}</button><h3>${sectionLabel}</h3></div>`;
     if (settingsSection === "general") {
       content.innerHTML = `${navigation}
         <section class="settings-panel">
@@ -1855,6 +1865,7 @@
     showScreen($("startScreen"));
   });
   $("settingsButton").addEventListener("click", () => {
+    settingsSection = "menu";
     renderSettingsContent();
     $("settingsDialog").showModal();
   });
@@ -1864,6 +1875,11 @@
     const sectionButton = event.target.closest("[data-settings-section]");
     if (sectionButton) {
       settingsSection = sectionButton.dataset.settingsSection;
+      renderSettingsContent();
+      return;
+    }
+    if (event.target.closest("[data-settings-back]")) {
+      settingsSection = "menu";
       renderSettingsContent();
       return;
     }
