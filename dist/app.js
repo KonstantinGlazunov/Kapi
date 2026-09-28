@@ -14,6 +14,14 @@
   const OPERATION_ORDER = ["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"];
   const CURRICULUM_VERSION = 2;
   const CURRICULUM_STAGE_COUNT = 28;
+  const MULTIPLICATION_PHASES = [
+    { type: "zero" }, { type: "row", factor: 1 }, { type: "row", factor: 2 },
+    { type: "row", factor: 10 }, { type: "row", factor: 5 }, { type: "squares" },
+    { type: "row", factor: 4 }, { type: "row", factor: 3 }, { type: "row", factor: 9 },
+    { type: "row", factor: 6 }, { type: "row", factor: 8 }, { type: "row", factor: 7 }
+  ];
+  const CORE_DIVISORS = [1, 2, 10, 5];
+  const DERIVED_DIVISORS = [4, 3, 9, 6, 8, 7];
   const STAGE_EXAMPLES = ["● ● ●", "3 + 1", "2 + 3", "6 + 4", "4 + 5", "5 − 1", "9 − 3", "6 + 3 / 8 − 4", "10 + 7", "12 + 3", "18 − 4", "8 + 5", "13 − 5", "16 − 7 / 7 + 8", "42 + 10", "34 + 23", "37 + 25", "63 − 27", "3 + 3 + 3", "5 × 2", "12 : 3", "20 : 5", "7 × 8", "42 : 6 / 6 × 7", "340 + 220", "478 − 195", "3 400 + 2 100", "6 302 − 2 748"];
   const appSettings = { language: "de", problemCount: 20, automatic: true, range: "above100", operations: ["add", "subtract"], manualStage: 1, sound: true, curriculumVersion: CURRICULUM_VERSION };
   const translations = {
@@ -54,6 +62,7 @@
       settings: "Настройки", settingsHint: "Параметры тренировки сохраняются на этом устройстве.", language: "Язык", examples: "Количество примеров", mode: "Режим", automatic: "Автоматически: от простого к сложному", range: "Диапазон чисел", operations: "Действия", sound: "Звук", soundEnabled: "Включён", soundDisabled: "Выключен", update: "Обновить приложение", updateReady: "Доступно обновление", share: "Поделиться результатом", shareText: "Попробуйте тренажёр «Считаем с Капи»", shareDone: "Готово", closeSettings: "Закрыть настройки", genericHint: "Разбери пример по шагам и попробуй ещё раз.", startDescriptionFor: () => "Капи постепенно повышает сложность.", correctOfTotal: (count) => `верно из ${count}`, rangeNames: { auto: "Без ограничений", 10: "До 10", 20: "До 20", 100: "До 100", above100: "Выше 100" }, operationNames: { add: "Сложение +", subtract: "Вычитание −", multiply: "Умножение ×", divide: "Деление ÷", negative: "Отрицательные числа", decimal: "Десятичные дроби", fraction: "Обыкновенные дроби", power: "Степени", root: "Корни" },
       settingsCounting: "Настройки счёта", settingsGeneral: "Общие", settingsAbout: "О программе", chooseStage: "Учебная ступень", stageInfo: "Подробно о ступени", stageBrief: (name, example) => `${name}. Пример: ${example}.`, stageDetail: (stage, name, example) => `Ступень ${stage}: ${name}. Ребёнок выполняет задания только этого типа. Типичный пример: ${example}. При автоматической сложности переход возможен только после освоения предыдущей ступени.`, aboutText: "«Считаем с Капи» — детский тренажёр арифметики. Он помогает последовательно освоить числа, сложение, вычитание, умножение и деление, подстраивая сложность под результаты ребёнка.", feedbackTitle: "Замечания и предложения", feedbackName: "Имя (необязательно)", feedbackMessage: "Сообщение", feedbackPlaceholder: "Что нужно исправить или добавить?", sendWhatsApp: "Открыть WhatsApp", author: "Автор программы", feedbackIntro: "После нажатия откроется WhatsApp с готовым сообщением. Проверьте его и нажмите «Отправить».",
       legacyStageInfo: "Это занятие было записано до перехода на новую шкалу. Подробное описание старой ступени недоступно.",
+      multiplicationZero: "Умножение на ноль", multiplicationRow: (factor) => `Таблица на ${factor}`, multiplicationSquares: "Квадраты чисел", multiplicationMixed: "Теперь примеры вперемешку", divisionRow: (divisor) => `Деление на ${divisor}`, divisionMixed: "Теперь деление вперемешку",
       stageNames: ["количества от 0 до 5", "+0 и +1 до 5", "сложение до 5", "состав числа до 10", "сложение до 10", "−1 и −2 до 5", "вычитание до 10", "+ и − до 10", "числа от 11 до 20", "сложение до 20 без перехода", "вычитание до 20 без перехода", "сложение через 10", "вычитание через 10", "+ и − до 20", "шаги 1, 2 и 10 до 100", "счёт до 100 без перехода", "счёт до 100 с переходом", "+ и − до 100", "одинаковые группы", "умножение на 1, 2, 5 и 10", "деление на равные группы", "точное деление", "таблица умножения", "умножение и деление", "счёт до 1 000 без перехода", "счёт до 1 000 с переходом", "счёт до 10 000 без перехода", "счёт до 10 000 с переходом"],
       messages: {
         correct: ["Точно!", "Умница!", "Так держать!", "Супер!", "Верно!"],
@@ -99,6 +108,7 @@
       settings: "Einstellungen", settingsHint: "Die Trainingsoptionen werden auf diesem Gerät gespeichert.", language: "Sprache", examples: "Anzahl der Aufgaben", mode: "Modus", automatic: "Automatisch: von leicht zu schwer", range: "Zahlenbereich", operations: "Rechenarten", sound: "Ton", soundEnabled: "Ein", soundDisabled: "Aus", update: "App aktualisieren", updateReady: "Update verfügbar", share: "Ergebnis teilen", shareText: "Probiere „Rechnen mit Kapi“ aus", shareDone: "Fertig", closeSettings: "Einstellungen schließen", genericHint: "Löse die Aufgabe Schritt für Schritt und versuche es noch einmal.", startDescriptionFor: () => "Kapi erhöht die Schwierigkeit Schritt für Schritt.", correctOfTotal: (count) => `richtig von ${count}`, rangeNames: { auto: "Ohne Begrenzung", 10: "Bis 10", 20: "Bis 20", 100: "Bis 100", above100: "Über 100" }, operationNames: { add: "Addition +", subtract: "Subtraktion −", multiply: "Multiplikation ×", divide: "Division ÷", negative: "Negative Zahlen", decimal: "Dezimalzahlen", fraction: "Brüche", power: "Potenzen", root: "Wurzeln" },
       settingsCounting: "Recheneinstellungen", settingsGeneral: "Allgemein", settingsAbout: "Über die App", chooseStage: "Lernstufe", stageInfo: "Details zur Lernstufe", stageBrief: (name, example) => `${name}. Beispiel: ${example}.`, stageDetail: (stage, name, example) => `Stufe ${stage}: ${name}. Das Kind übt ausschließlich Aufgaben dieses Typs. Typisches Beispiel: ${example}. Im automatischen Modus wird diese Stufe erst nach der vorherigen Stufe freigeschaltet.`, aboutText: "„Rechnen mit Kapi“ ist ein Rechentrainer für Kinder. Zahlenverständnis, Addition, Subtraktion, Multiplikation und Division werden Schritt für Schritt aufgebaut. Die Schwierigkeit passt sich an die Ergebnisse des Kindes an.", feedbackTitle: "Hinweise und Vorschläge", feedbackName: "Name (optional)", feedbackMessage: "Nachricht", feedbackPlaceholder: "Was sollen wir verbessern oder ergänzen?", sendWhatsApp: "WhatsApp öffnen", author: "Über den Entwickler", feedbackIntro: "Nach dem Tippen öffnet sich WhatsApp mit einer vorbereiteten Nachricht. Prüfe sie und tippe dort auf „Senden“.",
       legacyStageInfo: "Dieses Training wurde vor der neuen Lernskala gespeichert. Eine genaue Beschreibung der früheren Stufe ist nicht verfügbar.",
+      multiplicationZero: "Malnehmen mit null", multiplicationRow: (factor) => `${factor}er-Reihe`, multiplicationSquares: "Quadrataufgaben", multiplicationMixed: "Jetzt kommen gemischte Malaufgaben", divisionRow: (divisor) => `Teilen durch ${divisor}`, divisionMixed: "Jetzt kommen gemischte Geteiltaufgaben",
       stageNames: ["Mengen von 0 bis 5", "+0 und +1 bis 5", "Addition bis 5", "Zahlzerlegung bis 10", "Addition bis 10", "−1 und −2 bis 5", "Subtraktion bis 10", "+ und − bis 10", "Zahlen von 11 bis 20", "Addition bis 20 ohne Übergang", "Subtraktion bis 20 ohne Übergang", "Addition über den Zehner", "Subtraktion über den Zehner", "+ und − bis 20", "Schritte 1, 2 und 10 bis 100", "Rechnen bis 100 ohne Übergang", "Rechnen bis 100 mit Übergang", "+ und − bis 100", "Gleiche Gruppen", "Malnehmen mit 1, 2, 5 und 10", "Teilen in gleiche Gruppen", "Division ohne Rest", "Einmaleins", "Multiplikation und Division", "Rechnen bis 1.000 ohne Übergang", "Rechnen bis 1.000 mit Übergang", "Rechnen bis 10.000 ohne Übergang", "Rechnen bis 10.000 mit Übergang"],
       messages: {
         correct: ["Richtig!", "Klasse!", "Weiter so!", "Super!", "Genau!"],
@@ -275,7 +285,10 @@
       totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [],
       adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveCorrectStreak: 0, adaptiveRecentResults: [],
       personalFastTime: null, paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {},
-      curriculumVersion: CURRICULUM_VERSION, curriculumStats: {}
+      curriculumVersion: CURRICULUM_VERSION, curriculumStats: {},
+      multiplicationSequence: { phase: 0, item: 1, mixed: false },
+      divisionCoreSequence: { phase: 0, item: 0, mixed: false },
+      divisionDerivedSequence: { phase: 0, item: 0, mixed: false }
     };
     try {
       const stored = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}");
@@ -311,6 +324,9 @@
         : [];
       profile.operationStats = profile.operationStats && typeof profile.operationStats === "object" ? profile.operationStats : {};
       profile.curriculumStats = profile.curriculumStats && typeof profile.curriculumStats === "object" ? profile.curriculumStats : {};
+      profile.multiplicationSequence = normalizeLearningSequence(profile.multiplicationSequence, MULTIPLICATION_PHASES.length, 1, 10);
+      profile.divisionCoreSequence = normalizeLearningSequence(profile.divisionCoreSequence, CORE_DIVISORS.length, 0, 10);
+      profile.divisionDerivedSequence = normalizeLearningSequence(profile.divisionDerivedSequence, DERIVED_DIVISORS.length, 0, 10);
       Object.keys(profile.curriculumStats).forEach((stage) => {
         profile.curriculumStats[stage] = Array.isArray(profile.curriculumStats[stage])
           ? profile.curriculumStats[stage].filter((value) => value === 0 || value === 1).slice(-20)
@@ -326,6 +342,15 @@
 
   function saveProfile(profile) {
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  }
+
+  function normalizeLearningSequence(value, phaseCount, minimumItem, maximumItem) {
+    const sequence = value && typeof value === "object" ? value : {};
+    return {
+      phase: Math.min(phaseCount - 1, Math.max(0, Number(sequence.phase) || 0)),
+      item: Math.min(maximumItem, Math.max(minimumItem, Number.isFinite(Number(sequence.item)) ? Number(sequence.item) : minimumItem)),
+      mixed: sequence.mixed === true
+    };
   }
 
   function validPaceSamples(values) {
@@ -449,7 +474,7 @@
   }
 
   function makeGeneratedProblem(stage, index, profile) {
-    if (appSettings.automatic) return makeCurriculumProblem(stage, index, profile);
+    if (appSettings.automatic || (stage >= 19 && stage <= 24)) return makeCurriculumProblem(stage, index, profile);
     const operation = chooseOperation(profile);
     const max = Math.max(10, effectiveMax(stage));
     const mode = index % 2 === 0 ? "choice" : "input";
@@ -476,7 +501,7 @@
     problem.mode = index % 2 === 0 ? "choice" : "input";
     problem.isReview = false;
     problem.curriculumStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, state.stage || 1));
-    problem.key = problem.text.replace(/\s+/g, "");
+    problem.key = `${operation}:${problem.a}:${problem.b}:${problem.answer}:${problem.text}`.replace(/\s+/g, "");
     return problem;
   }
 
@@ -569,20 +594,40 @@
       problem = { a: total, b: groups, answer: each, operator: ":", text: copy.sharingQuestion(total, groups), groupCount: groups, groupSize: each, conceptVisual: true };
       operation = "divide";
     } else if (current === 22) {
-      const divisor = pick([2, 5, 10]); const answer = randomInt(1, 10); a = divisor * answer;
+      const sequence = profile.divisionCoreSequence;
+      const divisor = sequence.mixed ? pick(CORE_DIVISORS) : CORE_DIVISORS[sequence.phase];
+      const answer = sequence.mixed ? randomInt(0, 10) : sequence.item; a = divisor * answer;
       problem = { a, b: divisor, answer, operator: ":", text: `${a} : ${divisor} = ?` };
       operation = "divide";
     } else if (current === 23) {
-      a = randomInt(2, 10); b = randomInt(2, 10);
+      const sequence = profile.multiplicationSequence;
+      if (sequence.mixed) {
+        a = randomInt(0, 10); b = randomInt(0, 10);
+      } else {
+        const phase = MULTIPLICATION_PHASES[sequence.phase];
+        if (phase.type === "zero") { a = sequence.item; b = 0; }
+        else if (phase.type === "squares") { a = sequence.item; b = sequence.item; }
+        else { a = phase.factor; b = sequence.item; }
+      }
       problem = { a, b, answer: a * b, operator: "×", text: `${a} × ${b} = ?` };
       operation = "multiply";
     } else if (current === 24) {
-      if (operation === "multiply") {
+      const sequence = profile.divisionDerivedSequence;
+      if (!sequence.mixed) {
+        const divisor = DERIVED_DIVISORS[sequence.phase];
+        const answer = sequence.item;
+        a = divisor * answer;
+        b = divisor;
+        problem = { a, b, answer, operator: ":", text: `${a} : ${b} = ?` };
+        operation = "divide";
+      } else if (Math.random() < .5) {
         a = randomInt(2, 10); b = randomInt(2, 10);
         problem = { a, b, answer: a * b, operator: "×", text: `${a} × ${b} = ?` };
+        operation = "multiply";
       } else {
         b = randomInt(2, 10); const answer = randomInt(2, 10); a = b * answer;
         problem = { a, b, answer, operator: ":", text: `${a} : ${b} = ?` };
+        operation = "divide";
       }
     } else {
       const max = current <= 26 ? 1000 : 10000;
@@ -766,7 +811,10 @@
     const profile = getProfile();
     const queue = profile.errorQueue;
     const allowedOperations = new Set(activeOperations(profile));
-    const eligibleReviews = queue.filter((item) => allowedOperations.has(reviewOperation(item)) && (!appSettings.automatic || item.curriculumStage === profile.currentStage));
+    const eligibleReviews = queue.filter((item) => {
+      const sameStage = item.curriculumStage == null || item.curriculumStage === stage;
+      return allowedOperations.has(reviewOperation(item)) && sameStage;
+    });
     const remaining = TOTAL - index;
     const shouldReview = eligibleReviews.length > 0 && (index % 3 === 2 || remaining <= eligibleReviews.length * 2);
     if (shouldReview) {
@@ -1062,8 +1110,14 @@
   }
 
   function updateAdaptiveProgress(problem, isFirstAttempt, isCorrect, elapsed) {
-    if (problem.isReview || !isFirstAttempt) return "";
     const profile = getProfile();
+    const structured = updateStructuredOperationProgress(profile, problem, isFirstAttempt, isCorrect);
+    if (structured.handled) {
+      if (isCorrect && isFirstAttempt) updatePersonalPace(profile, elapsed);
+      saveProfile(profile);
+      return structured.message;
+    }
+    if (problem.isReview || !isFirstAttempt) return "";
     if (!appSettings.automatic) {
       if (isCorrect) updatePersonalPace(profile, elapsed);
       saveProfile(profile);
@@ -1102,6 +1156,68 @@
     state.stageAdvancedDuringSession = true;
     saveProfile(profile);
     return copy.adaptiveStage(copy.stageNames[profile.currentStage - 1]);
+  }
+
+  function updateStructuredOperationProgress(profile, problem, isFirstAttempt, isCorrect) {
+    if (state.stage === 23 && !profile.multiplicationSequence.mixed) {
+      if (!isFirstAttempt || !isCorrect || !matchesMultiplicationSequence(problem, profile.multiplicationSequence)) return { handled: true, message: "" };
+      return { handled: true, message: advanceMultiplicationSequence(profile.multiplicationSequence) };
+    }
+    if (state.stage === 22 && !profile.divisionCoreSequence.mixed) {
+      if (!isFirstAttempt || !isCorrect || !matchesDivisionSequence(problem, profile.divisionCoreSequence, CORE_DIVISORS)) return { handled: true, message: "" };
+      return { handled: true, message: advanceDivisionSequence(profile.divisionCoreSequence, CORE_DIVISORS) };
+    }
+    if (state.stage === 24 && !profile.divisionDerivedSequence.mixed) {
+      if (!isFirstAttempt || !isCorrect || !matchesDivisionSequence(problem, profile.divisionDerivedSequence, DERIVED_DIVISORS)) return { handled: true, message: "" };
+      return { handled: true, message: advanceDivisionSequence(profile.divisionDerivedSequence, DERIVED_DIVISORS) };
+    }
+    return { handled: false, message: "" };
+  }
+
+  function matchesMultiplicationSequence(problem, sequence) {
+    const phase = MULTIPLICATION_PHASES[sequence.phase];
+    if (!phase || problem.operation !== "multiply") return false;
+    if (phase.type === "zero") return problem.a === sequence.item && problem.b === 0;
+    if (phase.type === "squares") return problem.a === sequence.item && problem.b === sequence.item;
+    return problem.a === phase.factor && problem.b === sequence.item;
+  }
+
+  function advanceMultiplicationSequence(sequence) {
+    const phase = MULTIPLICATION_PHASES[sequence.phase];
+    const maximum = 10;
+    sequence.item += 1;
+    if (sequence.item <= maximum) return "";
+    sequence.phase += 1;
+    if (sequence.phase >= MULTIPLICATION_PHASES.length) {
+      sequence.phase = MULTIPLICATION_PHASES.length - 1;
+      sequence.item = maximum;
+      sequence.mixed = true;
+      return copy.multiplicationMixed;
+    }
+    const next = MULTIPLICATION_PHASES[sequence.phase];
+    sequence.item = next.type === "squares" ? 2 : 1;
+    if (next.type === "zero") return copy.multiplicationZero;
+    if (next.type === "squares") return copy.multiplicationSquares;
+    return copy.multiplicationRow(next.factor);
+  }
+
+  function matchesDivisionSequence(problem, sequence, divisors) {
+    const divisor = divisors[sequence.phase];
+    return problem.operation === "divide" && problem.b === divisor && problem.answer === sequence.item && problem.a === divisor * sequence.item;
+  }
+
+  function advanceDivisionSequence(sequence, divisors) {
+    sequence.item += 1;
+    if (sequence.item <= 10) return "";
+    sequence.phase += 1;
+    if (sequence.phase >= divisors.length) {
+      sequence.phase = divisors.length - 1;
+      sequence.item = 10;
+      sequence.mixed = true;
+      return copy.divisionMixed;
+    }
+    sequence.item = 0;
+    return copy.divisionRow(divisors[sequence.phase]);
   }
 
   function updatePersonalPace(profile, elapsed) {
@@ -1625,7 +1741,15 @@
       return;
     }
     if (input.name === "manualStage") {
+      const previousStage = appSettings.manualStage;
       appSettings.manualStage = Math.min(maximumAllowedStage(), Math.max(1, Number(input.value) || 1));
+      if (appSettings.manualStage !== previousStage) {
+        const profile = getProfile();
+        if (appSettings.manualStage === 22) profile.divisionCoreSequence = { phase: 0, item: 0, mixed: false };
+        if (appSettings.manualStage === 23) profile.multiplicationSequence = { phase: 0, item: 1, mixed: false };
+        if (appSettings.manualStage === 24) profile.divisionDerivedSequence = { phase: 0, item: 0, mixed: false };
+        saveProfile(profile);
+      }
       saveSettings();
       renderSettingsContent();
       updateHomeStats();
