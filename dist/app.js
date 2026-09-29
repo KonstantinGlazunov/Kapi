@@ -28,7 +28,7 @@
     ru: {
       locale: "ru-RU", appName: "Считаем с Капи", description: "Адаптивный тренажёр арифметики для детей — от сложения до корней.",
       startEyebrow: "Уровень 1", startTitle: "Готовы считать?", startDescription: "20 коротких примеров. Капи постепенно повышает сложность.",
-      dayStreak: "дней подряд", totalXp: "всего XP", start: "Начать тренировку", history: "История занятий", speech: "У тебя получится!",
+      dayStreak: "дней подряд", totalXp: "всего XP", start: "Начать тренировку", history: "История занятий", speech: "Hey!",
       home: "Вернуться в начало", soundOn: "Выключить звук", soundOff: "Включить звук", gameProgress: "Игровой прогресс",
       problem: "Пример", answerStreak: "Серия правильных ответов", xpEarned: "Набранные очки опыта", careful: "Считай внимательно", next: "Следующий пример",
       answer: "Ответ", numberPad: "Цифровая клавиатура", clear: "Очистить", backspace: "Удалить последнюю цифру", check: "Проверить",
@@ -74,7 +74,7 @@
     de: {
       locale: "de-DE", appName: "Rechnen mit Kapi", description: "Adaptives Rechentraining für Kinder – von Addition bis zu Wurzeln.",
       startEyebrow: "Stufe 1", startTitle: "Bereit zum Rechnen?", startDescription: "20 kurze Aufgaben. Kapi erhöht die Schwierigkeit Schritt für Schritt.",
-      dayStreak: "Tage in Folge", totalXp: "XP insgesamt", start: "Training starten", history: "Trainingsverlauf", speech: "Du schaffst das!",
+      dayStreak: "Tage in Folge", totalXp: "XP insgesamt", start: "Training starten", history: "Trainingsverlauf", speech: "Hey!",
       home: "Zur Startseite", soundOn: "Ton ausschalten", soundOff: "Ton einschalten", gameProgress: "Spielfortschritt",
       problem: "Aufgabe", answerStreak: "Richtige Antworten in Folge", xpEarned: "Gesammelte Erfahrungspunkte", careful: "Rechne in Ruhe", next: "Nächste Aufgabe",
       answer: "Antwort", numberPad: "Zahlentastatur", clear: "Löschen", backspace: "Letzte Ziffer löschen", check: "Prüfen",
@@ -391,7 +391,32 @@
     $("homeButton").classList.toggle("hidden", target === $("startScreen"));
     document.body.classList.toggle("game-active", target === $("gameScreen"));
     document.body.classList.toggle("start-active", target === $("startScreen"));
+    if (target === $("startScreen")) restartHomeGreeting();
     scheduleFitCheck();
+  }
+
+  let homeGreetingTimer = 0;
+  function restartHomeGreeting() {
+    const mascot = $("homeMascot");
+    if (!mascot) return;
+    mascot.classList.remove("is-greeting");
+    void mascot.offsetWidth;
+    mascot.classList.add("is-greeting");
+    window.clearTimeout(homeGreetingTimer);
+    homeGreetingTimer = window.setTimeout(speakHomeGreeting, 520);
+  }
+
+  function speakHomeGreeting() {
+    if (!state.sound || !("speechSynthesis" in window)) return;
+    try {
+      const utterance = new SpeechSynthesisUtterance("Hey!");
+      utterance.lang = language === "ru" ? "ru-RU" : "de-DE";
+      utterance.rate = 1.12;
+      utterance.pitch = 1.25;
+      utterance.volume = .8;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    } catch { /* Voice greeting remains optional. */ }
   }
 
   function randomInt(min, max) {
@@ -1929,6 +1954,7 @@
   if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !runsStandalone()) showInstallPrompt("ios");
   registerWebMcp();
   syncViewportSize();
+  window.setTimeout(restartHomeGreeting, 360);
   window.addEventListener("resize", syncViewportSize, { passive: true });
   window.visualViewport?.addEventListener("resize", syncViewportSize, { passive: true });
   window.visualViewport?.addEventListener("scroll", syncViewportSize, { passive: true });
