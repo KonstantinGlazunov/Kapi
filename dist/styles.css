@@ -187,7 +187,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 
 .mascot-stage { position: relative; width: min(42vw, 410px); aspect-ratio: 1; }
 .mascot-stage img, .mini-mascot img, .result-mascot img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 18px 18px rgba(90,56,25,.17)); }
-.home-mascot-sprite { width: 100%; height: 100%; background: url("assets/kapi-welcome-sprite.webp") 0 0 / 400% 100% no-repeat; filter: drop-shadow(0 18px 18px rgba(90,56,25,.17)); transform-origin: 50% 88%; }
+.home-mascot-sprite { width: 100%; height: 100%; background: url("assets/kapi-welcome-sprite.webp") 0 0 / 400% 100% no-repeat; filter: drop-shadow(0 18px 18px rgba(90,56,25,.17)); transform-origin: 50% 88%; animation: float 3.2s ease-in-out infinite; }
 .home-mascot-sprite.is-greeting { animation: kapi-welcome 3.4s step-end 1 both; }
 
 .speech-bubble {

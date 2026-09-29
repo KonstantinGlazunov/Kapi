@@ -396,14 +396,19 @@
   }
 
   let homeGreetingTimer = 0;
+  let homeIdleTimer = 0;
   function restartHomeGreeting() {
     const mascot = $("homeMascot");
     if (!mascot) return;
+    window.clearTimeout(homeIdleTimer);
     mascot.classList.remove("is-greeting");
     void mascot.offsetWidth;
     mascot.classList.add("is-greeting");
     window.clearTimeout(homeGreetingTimer);
     homeGreetingTimer = window.setTimeout(speakHomeGreeting, 520);
+    homeIdleTimer = window.setTimeout(() => {
+      mascot.classList.remove("is-greeting");
+    }, 3400);
   }
 
   function speakHomeGreeting() {
