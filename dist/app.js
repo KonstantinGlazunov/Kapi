@@ -12,8 +12,9 @@
   const INVITE_URL = `${APP_URL}/?install=1`;
   const UNIVERSAL_FAST_TIME = 4;
   const OPERATION_ORDER = ["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"];
+  const OPERATION_MIN_STAGE = { add: 2, subtract: 6, multiply: 19, divide: 21, power: 30, fraction: 31, decimal: 34, negative: 36, root: 39 };
   const CURRICULUM_VERSION = 2;
-  const CURRICULUM_STAGE_COUNT = 28;
+  const CURRICULUM_STAGE_COUNT = 41;
   const MULTIPLICATION_PHASES = [
     { type: "zero" }, { type: "row", factor: 1 }, { type: "row", factor: 2 },
     { type: "row", factor: 10 }, { type: "row", factor: 5 }, { type: "squares" },
@@ -22,7 +23,7 @@
   ];
   const CORE_DIVISORS = [1, 2, 10, 5];
   const DERIVED_DIVISORS = [4, 3, 9, 6, 8, 7];
-  const STAGE_EXAMPLES = ["● ● ●", "3 + 1", "2 + 3", "6 + 4", "4 + 5", "5 − 1", "9 − 3", "6 + 3 / 8 − 4", "10 + 7", "12 + 3", "18 − 4", "8 + 5", "13 − 5", "16 − 7 / 7 + 8", "42 + 10", "34 + 23", "37 + 25", "63 − 27", "3 + 3 + 3", "5 × 2", "12 : 3", "20 : 5", "7 × 8", "42 : 6 / 6 × 7", "340 + 220", "478 − 195", "3 400 + 2 100", "6 302 − 2 748"];
+  const STAGE_EXAMPLES = ["● ● ●", "3 + 1", "2 + 3", "6 + 4", "4 + 5", "5 − 1", "9 − 3", "6 + 3 / 8 − 4", "10 + 7", "12 + 3", "18 − 4", "8 + 5", "13 − 5", "16 − 7 / 7 + 8", "42 + 10", "34 + 23", "37 + 25", "63 − 27", "3 + 3 + 3", "5 × 2", "12 : 3", "20 : 5", "7 × 8", "42 : 6 / 6 × 7", "340 + 220", "478 − 195", "3 400 + 2 100", "6 302 − 2 748", "48 000 ÷ 600", "7²", "1/4 + 2/4", "2/3 + 1/6", "3/4 × 2/5", "2,4 + 1,7", "3,6 ÷ 0,6", "4 − 9", "−6 × 3", "2⁵", "√144", "∛125", "3³ / √81"];
   const appSettings = { language: "de", problemCount: 20, automatic: true, range: "above100", operations: ["add", "subtract"], manualStage: 1, sound: true, curriculumVersion: CURRICULUM_VERSION };
   const translations = {
     ru: {
@@ -60,10 +61,10 @@
       operationUnlocked: (name) => `Новое действие: ${name}`,
       installKicker: "Приложение Капи", installTitle: "Установить на телефон?", installText: "Капи появится на главном экране и будет открываться без панели браузера.", installNow: "Установить", installHome: "Установить приложение", continueBrowser: "Продолжить в браузере", iosInstallText: "На iPhone нажмите «Поделиться», затем «На экран Домой».",
       settings: "Настройки", settingsHint: "Параметры тренировки сохраняются на этом устройстве.", language: "Язык", examples: "Количество примеров", mode: "Режим", automatic: "Автоматически: от простого к сложному", range: "Диапазон чисел", operations: "Действия", sound: "Звук", soundEnabled: "Включён", soundDisabled: "Выключен", update: "Обновить приложение", updateReady: "Доступно обновление", share: "Поделиться результатом", shareText: "Попробуйте тренажёр «Считаем с Капи»", shareDone: "Готово", closeSettings: "Закрыть настройки", genericHint: "Разбери пример по шагам и попробуй ещё раз.", startDescriptionFor: () => "Капи постепенно повышает сложность.", correctOfTotal: (count) => `верно из ${count}`, rangeNames: { auto: "Без ограничений", 10: "До 10", 20: "До 20", 100: "До 100", above100: "Выше 100" }, operationNames: { add: "Сложение +", subtract: "Вычитание −", multiply: "Умножение ×", divide: "Деление ÷", negative: "Отрицательные числа", decimal: "Десятичные дроби", fraction: "Обыкновенные дроби", power: "Степени", root: "Корни" },
-      settingsCounting: "Настройки счёта", settingsGeneral: "Общие", settingsAbout: "О программе", backToSettings: "Назад к меню", settingsCountingMenu: "Количество примеров, режим, ступень и действия", settingsGeneralMenu: "Язык и звук", settingsAboutMenu: "Описание, автор и обратная связь", chooseStage: "Учебная ступень", stageInfo: "Подробно о ступени", stageBrief: (name, example) => `${name}. Пример: ${example}.`, stageDetail: (stage, name, example) => `Ступень ${stage}: ${name}. Ребёнок выполняет задания только этого типа. Типичный пример: ${example}. При автоматической сложности переход возможен только после освоения предыдущей ступени.`, aboutText: "«Считаем с Капи» — детский тренажёр арифметики. Он помогает последовательно освоить числа, сложение, вычитание, умножение и деление, подстраивая сложность под результаты ребёнка.", feedbackTitle: "Замечания и предложения", feedbackName: "Имя (необязательно)", feedbackMessage: "Сообщение", feedbackPlaceholder: "Что нужно исправить или добавить?", sendWhatsApp: "Открыть WhatsApp", author: "Автор программы", feedbackIntro: "После нажатия откроется WhatsApp с готовым сообщением. Проверьте его и нажмите «Отправить».",
+      settingsCounting: "Настройки счёта", settingsGeneral: "Общие", settingsAbout: "О программе", backToSettings: "Назад к меню", settingsCountingMenu: "Количество примеров, режим, ступень и действия", settingsGeneralMenu: "Язык и звук", settingsAboutMenu: "Описание, автор и обратная связь", chooseStage: "Учебная ступень", stageInfo: "Подробно о ступени", stageBrief: (name, example) => `${name}. Пример: ${example}.`, stageDetail: (stage, name, example) => `Ступень ${stage}: ${name}. Ребёнок выполняет задания только этого типа. Типичный пример: ${example}. При автоматической сложности переход возможен только после освоения предыдущей ступени.`, aboutText: "«Считаем с Капи» — детский тренажёр арифметики от первых чисел до тем 10-го класса. В приложении принята смешанная последовательность, основанная на общих темах немецких учебных программ, но не привязанная к конкретному типу школы или федеральной земле.", feedbackTitle: "Замечания и предложения", feedbackName: "Имя (необязательно)", feedbackMessage: "Сообщение", feedbackPlaceholder: "Что нужно исправить или добавить?", sendWhatsApp: "Открыть WhatsApp", author: "Автор программы", feedbackIntro: "После нажатия откроется WhatsApp с готовым сообщением. Проверьте его и нажмите «Отправить».",
       legacyStageInfo: "Это занятие было записано до перехода на новую шкалу. Подробное описание старой ступени недоступно.",
       multiplicationZero: "Умножение на ноль", multiplicationRow: (factor) => `Таблица на ${factor}`, multiplicationSquares: "Квадраты чисел", multiplicationMixed: "Теперь примеры вперемешку", divisionRow: (divisor) => `Деление на ${divisor}`, divisionMixed: "Теперь деление вперемешку",
-      stageNames: ["количества от 0 до 5", "+0 и +1 до 5", "сложение до 5", "состав числа до 10", "сложение до 10", "−1 и −2 до 5", "вычитание до 10", "+ и − до 10", "числа от 11 до 20", "сложение до 20 без перехода", "вычитание до 20 без перехода", "сложение через 10", "вычитание через 10", "+ и − до 20", "шаги 1, 2 и 10 до 100", "счёт до 100 без перехода", "счёт до 100 с переходом", "+ и − до 100", "одинаковые группы", "умножение на 1, 2, 5 и 10", "деление на равные группы", "точное деление", "таблица умножения", "умножение и деление", "счёт до 1 000 без перехода", "счёт до 1 000 с переходом", "счёт до 10 000 без перехода", "счёт до 10 000 с переходом"],
+      stageNames: ["количества от 0 до 5", "+0 и +1 до 5", "сложение до 5", "состав числа до 10", "сложение до 10", "−1 и −2 до 5", "вычитание до 10", "+ и − до 10", "числа от 11 до 20", "сложение до 20 без перехода", "вычитание до 20 без перехода", "сложение через 10", "вычитание через 10", "+ и − до 20", "шаги 1, 2 и 10 до 100", "счёт до 100 без перехода", "счёт до 100 с переходом", "+ и − до 100", "одинаковые группы", "умножение на 1, 2, 5 и 10", "деление на равные группы", "точное деление", "таблица умножения", "умножение и деление", "счёт до 1 000 без перехода", "счёт до 1 000 с переходом", "счёт до 10 000 без перехода", "счёт до 10 000 с переходом", "четыре действия с большими числами", "квадраты и кубы", "понятие обыкновенной дроби", "сложение и вычитание дробей", "умножение и деление дробей", "сложение и вычитание десятичных дробей", "умножение и деление десятичных дробей", "отрицательные числа", "четыре действия с рациональными числами", "степени с натуральными показателями", "квадратные корни", "кубические корни", "степени и корни"],
       messages: {
         correct: ["Точно!", "Умница!", "Так держать!", "Супер!", "Верно!"],
         streak: ["Вот это серия!", "Три подряд!", "Капи в восторге!", "Ты разогналась!"],
@@ -106,10 +107,10 @@
       operationUnlocked: (name) => `Neu freigeschaltet: ${name}`,
       installKicker: "Kapi-App", installTitle: "Auf dem Handy installieren?", installText: "Kapi erscheint auf dem Startbildschirm und öffnet sich ohne Browserleiste.", installNow: "Installieren", installHome: "App installieren", continueBrowser: "Im Browser fortfahren", iosInstallText: "Tippe auf dem iPhone auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
       settings: "Einstellungen", settingsHint: "Die Trainingsoptionen werden auf diesem Gerät gespeichert.", language: "Sprache", examples: "Anzahl der Aufgaben", mode: "Modus", automatic: "Automatisch: von leicht zu schwer", range: "Zahlenbereich", operations: "Rechenarten", sound: "Ton", soundEnabled: "Ein", soundDisabled: "Aus", update: "App aktualisieren", updateReady: "Update verfügbar", share: "Ergebnis teilen", shareText: "Probiere „Rechnen mit Kapi“ aus", shareDone: "Fertig", closeSettings: "Einstellungen schließen", genericHint: "Löse die Aufgabe Schritt für Schritt und versuche es noch einmal.", startDescriptionFor: () => "Kapi erhöht die Schwierigkeit Schritt für Schritt.", correctOfTotal: (count) => `richtig von ${count}`, rangeNames: { auto: "Ohne Begrenzung", 10: "Bis 10", 20: "Bis 20", 100: "Bis 100", above100: "Über 100" }, operationNames: { add: "Addition +", subtract: "Subtraktion −", multiply: "Multiplikation ×", divide: "Division ÷", negative: "Negative Zahlen", decimal: "Dezimalzahlen", fraction: "Brüche", power: "Potenzen", root: "Wurzeln" },
-      settingsCounting: "Recheneinstellungen", settingsGeneral: "Allgemein", settingsAbout: "Über die App", backToSettings: "Zurück zum Menü", settingsCountingMenu: "Aufgabenanzahl, Modus, Lernstufe und Rechenarten", settingsGeneralMenu: "Sprache und Ton", settingsAboutMenu: "Beschreibung, Entwickler und Feedback", chooseStage: "Lernstufe", stageInfo: "Details zur Lernstufe", stageBrief: (name, example) => `${name}. Beispiel: ${example}.`, stageDetail: (stage, name, example) => `Stufe ${stage}: ${name}. Das Kind übt ausschließlich Aufgaben dieses Typs. Typisches Beispiel: ${example}. Im automatischen Modus wird diese Stufe erst nach der vorherigen Stufe freigeschaltet.`, aboutText: "„Rechnen mit Kapi“ ist ein Rechentrainer für Kinder. Zahlenverständnis, Addition, Subtraktion, Multiplikation und Division werden Schritt für Schritt aufgebaut. Die Schwierigkeit passt sich an die Ergebnisse des Kindes an.", feedbackTitle: "Hinweise und Vorschläge", feedbackName: "Name (optional)", feedbackMessage: "Nachricht", feedbackPlaceholder: "Was sollen wir verbessern oder ergänzen?", sendWhatsApp: "WhatsApp öffnen", author: "Über den Entwickler", feedbackIntro: "Nach dem Tippen öffnet sich WhatsApp mit einer vorbereiteten Nachricht. Prüfe sie und tippe dort auf „Senden“.",
+      settingsCounting: "Recheneinstellungen", settingsGeneral: "Allgemein", settingsAbout: "Über die App", backToSettings: "Zurück zum Menü", settingsCountingMenu: "Aufgabenanzahl, Modus, Lernstufe und Rechenarten", settingsGeneralMenu: "Sprache und Ton", settingsAboutMenu: "Beschreibung, Entwickler und Feedback", chooseStage: "Lernstufe", stageInfo: "Details zur Lernstufe", stageBrief: (name, example) => `${name}. Beispiel: ${example}.`, stageDetail: (stage, name, example) => `Stufe ${stage}: ${name}. Das Kind übt ausschließlich Aufgaben dieses Typs. Typisches Beispiel: ${example}. Im automatischen Modus wird diese Stufe erst nach der vorherigen Stufe freigeschaltet.`, aboutText: "„Rechnen mit Kapi“ ist ein Rechentrainer von den ersten Zahlen bis zu Themen der 10. Klasse. Die App verwendet eine gemischte Reihenfolge auf Grundlage gemeinsamer Themen deutscher Lehrpläne, ist aber nicht an eine bestimmte Schulform oder ein Bundesland gebunden.", feedbackTitle: "Hinweise und Vorschläge", feedbackName: "Name (optional)", feedbackMessage: "Nachricht", feedbackPlaceholder: "Was sollen wir verbessern oder ergänzen?", sendWhatsApp: "WhatsApp öffnen", author: "Über den Entwickler", feedbackIntro: "Nach dem Tippen öffnet sich WhatsApp mit einer vorbereiteten Nachricht. Prüfe sie und tippe dort auf „Senden“.",
       legacyStageInfo: "Dieses Training wurde vor der neuen Lernskala gespeichert. Eine genaue Beschreibung der früheren Stufe ist nicht verfügbar.",
       multiplicationZero: "Malnehmen mit null", multiplicationRow: (factor) => `${factor}er-Reihe`, multiplicationSquares: "Quadrataufgaben", multiplicationMixed: "Jetzt kommen gemischte Malaufgaben", divisionRow: (divisor) => `Teilen durch ${divisor}`, divisionMixed: "Jetzt kommen gemischte Geteiltaufgaben",
-      stageNames: ["Mengen von 0 bis 5", "+0 und +1 bis 5", "Addition bis 5", "Zahlzerlegung bis 10", "Addition bis 10", "−1 und −2 bis 5", "Subtraktion bis 10", "+ und − bis 10", "Zahlen von 11 bis 20", "Addition bis 20 ohne Übergang", "Subtraktion bis 20 ohne Übergang", "Addition über den Zehner", "Subtraktion über den Zehner", "+ und − bis 20", "Schritte 1, 2 und 10 bis 100", "Rechnen bis 100 ohne Übergang", "Rechnen bis 100 mit Übergang", "+ und − bis 100", "Gleiche Gruppen", "Malnehmen mit 1, 2, 5 und 10", "Teilen in gleiche Gruppen", "Division ohne Rest", "Einmaleins", "Multiplikation und Division", "Rechnen bis 1.000 ohne Übergang", "Rechnen bis 1.000 mit Übergang", "Rechnen bis 10.000 ohne Übergang", "Rechnen bis 10.000 mit Übergang"],
+      stageNames: ["Mengen von 0 bis 5", "+0 und +1 bis 5", "Addition bis 5", "Zahlzerlegung bis 10", "Addition bis 10", "−1 und −2 bis 5", "Subtraktion bis 10", "+ und − bis 10", "Zahlen von 11 bis 20", "Addition bis 20 ohne Übergang", "Subtraktion bis 20 ohne Übergang", "Addition über den Zehner", "Subtraktion über den Zehner", "+ und − bis 20", "Schritte 1, 2 und 10 bis 100", "Rechnen bis 100 ohne Übergang", "Rechnen bis 100 mit Übergang", "+ und − bis 100", "Gleiche Gruppen", "Malnehmen mit 1, 2, 5 und 10", "Teilen in gleiche Gruppen", "Division ohne Rest", "Einmaleins", "Multiplikation und Division", "Rechnen bis 1.000 ohne Übergang", "Rechnen bis 1.000 mit Übergang", "Rechnen bis 10.000 ohne Übergang", "Rechnen bis 10.000 mit Übergang", "Vier Grundrechenarten mit großen Zahlen", "Quadrate und Kubikzahlen", "Gewöhnliche Brüche verstehen", "Brüche addieren und subtrahieren", "Brüche multiplizieren und dividieren", "Dezimalzahlen addieren und subtrahieren", "Dezimalzahlen multiplizieren und dividieren", "Negative Zahlen", "Vier Grundrechenarten mit rationalen Zahlen", "Potenzen mit natürlichen Exponenten", "Quadratwurzeln", "Kubikwurzeln", "Potenzen und Wurzeln"],
       messages: {
         correct: ["Richtig!", "Klasse!", "Weiter so!", "Super!", "Genau!"],
         streak: ["Starke Serie!", "Drei hintereinander!", "Kapi freut sich!", "Du bist im Rechenfluss!"],
@@ -208,6 +209,7 @@
       if (!appSettings.operations.length) appSettings.operations = ["add"];
       appSettings.sound = value.sound !== false;
       appSettings.curriculumVersion = CURRICULUM_VERSION;
+      if (!appSettings.automatic) syncStageToOperations();
       if (!currentCurriculum) localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
     } catch { /* Keep defaults. */ }
     language = appSettings.language;
@@ -285,7 +287,10 @@
             <div class="stage-summary"><span>${copy.stageBrief(copy.stageNames[stageIndex], STAGE_EXAMPLES[stageIndex])}</span><details><summary aria-label="${copy.stageInfo}" title="${copy.stageInfo}">i</summary><p>${copy.stageDetail(appSettings.manualStage, copy.stageNames[stageIndex], STAGE_EXAMPLES[stageIndex])}</p></details></div>
           </fieldset>
           <fieldset class="operation-settings"><legend>${copy.operations}</legend>
-            ${OPERATION_ORDER.map((operation) => `<label><input type="checkbox" name="operation" value="${operation}" ${appSettings.operations.includes(operation) ? "checked" : ""}> ${copy.operationNames[operation]}</label>`).join("")}
+            ${OPERATION_ORDER.map((operation) => {
+              const available = operationAvailableAtStage(operation, appSettings.manualStage);
+              return `<label class="${available ? "" : "operation-locked"}"><input type="checkbox" name="operation" value="${operation}" ${appSettings.operations.includes(operation) ? "checked" : ""} ${available ? "" : "disabled"}> ${copy.operationNames[operation]}</label>`;
+            }).join("")}
           </fieldset>`}
       </section>`;
   }
@@ -430,7 +435,7 @@
 
   function pick(list) { return list[randomInt(0, list.length - 1)]; }
 
-  const stageLimits = [5, 5, 5, 10, 10, 5, 10, 10, 20, 20, 20, 20, 20, 20, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 1000, 1000, 10000, 10000];
+  const stageLimits = [5, 5, 5, 10, 10, 5, 10, 10, 20, 20, 20, 20, 20, 20, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 1000, 1000, 10000, 10000, 1000000, 1000, 100, 100, 100, 100, 100, 100, 100, 10000, 400, 1000, 10000];
 
   function hasCarry(a, b) {
     while (a > 0 || b > 0) {
@@ -462,8 +467,9 @@
 
   function activeOperations(profile) {
     if (!appSettings.automatic) {
+      if (appSettings.manualStage === 1) return ["count"];
       const selected = OPERATION_ORDER.filter((operation) => appSettings.operations.includes(operation));
-      return selected.length ? selected : ["add"];
+      return selected.length ? selected : [nativeOperationForStage(appSettings.manualStage)];
     }
     const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, profile.currentStage));
     if (stage === 1) return ["count"];
@@ -472,7 +478,15 @@
     if ([8, 14, 15, 16, 17, 18, 25, 26, 27, 28].includes(stage)) return ["add", "subtract"];
     if (stage === 19 || stage === 20 || stage === 23) return ["multiply"];
     if (stage === 21 || stage === 22) return ["divide"];
-    return ["multiply", "divide"];
+    if (stage === 24) return ["multiply", "divide"];
+    if (stage <= 28) return ["add", "subtract"];
+    if (stage === 29) return ["add", "subtract", "multiply", "divide"];
+    if (stage === 30 || stage === 38) return ["power"];
+    if (stage >= 31 && stage <= 33) return ["fraction"];
+    if (stage === 34 || stage === 35) return ["decimal"];
+    if (stage === 36 || stage === 37) return ["negative"];
+    if (stage === 41) return ["power", "root"];
+    return ["root"];
   }
 
   function chooseOperation(profile) {
@@ -504,6 +518,50 @@
     return ({ "10": 8, "20": 14, "100": 24, above100: CURRICULUM_STAGE_COUNT })[appSettings.range] || CURRICULUM_STAGE_COUNT;
   }
 
+  function operationAvailableAtStage(operation, stage) {
+    return stage >= (OPERATION_MIN_STAGE[operation] || 1);
+  }
+
+  function nativeOperationForStage(stage) {
+    if (stage <= 1) return "count";
+    if (stage <= 5) return "add";
+    if (stage <= 7) return "subtract";
+    if (stage <= 18) return "add";
+    if (stage <= 20 || stage === 23) return "multiply";
+    if (stage <= 22) return "divide";
+    if (stage === 24) return "multiply";
+    if (stage <= 29) return "add";
+    if (stage === 30 || stage === 38) return "power";
+    if (stage <= 33) return "fraction";
+    if (stage <= 35) return "decimal";
+    if (stage <= 37) return "negative";
+    return "root";
+  }
+
+  function ensureRangeSupportsStage(stage) {
+    const requiredRange = stage <= 8 ? "10" : stage <= 14 ? "20" : stage <= 24 ? "100" : "above100";
+    const rank = { "10": 1, "20": 2, "100": 3, above100: 4 };
+    if ((rank[appSettings.range] || 0) < rank[requiredRange]) appSettings.range = requiredRange;
+  }
+
+  function reconcileOperationsForStage(stage) {
+    appSettings.operations = OPERATION_ORDER.filter((operation) =>
+      appSettings.operations.includes(operation) && operationAvailableAtStage(operation, stage)
+    );
+    if (stage > 1 && !appSettings.operations.length) appSettings.operations = [nativeOperationForStage(stage)];
+  }
+
+  function syncStageToOperations() {
+    const requiredStage = appSettings.operations.reduce((highest, operation) =>
+      Math.max(highest, OPERATION_MIN_STAGE[operation] || 1), 1
+    );
+    if (appSettings.manualStage < requiredStage) {
+      appSettings.manualStage = requiredStage;
+      ensureRangeSupportsStage(requiredStage);
+    }
+    reconcileOperationsForStage(appSettings.manualStage);
+  }
+
   function promoteToNextRange(profile) {
     if (profile.currentStage >= maximumAllowedStage()) return "";
     profile.currentStage += 1;
@@ -516,6 +574,7 @@
   function makeGeneratedProblem(stage, index, profile) {
     if (appSettings.automatic || (stage >= 19 && stage <= 24)) return makeCurriculumProblem(stage, index, profile);
     const operation = chooseOperation(profile);
+    if (operation === "count") return makeCurriculumProblem(stage, index, profile);
     const max = Math.max(10, effectiveMax(stage));
     const mode = index % 2 === 0 ? "choice" : "input";
     let problem;
@@ -523,11 +582,12 @@
     if (operation === "add" || operation === "subtract") problem = makeAddSubtractProblem(operation, stage, max, profile);
     else if (operation === "multiply") problem = makeMultiplicationProblem(max);
     else if (operation === "divide") problem = makeDivisionProblem(max);
-    else if (operation === "negative") problem = makeNegativeProblem(max);
-    else if (operation === "decimal") problem = makeDecimalProblem(max, operationMastered(profile, "decimal"));
-    else if (operation === "fraction") problem = makeFractionProblem(operationMastered(profile, "fraction"));
-    else if (operation === "power") problem = makePowerProblem(max, operationMastered(profile, "power"));
-    else problem = makeRootProblem(max, operationMastered(profile, "root"));
+    else if (operation === "negative") problem = makeNegativeProblem(max, stage >= 37);
+    else if (operation === "decimal") problem = makeDecimalProblem(max, operationMastered(profile, "decimal"), stage >= 35);
+   else if (operation === "fraction") problem = makeFractionProblem(operationMastered(profile, "fraction"), stage);
+    else if (operation === "fraction") problem = makeFractionProblem(operationMastered(profile, "fraction"), stage);
+    else if (operation === "power") problem = makePowerProblem(max, operationMastered(profile, "power") || stage >= 38);
+    else problem = makeRootProblem(max, operationMastered(profile, "root") || stage >= 40, stage >= 40 ? 3 : 2);
 
     problem.operation = operation;
     problem.mode = mode;
@@ -669,6 +729,31 @@
         problem = { a, b, answer, operator: ":", text: `${a} : ${b} = ?` };
         operation = "divide";
       }
+    } else if (current === 29) {
+      if (operation === "add" || operation === "subtract") problem = makeAddSubtractProblem(operation, current, 1000000, profile);
+      else if (operation === "multiply") problem = makeMultiplicationProblem(1000000);
+      else problem = makeDivisionProblem(1000000);
+    } else if (current === 30 || current === 38) {
+      operation = "power";
+      problem = makePowerProblem(current === 30 ? 1000 : 10000, current === 38);
+    } else if (current >= 31 && current <= 33) {
+      operation = "fraction";
+      problem = makeFractionProblem(operationMastered(profile, "fraction"), current);
+    } else if (current >= 34 && current <= 35) {
+      operation = "decimal";
+      problem = makeDecimalProblem(100, operationMastered(profile, "decimal"), current === 35);
+    } else if (current >= 36 && current <= 37) {
+      operation = "negative";
+      problem = makeNegativeProblem(100, current === 37);
+    } else if (current === 39) {
+      operation = "root";
+      problem = makeRootProblem(400, false, 2);
+    } else if (current === 40) {
+      operation = "root";
+      problem = makeRootProblem(1000, true, 3);
+    } else if (current === 41) {
+      operation = pick(["power", "root"]);
+      problem = operation === "power" ? makePowerProblem(10000, true) : makeRootProblem(10000, true);
     } else {
       const max = current <= 26 ? 1000 : 10000;
       const transition = current === 26 || current === 28;
@@ -760,15 +845,38 @@
     return { a, b: divisor, answer, operator: "÷", text: `${a} ÷ ${divisor} = ?` };
   }
 
-  function makeNegativeProblem(max) {
+  function makeNegativeProblem(max, advanced = false) {
     const limit = Math.min(max, 100);
+    if (advanced && Math.random() < .45) {
+      const divisor = randomInt(2, 10);
+      const answer = randomInt(-10, 10);
+      const dividend = divisor * answer;
+      return { a: dividend, b: divisor, answer, operator: ":", text: `${dividend} : ${divisor} = ?` };
+    }
+    if (advanced && Math.random() < .45) {
+      const a = randomInt(-10, 10);
+      const b = randomInt(-10, 10);
+      return { a, b, answer: a * b, operator: "×", text: `${a} × (${b}) = ?` };
+    }
     const a = randomInt(0, Math.max(1, Math.floor(limit * .7)));
     const b = randomInt(a + 1, limit);
     return { a, b, answer: a - b, operator: "−", text: `${a} − ${b} = ?` };
   }
 
-  function makeDecimalProblem(max, mastered) {
+  function makeDecimalProblem(max, mastered, advanced = false) {
     const places = mastered && Math.random() < .4 ? 100 : 10;
+    if (advanced && Math.random() < .5) {
+      const divisor = randomInt(2, 9);
+      const answer = randomInt(1, Math.max(2, Math.min(20, Math.floor(max / 10))));
+      const dividend = divisor * answer;
+      return { a: dividend / 10, b: divisor / 10, answer, operator: "÷", answerType: "decimal", text: `${formatProblemNumber(dividend / 10)} ÷ ${formatProblemNumber(divisor / 10)} = ?` };
+    }
+    if (advanced) {
+      const a = randomInt(1, 20) / 10;
+      const b = randomInt(1, 20) / 10;
+      const answer = Number((a * b).toFixed(2));
+      return { a, b, answer, operator: "×", answerType: "decimal", text: `${formatProblemNumber(a)} × ${formatProblemNumber(b)} = ?` };
+    }
     const limit = Math.max(10, Math.min(max * places, 10000));
     let left = randomInt(1, Math.max(2, Math.floor(limit * .7)));
     let right = randomInt(1, Math.max(1, limit - left));
@@ -781,46 +889,52 @@
     return { a, b, answer, operator, answerType: "decimal", text: `${formatProblemNumber(a)} ${operator} ${formatProblemNumber(b)} = ?` };
   }
 
-  function makeFractionProblem(mastered) {
-    const denominator = randomInt(3, 10);
-    let left = randomInt(1, denominator - 2);
-    let right = randomInt(1, denominator - left - 1);
-    let operator = "+";
-    let numerator;
-    let resultDenominator;
-    if (mastered && Math.random() < .45) {
-      operator = Math.random() < .5 ? "×" : "÷";
-      if (operator === "×") {
-        numerator = left * right;
-        resultDenominator = denominator * denominator;
-      } else {
-        const rightDenominator = denominator;
-        if (left * rightDenominator >= right * denominator) [left, right] = [right, left];
-        numerator = left * rightDenominator;
-        resultDenominator = denominator * right;
-      }
+function makeFractionProblem(mastered, stage = 31) {
+  const denominator = randomInt(3, 10);
+  let left = randomInt(1, denominator - 2);
+  let right = randomInt(1, denominator - left - 1);
+  let operator = "+";
+  let numerator;
+  let resultDenominator;
+  if (stage >= 33 || (mastered && Math.random() < .45)) {
+    operator = Math.random() < .5 ? "×" : "÷";
+    if (operator === "×") {
+      numerator = left * right;
+      resultDenominator = denominator * denominator;
     } else {
-      const useSubtract = Math.random() < .4;
-      if (useSubtract) {
-        operator = "−";
-        if (right > left) [left, right] = [right, left];
-        numerator = left - right;
-      } else numerator = left + right;
-      resultDenominator = denominator;
+      const rightDenominator = denominator;
+      if (left * rightDenominator >= right * denominator) [left, right] = [right, left];
+      numerator = left * rightDenominator;
+      resultDenominator = denominator * right;
     }
-    const answer = normalizeFraction(numerator, resultDenominator);
-    return { a: `${left}/${denominator}`, b: `${right}/${denominator}`, answer, operator, answerType: "fraction", text: `${left}/${denominator} ${operator} ${right}/${denominator} = ?` };
+  } else if (stage >= 32) {
+    const rightDenominator = denominator;
+    right = randomInt(1, denominator - 1);
+    operator = Math.random() < .5 ? "+" : "−";
+    numerator = left * rightDenominator + (operator === "+" ? right * denominator : -right * denominator);
+    resultDenominator = denominator * rightDenominator;
+  } else {
+    const useSubtract = Math.random() < .4;
+    if (useSubtract) {
+      operator = "−";
+      if (right > left) [left, right] = [right, left];
+      numerator = left - right;
+    } else numerator = left + right;
+    resultDenominator = denominator;
   }
+  const answer = normalizeFraction(numerator, resultDenominator);
+  return { a: `${left}/${denominator}`, b: `${right}/${denominator}`, answer, operator, answerType: "fraction", text: `${left}/${denominator} ${operator} ${right}/${denominator} = ?` };
+}
 
-  function makePowerProblem(max, mastered) {
-    const exponent = mastered && Math.random() < .35 ? 3 : 2;
+function makePowerProblem(max, mastered) {
+    const exponent = mastered ? randomInt(2, 5) : 2;
     const largestBase = Math.max(2, Math.floor(Math.pow(max, 1 / exponent)));
     const base = randomInt(2, Math.min(largestBase, exponent === 2 ? 20 : 10));
     return { a: base, b: exponent, answer: base ** exponent, operator: "^", text: `${base}${exponent === 2 ? "²" : "³"} = ?` };
   }
 
-  function makeRootProblem(max, mastered) {
-    const cube = mastered && Math.random() < .3;
+  function makeRootProblem(max, mastered, degreeOverride = null) {
+    const cube = degreeOverride === 3 || (degreeOverride !== 2 && mastered && Math.random() < .3);
     const degree = cube ? 3 : 2;
     const largestRoot = Math.max(2, Math.floor(Math.pow(max, 1 / degree)));
     const answer = randomInt(2, Math.min(largestRoot, cube ? 10 : 20));
@@ -1076,8 +1190,9 @@
       const text = state.streak > 0 && state.streak % 3 === 0 ? pick(messages.streak) : pick(messages.correct);
       $("feedback").textContent = `${text} +${earned} ★`;
       setMascot("happy");
-      sound(state.streak > 0 && state.streak % 3 === 0 ? "streak" : "correct");
       const streakScene = state.streak === 10 ? "dance" : state.streak === 6 ? "party" : state.streak === 3 ? "flag" : "";
+      const hasMotivationBanner = Boolean(operationMessage || adaptiveMessage || streakScene || (state.streak > 0 && state.streak % 3 === 0));
+      if (!hasMotivationBanner) sound(state.streak > 0 && state.streak % 3 === 0 ? "streak" : "correct");
       if (operationMessage || adaptiveMessage) showMotivation(operationMessage || adaptiveMessage, copy.adaptiveAdjusted, advance, reachedNewStage ? "handshake" : (streakScene || "flag"));
       else if (streakScene) showMotivation(streakScene === "dance" ? copy.rewardDance : streakScene === "party" ? copy.rewardParty : copy.rewardFlag, copy.rightInRow(state.streak), advance, streakScene);
       else if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, copy.rightInRow(state.streak), advance, "flag");
@@ -1477,7 +1592,6 @@
     makeConfetti();
     showMotivation(advanced ? copy.rewardHandshake : pick(messages.complete), `+${state.score} XP`, null, advanced ? "handshake" : "dance");
     showScreen($("resultScreen"));
-    sound("complete");
   }
 
   function saveSession(session) {
@@ -1571,6 +1685,7 @@
     dance: "assets/kapi-dance.webp",
     handshake: "assets/kapi-handshake.webp"
   };
+  const motivationSounds = { flag: "flag", party: "party", dance: "dance", handshake: "handshake" };
 
   function showMotivation(title, subtitle, action = null, scene = "flag") {
     dismissMotivation(false);
@@ -1587,6 +1702,7 @@
     card.style.animation = "none";
     void card.offsetWidth;
     card.style.animation = "";
+    sound(motivationSounds[scene] || "flag");
     motivationAction = action;
     motivationTimer = window.setTimeout(() => dismissMotivation(true), 3000);
   }
@@ -1611,7 +1727,11 @@
         correct: [[520, 0, .08], [700, .09, .1]],
         wrong: [[220, 0, .11], [185, .1, .12]],
         streak: [[520, 0, .07], [660, .08, .07], [880, .16, .14]],
-        complete: [[440, 0, .1], [554, .11, .1], [660, .22, .1], [880, .34, .2]]
+        complete: [[440, 0, .1], [554, .11, .1], [660, .22, .1], [880, .34, .2]],
+        flag: [[523, 0, .08], [659, .08, .08], [784, .16, .18]],
+        party: [[392, 0, .12], [523, .12, .12], [659, .24, .12], [784, .36, .22]],
+        dance: [[659, 0, .08], [784, .1, .08], [880, .2, .08], [784, .3, .08], [988, .4, .18]],
+        handshake: [[523, 0, .18], [659, 0, .18], [784, 0, .24]]
         ,tap: [[360, 0, .035]]
       };
       (patterns[type] || patterns.correct).forEach(([frequency, delay, duration]) => {
@@ -1784,6 +1904,7 @@
     if (input.name === "range") {
       appSettings.range = input.value;
       appSettings.manualStage = Math.min(appSettings.manualStage, maximumAllowedStage());
+      reconcileOperationsForStage(appSettings.manualStage);
       saveSettings();
       renderSettingsContent();
       updateHomeStats();
@@ -1799,6 +1920,7 @@
         if (appSettings.manualStage === 24) profile.divisionDerivedSequence = { phase: 0, item: 0, mixed: false };
         saveProfile(profile);
       }
+      reconcileOperationsForStage(appSettings.manualStage);
       saveSettings();
       renderSettingsContent();
       updateHomeStats();
@@ -1811,6 +1933,18 @@
         return;
       }
       appSettings.operations = OPERATION_ORDER.filter((operation) => selected.includes(operation));
+      const requiredStage = appSettings.operations.reduce((highest, operation) =>
+        Math.max(highest, OPERATION_MIN_STAGE[operation] || 1), 1
+      );
+      if (appSettings.manualStage < requiredStage) {
+        appSettings.manualStage = requiredStage;
+        ensureRangeSupportsStage(requiredStage);
+      }
+      reconcileOperationsForStage(appSettings.manualStage);
+      saveSettings();
+      renderSettingsContent();
+      updateHomeStats();
+      return;
     }
     saveSettings();
   }
