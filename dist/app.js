@@ -271,7 +271,8 @@
     }
     const profile = getProfile();
     const maxStage = maximumAllowedStage();
-    const selectedStage = Math.min(maxStage, appSettings.automatic ? profile.currentStage : appSettings.manualStage);
+    const selectableStageCount = appSettings.automatic ? maxStage : CURRICULUM_STAGE_COUNT;
+    const selectedStage = Math.min(selectableStageCount, appSettings.automatic ? profile.currentStage : appSettings.manualStage);
     if (appSettings.automatic && profile.currentStage !== selectedStage) {
       profile.currentStage = selectedStage;
       saveProfile(profile);
@@ -291,7 +292,7 @@
           ${[["10", copy.rangeNames[10]], ["20", copy.rangeNames[20]], ["100", copy.rangeNames[100]], ["above100", copy.rangeNames.above100]].map(([value, label]) => `<label><input type="radio" name="range" value="${value}" ${appSettings.range === value ? "checked" : ""}> ${label}</label>`).join("")}
         </fieldset>
         <fieldset class="stage-settings"><legend>${appSettings.automatic ? copy.startStage : copy.chooseStage}</legend>
-            <select name="manualStage" aria-label="${appSettings.automatic ? copy.startStage : copy.chooseStage}">${Array.from({ length: maxStage }, (_, index) => `<option value="${index + 1}" ${selectedStage === index + 1 ? "selected" : ""}>${index + 1}. ${copy.stageNames[index]}</option>`).join("")}</select>
+            <select name="manualStage" aria-label="${appSettings.automatic ? copy.startStage : copy.chooseStage}">${Array.from({ length: selectableStageCount }, (_, index) => `<option value="${index + 1}" ${selectedStage === index + 1 ? "selected" : ""}>${index + 1}. ${copy.stageNames[index]}</option>`).join("")}</select>
             <div class="stage-summary"><span>${copy.stageBrief(copy.stageNames[stageIndex], STAGE_EXAMPLES[stageIndex])}</span><details><summary aria-label="${copy.stageInfo}" title="${copy.stageInfo}">i</summary><p>${copy.stageDetail(appSettings.manualStage, copy.stageNames[stageIndex], STAGE_EXAMPLES[stageIndex])}</p></details></div>
         </fieldset>
         <fieldset class="operation-settings"><legend>${copy.operations}</legend>
@@ -548,9 +549,13 @@
   }
 
   function ensureRangeSupportsStage(stage) {
-    const requiredRange = stage <= 8 ? "10" : stage <= 14 ? "20" : stage <= 24 ? "100" : "above100";
+    const requiredRange = rangeForStage(stage);
     const rank = { "10": 1, "20": 2, "100": 3, above100: 4 };
     if ((rank[appSettings.range] || 0) < rank[requiredRange]) appSettings.range = requiredRange;
+  }
+
+  function rangeForStage(stage) {
+    return stage <= 8 ? "10" : stage <= 14 ? "20" : stage <= 24 ? "100" : "above100";
   }
 
   function reconcileOperationsForStage(stage) {
@@ -569,6 +574,10 @@
       ensureRangeSupportsStage(requiredStage);
     }
     reconcileOperationsForStage(appSettings.manualStage);
+  }
+
+  function availableOperationsThroughStage(stage) {
+    return OPERATION_ORDER.filter((operation) => operationAvailableAtStage(operation, stage));
   }
 
   function setAdaptiveStage(profile, stage) {
@@ -594,9 +603,12 @@
   }
 
   function makeGeneratedProblem(stage, index, profile) {
-    if (appSettings.automatic || (stage >= 19 && stage <= 24)) return makeCurriculumProblem(stage, index, profile);
+    if (appSettings.automatic) return makeCurriculumProblem(stage, index, profile);
     const operation = chooseOperation(profile);
     if (operation === "count") return makeCurriculumProblem(stage, index, profile);
+    if ((operation === "multiply" && [19, 20, 23].includes(stage)) || (operation === "divide" && [21, 22, 24].includes(stage))) {
+      return makeCurriculumProblemForStage(stage, index, profile);
+    }
     const max = Math.max(10, effectiveMax(stage));
     const mode = index % 2 === 0 ? "choice" : "input";
     let problem;
@@ -1946,7 +1958,11 @@ function makePowerProblem(max, mastered) {
     }
     if (input.name === "manualStage") {
       const previousStage = appSettings.manualStage;
-      appSettings.manualStage = Math.min(maximumAllowedStage(), Math.max(1, Number(input.value) || 1));
+      appSettings.manualStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(input.value) || 1));
+      if (!appSettings.automatic) {
+        appSettings.range = rangeForStage(appSettings.manualStage);
+        appSettings.operations = availableOperationsThroughStage(appSettings.manualStage);
+      }
       if (appSettings.manualStage !== previousStage || appSettings.automatic) {
         const profile = getProfile();
         if (appSettings.automatic) setAdaptiveStage(profile, appSettings.manualStage);
