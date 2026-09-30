@@ -24,7 +24,7 @@
   const CORE_DIVISORS = [1, 2, 10, 5];
   const DERIVED_DIVISORS = [4, 3, 9, 6, 8, 7];
   const STAGE_EXAMPLES = ["● ● ●", "3 + 1", "2 + 3", "6 + 4", "4 + 5", "5 − 1", "9 − 3", "6 + 3 / 8 − 4", "10 + 7", "12 + 3", "18 − 4", "8 + 5", "13 − 5", "16 − 7 / 7 + 8", "42 + 10", "34 + 23", "37 + 25", "63 − 27", "3 + 3 + 3", "5 × 2", "12 : 3", "20 : 5", "7 × 8", "42 : 6 / 6 × 7", "340 + 220", "478 − 195", "3 400 + 2 100", "6 302 − 2 748", "48 000 ÷ 600", "7²", "1/4 + 2/4", "2/3 + 1/6", "3/4 × 2/5", "2,4 + 1,7", "3,6 ÷ 0,6", "4 − 9", "−6 × 3", "2⁵", "√144", "∛125", "3³ / √81"];
-  const appSettings = { language: "de", problemCount: 20, automatic: true, range: "above100", operations: ["add", "subtract"], manualStage: 1, sound: true, curriculumVersion: CURRICULUM_VERSION };
+  const appSettings = { language: "de", problemCount: 20, automatic: true, range: "above100", operations: [...OPERATION_ORDER], manualStage: 1, sound: true, curriculumVersion: CURRICULUM_VERSION };
   const translations = {
     ru: {
       locale: "ru-RU", appName: "Считаем с Капи", description: "Адаптивный тренажёр арифметики для детей — от сложения до корней.",
@@ -60,7 +60,7 @@
       subtractionUnlocked: "Сложение освоено — начинаем вычитание!",
       operationUnlocked: (name) => `Новое действие: ${name}`,
       installKicker: "Приложение Капи", installTitle: "Установить на телефон?", installText: "Капи появится на главном экране и будет открываться без панели браузера.", installNow: "Установить", installHome: "Установить приложение", continueBrowser: "Продолжить в браузере", iosInstallText: "На iPhone нажмите «Поделиться», затем «На экран Домой».",
-      settings: "Настройки", settingsHint: "Параметры тренировки сохраняются на этом устройстве.", language: "Язык", examples: "Количество примеров", mode: "Режим", automatic: "Автоматически: от простого к сложному", range: "Диапазон чисел", operations: "Действия", sound: "Звук", soundEnabled: "Включён", soundDisabled: "Выключен", update: "Обновить приложение", updateReady: "Доступно обновление", share: "Поделиться результатом", shareText: "Попробуйте тренажёр «Считаем с Капи»", shareDone: "Готово", closeSettings: "Закрыть настройки", genericHint: "Разбери пример по шагам и попробуй ещё раз.", startDescriptionFor: () => "Капи постепенно повышает сложность.", correctOfTotal: (count) => `верно из ${count}`, rangeNames: { auto: "Без ограничений", 10: "До 10", 20: "До 20", 100: "До 100", above100: "Выше 100" }, operationNames: { add: "Сложение +", subtract: "Вычитание −", multiply: "Умножение ×", divide: "Деление ÷", negative: "Отрицательные числа", decimal: "Десятичные дроби", fraction: "Обыкновенные дроби", power: "Степени", root: "Корни" },
+      settings: "Настройки", settingsHint: "Параметры тренировки сохраняются на этом устройстве.", language: "Язык", examples: "Количество примеров", mode: "Режим", automatic: "Автоматически повышать ступень", automaticHint: "Ступень может повышаться или временно понижаться по результатам. Новые действия добавляются по учебной последовательности.", range: "Максимальный диапазон чисел", operations: "Действия", operationsAutomatic: "Действия открываются автоматически. Отмечены уже доступные на текущей ступени.", startStage: "Стартовая ступень", sound: "Звук", soundEnabled: "Включён", soundDisabled: "Выключен", update: "Обновить приложение", updateReady: "Доступно обновление", share: "Поделиться результатом", shareText: "Попробуйте тренажёр «Считаем с Капи»", shareDone: "Готово", closeSettings: "Закрыть настройки", genericHint: "Разбери пример по шагам и попробуй ещё раз.", startDescriptionFor: () => "Капи постепенно повышает сложность.", correctOfTotal: (count) => `верно из ${count}`, rangeNames: { auto: "Без ограничений", 10: "До 10", 20: "До 20", 100: "До 100", above100: "Выше 100" }, operationNames: { add: "Сложение +", subtract: "Вычитание −", multiply: "Умножение ×", divide: "Деление ÷", negative: "Отрицательные числа", decimal: "Десятичные дроби", fraction: "Обыкновенные дроби", power: "Степени", root: "Корни" },
       settingsCounting: "Настройки счёта", settingsGeneral: "Общие", settingsAbout: "О программе", backToSettings: "Назад к меню", settingsCountingMenu: "Количество примеров, режим, ступень и действия", settingsGeneralMenu: "Язык и звук", settingsAboutMenu: "Описание, автор и обратная связь", chooseStage: "Учебная ступень", stageInfo: "Подробно о ступени", stageBrief: (name, example) => `${name}. Пример: ${example}.`, stageDetail: (stage, name, example) => `Ступень ${stage}: ${name}. Ребёнок выполняет задания только этого типа. Типичный пример: ${example}. При автоматической сложности переход возможен только после освоения предыдущей ступени.`, aboutText: "«Считаем с Капи» — детский тренажёр арифметики от первых чисел до тем 10-го класса. В приложении принята смешанная последовательность, основанная на общих темах немецких учебных программ, но не привязанная к конкретному типу школы или федеральной земле.", feedbackTitle: "Замечания и предложения", feedbackName: "Имя (необязательно)", feedbackMessage: "Сообщение", feedbackPlaceholder: "Что нужно исправить или добавить?", sendWhatsApp: "Открыть WhatsApp", author: "Автор программы", feedbackIntro: "После нажатия откроется WhatsApp с готовым сообщением. Проверьте его и нажмите «Отправить».",
       legacyStageInfo: "Это занятие было записано до перехода на новую шкалу. Подробное описание старой ступени недоступно.",
       multiplicationZero: "Умножение на ноль", multiplicationRow: (factor) => `Таблица на ${factor}`, multiplicationSquares: "Квадраты чисел", multiplicationMixed: "Теперь примеры вперемешку", divisionRow: (divisor) => `Деление на ${divisor}`, divisionMixed: "Теперь деление вперемешку",
@@ -106,7 +106,7 @@
       subtractionUnlocked: "Addition geschafft – jetzt beginnt die Subtraktion!",
       operationUnlocked: (name) => `Neu freigeschaltet: ${name}`,
       installKicker: "Kapi-App", installTitle: "Auf dem Handy installieren?", installText: "Kapi erscheint auf dem Startbildschirm und öffnet sich ohne Browserleiste.", installNow: "Installieren", installHome: "App installieren", continueBrowser: "Im Browser fortfahren", iosInstallText: "Tippe auf dem iPhone auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
-      settings: "Einstellungen", settingsHint: "Die Trainingsoptionen werden auf diesem Gerät gespeichert.", language: "Sprache", examples: "Anzahl der Aufgaben", mode: "Modus", automatic: "Automatisch: von leicht zu schwer", range: "Zahlenbereich", operations: "Rechenarten", sound: "Ton", soundEnabled: "Ein", soundDisabled: "Aus", update: "App aktualisieren", updateReady: "Update verfügbar", share: "Ergebnis teilen", shareText: "Probiere „Rechnen mit Kapi“ aus", shareDone: "Fertig", closeSettings: "Einstellungen schließen", genericHint: "Löse die Aufgabe Schritt für Schritt und versuche es noch einmal.", startDescriptionFor: () => "Kapi erhöht die Schwierigkeit Schritt für Schritt.", correctOfTotal: (count) => `richtig von ${count}`, rangeNames: { auto: "Ohne Begrenzung", 10: "Bis 10", 20: "Bis 20", 100: "Bis 100", above100: "Über 100" }, operationNames: { add: "Addition +", subtract: "Subtraktion −", multiply: "Multiplikation ×", divide: "Division ÷", negative: "Negative Zahlen", decimal: "Dezimalzahlen", fraction: "Brüche", power: "Potenzen", root: "Wurzeln" },
+      settings: "Einstellungen", settingsHint: "Die Trainingsoptionen werden auf diesem Gerät gespeichert.", language: "Sprache", examples: "Anzahl der Aufgaben", mode: "Modus", automatic: "Lernstufe automatisch erhöhen", automaticHint: "Die Lernstufe kann je nach Ergebnis steigen oder vorübergehend sinken. Neue Rechenarten werden nach der Lernfolge freigeschaltet.", range: "Maximaler Zahlenbereich", operations: "Rechenarten", operationsAutomatic: "Rechenarten werden automatisch freigeschaltet. Markiert sind die auf dieser Lernstufe verfügbaren Arten.", startStage: "Startstufe", sound: "Ton", soundEnabled: "Ein", soundDisabled: "Aus", update: "App aktualisieren", updateReady: "Update verfügbar", share: "Ergebnis teilen", shareText: "Probiere „Rechnen mit Kapi“ aus", shareDone: "Fertig", closeSettings: "Einstellungen schließen", genericHint: "Löse die Aufgabe Schritt für Schritt und versuche es noch einmal.", startDescriptionFor: () => "Kapi erhöht die Schwierigkeit Schritt für Schritt.", correctOfTotal: (count) => `richtig von ${count}`, rangeNames: { auto: "Ohne Begrenzung", 10: "Bis 10", 20: "Bis 20", 100: "Bis 100", above100: "Über 100" }, operationNames: { add: "Addition +", subtract: "Subtraktion −", multiply: "Multiplikation ×", divide: "Division ÷", negative: "Negative Zahlen", decimal: "Dezimalzahlen", fraction: "Brüche", power: "Potenzen", root: "Wurzeln" },
       settingsCounting: "Recheneinstellungen", settingsGeneral: "Allgemein", settingsAbout: "Über die App", backToSettings: "Zurück zum Menü", settingsCountingMenu: "Aufgabenanzahl, Modus, Lernstufe und Rechenarten", settingsGeneralMenu: "Sprache und Ton", settingsAboutMenu: "Beschreibung, Entwickler und Feedback", chooseStage: "Lernstufe", stageInfo: "Details zur Lernstufe", stageBrief: (name, example) => `${name}. Beispiel: ${example}.`, stageDetail: (stage, name, example) => `Stufe ${stage}: ${name}. Das Kind übt ausschließlich Aufgaben dieses Typs. Typisches Beispiel: ${example}. Im automatischen Modus wird diese Stufe erst nach der vorherigen Stufe freigeschaltet.`, aboutText: "„Rechnen mit Kapi“ ist ein Rechentrainer von den ersten Zahlen bis zu Themen der 10. Klasse. Die App verwendet eine gemischte Reihenfolge auf Grundlage gemeinsamer Themen deutscher Lehrpläne, ist aber nicht an eine bestimmte Schulform oder ein Bundesland gebunden.", feedbackTitle: "Hinweise und Vorschläge", feedbackName: "Name (optional)", feedbackMessage: "Nachricht", feedbackPlaceholder: "Was sollen wir verbessern oder ergänzen?", sendWhatsApp: "WhatsApp öffnen", author: "Über den Entwickler", feedbackIntro: "Nach dem Tippen öffnet sich WhatsApp mit einer vorbereiteten Nachricht. Prüfe sie und tippe dort auf „Senden“.",
       legacyStageInfo: "Dieses Training wurde vor der neuen Lernskala gespeichert. Eine genaue Beschreibung der früheren Stufe ist nicht verfügbar.",
       multiplicationZero: "Malnehmen mit null", multiplicationRow: (factor) => `${factor}er-Reihe`, multiplicationSquares: "Quadrataufgaben", multiplicationMixed: "Jetzt kommen gemischte Malaufgaben", divisionRow: (divisor) => `Teilen durch ${divisor}`, divisionMixed: "Jetzt kommen gemischte Geteiltaufgaben",
@@ -119,6 +119,8 @@
       }
     }
   };
+  translations.ru.stageNames[8] = "состав чисел 11–20: 10 + n";
+  translations.de.stageNames[8] = "Zahlen 11–20 als 10 + n";
   let copy = translations[language];
   let messages = copy.messages;
   let deferredInstallPrompt = null;
@@ -204,7 +206,7 @@
       appSettings.range = currentCurriculum && ["10", "20", "100", "above100"].includes(String(value.range)) ? String(value.range) : "above100";
       appSettings.operations = currentCurriculum && Array.isArray(value.operations)
         ? OPERATION_ORDER.filter((operation) => value.operations.includes(operation))
-        : ["add", "subtract"];
+        : [...OPERATION_ORDER];
       appSettings.manualStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(value.manualStage) || 1));
       if (!appSettings.operations.length) appSettings.operations = ["add"];
       appSettings.sound = value.sound !== false;
@@ -267,9 +269,15 @@
         </section>`;
       return;
     }
+    const profile = getProfile();
     const maxStage = maximumAllowedStage();
-    if (appSettings.manualStage > maxStage) appSettings.manualStage = maxStage;
-    const stageIndex = appSettings.manualStage - 1;
+    const selectedStage = Math.min(maxStage, appSettings.automatic ? profile.currentStage : appSettings.manualStage);
+    if (appSettings.automatic && profile.currentStage !== selectedStage) {
+      profile.currentStage = selectedStage;
+      saveProfile(profile);
+    }
+    appSettings.manualStage = selectedStage;
+    const stageIndex = selectedStage - 1;
     content.innerHTML = `${navigation}
       <section class="settings-panel">
         <fieldset><legend>${copy.examples}</legend>
@@ -277,21 +285,23 @@
         </fieldset>
         <fieldset><legend>${copy.mode}</legend>
           <label class="setting-wide"><input type="checkbox" name="automatic" ${appSettings.automatic ? "checked" : ""}> ${copy.automatic}</label>
+          ${appSettings.automatic ? `<p class="settings-note">${copy.automaticHint}</p>` : ""}
         </fieldset>
-        ${appSettings.automatic ? "" : `
-          <fieldset><legend>${copy.range}</legend>
-            ${[["10", copy.rangeNames[10]], ["20", copy.rangeNames[20]], ["100", copy.rangeNames[100]], ["above100", copy.rangeNames.above100]].map(([value, label]) => `<label><input type="radio" name="range" value="${value}" ${appSettings.range === value ? "checked" : ""}> ${label}</label>`).join("")}
-          </fieldset>
-          <fieldset class="stage-settings"><legend>${copy.chooseStage}</legend>
-            <select name="manualStage" aria-label="${copy.chooseStage}">${Array.from({ length: maxStage }, (_, index) => `<option value="${index + 1}" ${appSettings.manualStage === index + 1 ? "selected" : ""}>${index + 1}. ${copy.stageNames[index]}</option>`).join("")}</select>
+        <fieldset><legend>${copy.range}</legend>
+          ${[["10", copy.rangeNames[10]], ["20", copy.rangeNames[20]], ["100", copy.rangeNames[100]], ["above100", copy.rangeNames.above100]].map(([value, label]) => `<label><input type="radio" name="range" value="${value}" ${appSettings.range === value ? "checked" : ""}> ${label}</label>`).join("")}
+        </fieldset>
+        <fieldset class="stage-settings"><legend>${appSettings.automatic ? copy.startStage : copy.chooseStage}</legend>
+            <select name="manualStage" aria-label="${appSettings.automatic ? copy.startStage : copy.chooseStage}">${Array.from({ length: maxStage }, (_, index) => `<option value="${index + 1}" ${selectedStage === index + 1 ? "selected" : ""}>${index + 1}. ${copy.stageNames[index]}</option>`).join("")}</select>
             <div class="stage-summary"><span>${copy.stageBrief(copy.stageNames[stageIndex], STAGE_EXAMPLES[stageIndex])}</span><details><summary aria-label="${copy.stageInfo}" title="${copy.stageInfo}">i</summary><p>${copy.stageDetail(appSettings.manualStage, copy.stageNames[stageIndex], STAGE_EXAMPLES[stageIndex])}</p></details></div>
-          </fieldset>
-          <fieldset class="operation-settings"><legend>${copy.operations}</legend>
+        </fieldset>
+        <fieldset class="operation-settings"><legend>${copy.operations}</legend>
+            ${appSettings.automatic ? `<p class="settings-note">${copy.operationsAutomatic}</p>` : ""}
             ${OPERATION_ORDER.map((operation) => {
-              const available = operationAvailableAtStage(operation, appSettings.manualStage);
-              return `<label class="${available ? "" : "operation-locked"}"><input type="checkbox" name="operation" value="${operation}" ${appSettings.operations.includes(operation) ? "checked" : ""} ${available ? "" : "disabled"}> ${copy.operationNames[operation]}</label>`;
+              const available = operationAvailableAtStage(operation, selectedStage);
+              const checked = appSettings.automatic ? available : appSettings.operations.includes(operation);
+              return `<label class="${available ? "" : "operation-locked"}"><input type="checkbox" name="operation" value="${operation}" ${checked ? "checked" : ""} ${(appSettings.automatic || !available) ? "disabled" : ""}> ${copy.operationNames[operation]}</label>`;
             }).join("")}
-          </fieldset>`}
+        </fieldset>
       </section>`;
   }
 
@@ -514,7 +524,6 @@
   }
 
   function maximumAllowedStage() {
-    if (appSettings.automatic) return CURRICULUM_STAGE_COUNT;
     return ({ "10": 8, "20": 14, "100": 24, above100: CURRICULUM_STAGE_COUNT })[appSettings.range] || CURRICULUM_STAGE_COUNT;
   }
 
@@ -560,6 +569,19 @@
       ensureRangeSupportsStage(requiredStage);
     }
     reconcileOperationsForStage(appSettings.manualStage);
+  }
+
+  function setAdaptiveStage(profile, stage) {
+    const nextStage = Math.min(maximumAllowedStage(), Math.max(1, Number(stage) || 1));
+    profile.currentStage = nextStage;
+    profile.adaptiveRecentResults = [];
+    profile.accelerationWindow = [];
+    profile.curriculumStats[String(nextStage)] = [];
+    appSettings.manualStage = nextStage;
+    if (nextStage === 22) profile.divisionCoreSequence = { phase: 0, item: 0, mixed: false };
+    if (nextStage === 23) profile.multiplicationSequence = { phase: 0, item: 1, mixed: false };
+    if (nextStage === 24) profile.divisionDerivedSequence = { phase: 0, item: 0, mixed: false };
+    saveProfile(profile);
   }
 
   function promoteToNextRange(profile) {
@@ -1291,6 +1313,8 @@ function makePowerProblem(max, mastered) {
     if (recentFive.length === 5 && errorCount / recentFive.length > .2 && profile.currentStage > 1) {
       profile.currentStage -= 1;
       profile.adaptiveRecentResults = [];
+      profile.accelerationWindow = [];
+      profile.curriculumStats[String(profile.currentStage)] = [];
       state.stage = profile.currentStage;
       saveProfile(profile);
       return copy.easierStep(copy.stageNames[profile.currentStage - 1]);
@@ -1895,7 +1919,13 @@ function makePowerProblem(max, mastered) {
     }
     if (input.name === "automatic") {
       appSettings.automatic = input.checked;
-      if (!appSettings.automatic) appSettings.manualStage = Math.min(getProfile().currentStage, maximumAllowedStage());
+      const profile = getProfile();
+      if (appSettings.automatic) {
+        setAdaptiveStage(profile, appSettings.manualStage);
+      } else {
+        appSettings.manualStage = Math.min(profile.currentStage, maximumAllowedStage());
+        reconcileOperationsForStage(appSettings.manualStage);
+      }
       saveSettings();
       renderSettingsContent();
       updateHomeStats();
@@ -1903,8 +1933,12 @@ function makePowerProblem(max, mastered) {
     }
     if (input.name === "range") {
       appSettings.range = input.value;
-      appSettings.manualStage = Math.min(appSettings.manualStage, maximumAllowedStage());
-      reconcileOperationsForStage(appSettings.manualStage);
+      const profile = getProfile();
+      if (appSettings.automatic) setAdaptiveStage(profile, Math.min(profile.currentStage, maximumAllowedStage()));
+      else {
+        appSettings.manualStage = Math.min(appSettings.manualStage, maximumAllowedStage());
+        reconcileOperationsForStage(appSettings.manualStage);
+      }
       saveSettings();
       renderSettingsContent();
       updateHomeStats();
@@ -1913,14 +1947,17 @@ function makePowerProblem(max, mastered) {
     if (input.name === "manualStage") {
       const previousStage = appSettings.manualStage;
       appSettings.manualStage = Math.min(maximumAllowedStage(), Math.max(1, Number(input.value) || 1));
-      if (appSettings.manualStage !== previousStage) {
+      if (appSettings.manualStage !== previousStage || appSettings.automatic) {
         const profile = getProfile();
-        if (appSettings.manualStage === 22) profile.divisionCoreSequence = { phase: 0, item: 0, mixed: false };
-        if (appSettings.manualStage === 23) profile.multiplicationSequence = { phase: 0, item: 1, mixed: false };
-        if (appSettings.manualStage === 24) profile.divisionDerivedSequence = { phase: 0, item: 0, mixed: false };
-        saveProfile(profile);
+        if (appSettings.automatic) setAdaptiveStage(profile, appSettings.manualStage);
+        else {
+          if (appSettings.manualStage === 22) profile.divisionCoreSequence = { phase: 0, item: 0, mixed: false };
+          if (appSettings.manualStage === 23) profile.multiplicationSequence = { phase: 0, item: 1, mixed: false };
+          if (appSettings.manualStage === 24) profile.divisionDerivedSequence = { phase: 0, item: 0, mixed: false };
+          saveProfile(profile);
+        }
       }
-      reconcileOperationsForStage(appSettings.manualStage);
+      if (!appSettings.automatic) reconcileOperationsForStage(appSettings.manualStage);
       saveSettings();
       renderSettingsContent();
       updateHomeStats();
