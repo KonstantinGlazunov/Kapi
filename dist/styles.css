@@ -187,14 +187,17 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 
 .mascot-stage { position: relative; width: min(42vw, 410px); aspect-ratio: 1; }
 .mascot-stage img, .mini-mascot img, .result-mascot img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 18px 18px rgba(90,56,25,.17)); }
-.home-mascot-sprite { display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 32%; background: url("assets/kapi-welcome-sprite.webp") 0 0 / 400% 100% no-repeat; filter: drop-shadow(0 18px 18px rgba(90,56,25,.17)); transform-origin: 50% 88%; animation: float 3.2s ease-in-out infinite; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.home-mascot-sprite { display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 32%; background: url("assets/kapi-welcome-sprite.webp") 0 0 / 400% 100% no-repeat; filter: drop-shadow(0 18px 18px rgba(90,56,25,.17)); transform-origin: 50% 88%; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .home-mascot-sprite:focus-visible { outline: 4px solid rgba(15,118,110,.45); outline-offset: 5px; }
-.home-mascot-sprite.is-greeting { animation: kapi-welcome 3.4s step-end 1 both; }
-.home-mascot-sprite.is-reacting { background-position: center; background-size: contain; background-repeat: no-repeat; }
-.home-mascot-sprite.home-reaction-flag { background-image: url("assets/kapi-flag.webp"); animation: home-flag-reaction 2.6s ease-in-out both; }
-.home-mascot-sprite.home-reaction-party { background-image: url("assets/kapi-party.webp"); animation: home-party-reaction 2.6s ease-in-out both; }
-.home-mascot-sprite.home-reaction-dance { background-image: url("assets/kapi-dance.webp"); animation: home-dance-reaction .48s ease-in-out 5 alternate both; }
-.home-mascot-sprite.home-reaction-handshake { background-image: url("assets/kapi-handshake.webp"); animation: home-handshake-reaction .62s ease-in-out 4 alternate both; }
+.home-mascot-sprite.kapi-state-idle { animation: kapi-home-idle 4.8s ease-in-out infinite; }
+.home-mascot-sprite.kapi-state-idleBlink { animation: kapi-home-blink .34s step-end both; }
+.home-mascot-sprite.kapi-state-hey { animation: kapi-welcome 3.4s step-end both; }
+.home-mascot-sprite.kapi-state-correct { animation: happy-hop .68s ease both; }
+.home-mascot-sprite.kapi-state-wrong { animation: gentle-shake .72s ease both; }
+.home-mascot-sprite.kapi-state-flag { animation: home-flag-reaction 2.3s ease-in-out both; }
+.home-mascot-sprite.kapi-state-horn { animation: home-party-reaction 2.5s ease-in-out both; }
+.home-mascot-sprite.kapi-state-dance { animation: home-dance-reaction .48s ease-in-out 6 alternate both; }
+.home-mascot-sprite.kapi-state-levelUp { animation: home-handshake-reaction .62s ease-in-out 3 alternate both; }
 
 .speech-bubble {
   display: inline-block;
@@ -240,10 +243,17 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
   align-items: center;
 }
 
+.kapi-host { position: relative; flex: 0 0 auto; overflow: visible; transform-origin: 50% 82%; }
+.kapi-host img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .mini-mascot { width: 104px; height: 104px; margin-top: -8px; }
-.mascot-idle { animation: breathe 2.4s ease-in-out infinite; }
-.mascot-happy { animation: happy-hop .65s ease both; }
-.mascot-try { animation: gentle-shake .5s ease both; }
+.kapi-host.kapi-state-idle img { animation: kapi-idle-life 4.8s ease-in-out infinite; }
+.kapi-host.kapi-state-idleBlink img { animation: kapi-blink .34s ease both; }
+.kapi-host.kapi-state-correct img { animation: happy-hop .68s ease both; }
+.kapi-host.kapi-state-wrong img { animation: gentle-shake .72s ease both; }
+.kapi-host.kapi-state-flag img { animation: flag-wave .68s ease-in-out infinite alternate; }
+.kapi-host.kapi-state-horn img { animation: party-bounce .55s ease-in-out infinite alternate; }
+.kapi-host.kapi-state-dance img, .kapi-host.kapi-state-trainingFinished img { animation: kapi-dance .5s ease-in-out infinite alternate; }
+.kapi-host.kapi-state-levelUp img { animation: handshake .62s ease-in-out infinite alternate; }
 .feedback { min-height: 27px; color: var(--teal); font-size: 1rem; font-weight: 900; text-align: center; }
 .problem { margin: 14px 0 20px; font-size: clamp(3.15rem, 12vw, 5rem); line-height: 1; font-weight: 1000; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
 .problem.problem-wide { font-size: clamp(2rem, 7.2vw, 3.6rem); }
@@ -316,7 +326,6 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .result-screen { align-items: center; justify-content: center; padding: 24px 0; position: relative; }
 .result-card { width: min(100%, 620px); padding: 20px clamp(18px, 5vw, 42px) 30px; border-radius: 34px; background: rgba(255,253,247,.96); box-shadow: var(--shadow); text-align: center; position: relative; z-index: 2; }
 .result-mascot { width: 150px; height: 150px; margin: -12px auto -8px; }
-.mascot-celebrate { animation: kapi-dance .5s ease-in-out infinite alternate; transform-origin: 50% 82%; }
  .operation-locked { opacity: .45; cursor: not-allowed !important; }
  .operation-locked input { cursor: not-allowed; }
 .result-card h1 { font-size: clamp(2rem, 7vw, 3.7rem); }
@@ -392,14 +401,14 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .form-field input, .form-field textarea { scroll-margin-block: 84px 28px; }
 .feedback-submit { position: sticky; z-index: 3; bottom: 0; min-height: 50px; margin-top: 2px; border: 0; border-radius: 13px; background: #25d366; color: #103e24; box-shadow: 0 -10px 18px 8px rgba(255,255,255,.96), 0 7px 15px rgba(18,92,84,.16); font: inherit; font-weight: 1000; cursor: pointer; }
 
-.motivation-pop { position: fixed; z-index: 20; inset: 0; display: flex; justify-content: center; align-items: flex-start; padding: max(82px, calc(env(safe-area-inset-top) + 60px)) 12px 12px; background: transparent; touch-action: manipulation; }
+.motivation-pop { position: fixed; z-index: 20; inset: 0; display: flex; justify-content: center; align-items: flex-start; padding: max(82px, calc(env(safe-area-inset-top) + 60px)) 12px 12px; background: transparent; pointer-events: none; }
 .motivation-card { width: min(94vw, 430px); min-height: 132px; padding: 9px 16px 9px 8px; border: 4px solid white; border-radius: 28px; background: linear-gradient(135deg, #fff4a8, var(--yellow)); color: #5d4300; box-shadow: 0 18px 48px rgba(78,55,0,.25); display: grid; grid-template-columns: 132px 1fr; align-items: center; gap: 4px; overflow: visible; animation: reward-pop .45s cubic-bezier(.2,1.4,.4,1) both; }
 .motivation-art { position: relative; width: 132px; height: 132px; align-self: end; }
 .motivation-art img { position: absolute; inset: -24px -8px -5px -5px; width: 155px; height: 155px; object-fit: contain; filter: drop-shadow(0 9px 9px rgba(90,56,25,.17)); }
-.motivation-card[data-scene="flag"] .motivation-art img { animation: flag-wave .7s ease-in-out infinite alternate; transform-origin: 48% 80%; }
-.motivation-card[data-scene="party"] .motivation-art img { animation: party-bounce .55s ease-in-out infinite alternate; }
-.motivation-card[data-scene="dance"] .motivation-art img { animation: kapi-dance .5s ease-in-out infinite alternate; }
-.motivation-card[data-scene="handshake"] .motivation-art img { animation: handshake .75s ease-in-out infinite alternate; transform-origin: 45% 65%; }
+.motivation-card[data-kapi-state="flag"] .motivation-art img { animation: flag-wave .7s ease-in-out infinite alternate; transform-origin: 48% 80%; }
+.motivation-card[data-kapi-state="horn"] .motivation-art img { animation: party-bounce .55s ease-in-out infinite alternate; }
+.motivation-card[data-kapi-state="dance"] .motivation-art img, .motivation-card[data-kapi-state="trainingFinished"] .motivation-art img { animation: kapi-dance .5s ease-in-out infinite alternate; }
+.motivation-card[data-kapi-state="levelUp"] .motivation-art img { animation: handshake .75s ease-in-out infinite alternate; transform-origin: 45% 65%; }
 .motivation-copy { position: relative; z-index: 2; text-align: left; }
 .motivation-card strong { display: block; font-size: clamp(1.25rem, 5.5vw, 1.8rem); line-height: 1.02; text-transform: uppercase; letter-spacing: -.03em; }
 .motivation-card span { display: block; margin-top: 7px; font-weight: 900; }
@@ -435,6 +444,10 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 
 @keyframes float { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-11px) rotate(1deg); } }
 @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+@keyframes kapi-idle-life { 0%,100% { transform: translateY(0) rotate(-1deg) scale(1); } 24% { transform: translateY(-3px) rotate(.5deg) scale(1.015); } 52% { transform: translateY(-7px) rotate(1deg) scale(1.025); } 76% { transform: translateY(-2px) rotate(-.5deg) scale(1.01); } }
+@keyframes kapi-blink { 0%,100% { transform: scaleY(1); } 45%,60% { transform: scaleY(.94) translateY(3px); } }
+@keyframes kapi-home-idle { 0%,100% { background-position: 0 0; transform: translateY(0) rotate(-1deg); } 50% { background-position: 0 0; transform: translateY(-9px) rotate(1deg); } }
+@keyframes kapi-home-blink { 0%,100% { background-position: 0 0; transform: translateY(0); } 35%,70% { background-position: 33.333% 0; transform: translateY(-2px); } }
 @keyframes happy-hop { 0%,100% { transform: translateY(0) rotate(0); } 35% { transform: translateY(-16px) rotate(-5deg); } 65% { transform: translateY(-5px) rotate(5deg); } }
 @keyframes gentle-shake { 0%,100% { transform: translateX(0); } 30% { transform: translateX(-7px) rotate(-3deg); } 65% { transform: translateX(7px) rotate(3deg); } }
 @keyframes celebrate { from { transform: translateY(0) rotate(-3deg); } to { transform: translateY(-10px) rotate(3deg); } }
@@ -462,7 +475,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 @keyframes mini-burst { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; transform: rotate(calc(var(--burst-index) * 40deg)) translateY(-92px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-mascot-sprite.is-greeting, .home-mascot-sprite.is-reacting { animation: none; }
+  .home-mascot-sprite[class*="kapi-state-"], .kapi-host[class*="kapi-state-"] img { animation: none !important; }
 }
 
 @media (max-width: 680px) {

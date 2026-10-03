@@ -54,8 +54,8 @@
       <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
 
       <div class="play-card">
-        <div class="mini-mascot mascot-idle" id="gameMascot" aria-hidden="true">
-          <img src="assets/capybara.webp" alt="" width="700" height="700">
+        <div class="mini-mascot kapi-host" id="gameMascot" aria-hidden="true">
+          <img id="gameMascotImage" src="assets/capybara.webp" alt="" width="700" height="700">
         </div>
         <div class="feedback" id="feedback" role="status" aria-live="polite">Считай внимательно</div>
         <div class="problem" id="problemText">12 − 5 = ?</div>
@@ -67,8 +67,8 @@
     <section class="screen result-screen" id="resultScreen" aria-labelledby="resultTitle">
       <div class="confetti" id="confetti" aria-hidden="true"></div>
       <div class="result-card">
-        <div class="result-mascot mascot-celebrate" aria-hidden="true">
-          <img src="assets/kapi-dance.webp" alt="" width="700" height="700">
+        <div class="result-mascot kapi-host" id="resultMascot" aria-hidden="true">
+          <img id="resultMascotImage" src="assets/kapi-dance.webp" alt="" width="700" height="700">
         </div>
         <span class="eyebrow" id="resultEyebrow">Тренировка завершена</span>
         <h1 id="resultTitle">Отличная работа!</h1>
@@ -104,7 +104,7 @@
   </dialog>
 
   <div class="motivation-pop hidden" id="motivationPop" role="status" aria-live="polite">
-    <div class="motivation-card" data-scene="flag">
+    <div class="motivation-card" data-kapi-state="flag">
       <div class="motivation-art" aria-hidden="true">
         <img id="motivationMascot" src="assets/kapi-flag.webp" alt="" width="700" height="700">
         <div class="motivation-burst" id="motivationBurst"></div>
@@ -127,6 +127,7 @@
     </div>
   </div>
 
+  <script src="kapi.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>

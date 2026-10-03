@@ -159,6 +159,7 @@
 
   const $ = (id) => document.getElementById(id);
   const screens = [$("startScreen"), $("gameScreen"), $("resultScreen")];
+  let kapi = null;
 
   function applyLanguage() {
     copy = translations[language];
@@ -423,59 +424,44 @@
     document.body.classList.toggle("game-active", target === $("gameScreen"));
     document.body.classList.toggle("start-active", target === $("startScreen"));
     if (target === $("startScreen")) restartHomeGreeting();
+    else if (target === $("gameScreen")) kapi?.setSurface("game", "idle");
+    else if (target === $("resultScreen")) {
+      kapi?.setSurface("result", "idle");
+      kapi?.trigger("trainingFinished", { surface: "result" });
+    }
     scheduleFitCheck();
   }
 
-  let homeGreetingTimer = 0;
-  let homeIdleTimer = 0;
-  let homeReactionTimer = 0;
   let homeReactionLockedUntil = 0;
   let lastHomeReaction = "";
   const HOME_REACTION_COOLDOWN = 5000;
-  const homeReactionScenes = ["flag", "party", "dance", "handshake"];
+  const homeReactionScenes = ["flag", "horn", "dance", "levelUp"];
 
   function clearHomeReaction(restoreSpeech = true) {
-    const mascot = $("homeMascot");
-    if (!mascot) return;
-    window.clearTimeout(homeReactionTimer);
-    homeReactionTimer = 0;
-    mascot.classList.remove("is-reacting", ...homeReactionScenes.map((scene) => `home-reaction-${scene}`));
     $("speechBubble").classList.remove("is-reacting");
     if (restoreSpeech) $("speechBubble").textContent = copy.speech;
+    if (kapi?.surface === "home") kapi.trigger("idle", { surface: "home" });
   }
 
   function restartHomeGreeting() {
-    const mascot = $("homeMascot");
-    if (!mascot) return;
-    clearHomeReaction();
-    window.clearTimeout(homeIdleTimer);
-    mascot.classList.remove("is-greeting");
-    void mascot.offsetWidth;
-    mascot.classList.add("is-greeting");
-    window.clearTimeout(homeGreetingTimer);
-    homeGreetingTimer = window.setTimeout(speakHomeGreeting, 520);
-    homeIdleTimer = window.setTimeout(() => {
-      mascot.classList.remove("is-greeting");
-    }, 3400);
+    if (!kapi) return;
+    $("speechBubble").textContent = copy.speech;
+    $("speechBubble").classList.remove("is-reacting");
+    kapi.setSurface("home", "idle");
+    kapi.trigger("hey", { surface: "home" });
   }
 
   function playHomeReaction() {
     if (!$("startScreen").classList.contains("active") || Date.now() < homeReactionLockedUntil) return;
-    const mascot = $("homeMascot");
     const candidates = homeReactionScenes.filter((scene) => scene !== lastHomeReaction);
     const scene = pick(candidates);
     lastHomeReaction = scene;
     homeReactionLockedUntil = Date.now() + HOME_REACTION_COOLDOWN;
-    window.clearTimeout(homeGreetingTimer);
-    window.clearTimeout(homeIdleTimer);
-    clearHomeReaction(false);
-    mascot.classList.remove("is-greeting");
-    mascot.classList.add("is-reacting", `home-reaction-${scene}`);
-    const phrases = copy.homeReactions[scene];
+    const phraseKey = scene === "horn" ? "party" : scene === "levelUp" ? "handshake" : scene;
+    const phrases = copy.homeReactions[phraseKey];
     $("speechBubble").textContent = pick(phrases);
     $("speechBubble").classList.add("is-reacting");
-    sound(motivationSounds[scene]);
-    homeReactionTimer = window.setTimeout(() => clearHomeReaction(), 2600);
+    kapi.trigger(scene, { surface: "home", onComplete: () => clearHomeReaction() });
   }
 
   function speakHomeGreeting() {
@@ -1074,6 +1060,7 @@ function makePowerProblem(max, mastered) {
   }
 
   function startTraining() {
+    dismissMotivation();
     TOTAL = appSettings.problemCount;
     $("problemTotal").textContent = String(TOTAL);
     $("correctLabel").textContent = copy.correctOfTotal(TOTAL);
@@ -1107,7 +1094,6 @@ function makePowerProblem(max, mastered) {
     $("hint").classList.add("hidden");
     $("hint").innerHTML = "";
     $("feedback").textContent = state.index === 0 ? copy.careful : copy.next;
-    setMascot("idle");
     renderAnswer();
     if (state.problem.operation === "count" || state.problem.conceptVisual) showHint();
   }
@@ -1274,12 +1260,12 @@ function makePowerProblem(max, mastered) {
       const reachedNewStage = state.stage > stageBeforeAnswer;
       const text = state.streak > 0 && state.streak % 3 === 0 ? pick(messages.streak) : pick(messages.correct);
       $("feedback").textContent = `${text} +${earned} ★`;
-      setMascot("happy");
-      const streakScene = state.streak === 10 ? "dance" : state.streak === 6 ? "party" : state.streak === 3 ? "flag" : "";
-      const hasMotivationBanner = Boolean(operationMessage || adaptiveMessage || streakScene || (state.streak > 0 && state.streak % 3 === 0));
-      if (!hasMotivationBanner) sound(state.streak > 0 && state.streak % 3 === 0 ? "streak" : "correct");
-      if (operationMessage || adaptiveMessage) showMotivation(operationMessage || adaptiveMessage, copy.adaptiveAdjusted, advance, reachedNewStage ? "handshake" : (streakScene || "flag"));
-      else if (streakScene) showMotivation(streakScene === "dance" ? copy.rewardDance : streakScene === "party" ? copy.rewardParty : copy.rewardFlag, copy.rightInRow(state.streak), advance, streakScene);
+      const streakScene = state.streak === 10 ? "dance" : state.streak === 6 ? "horn" : state.streak === 3 ? "flag" : "";
+      const genericStreak = state.streak > 0 && state.streak % 3 === 0;
+      const reaction = reachedNewStage ? "levelUp" : (streakScene || (operationMessage || adaptiveMessage || genericStreak ? "flag" : "correct"));
+      kapi.trigger(reaction, { surface: "game" });
+      if (operationMessage || adaptiveMessage) showMotivation(operationMessage || adaptiveMessage, copy.adaptiveAdjusted, advance, reachedNewStage ? "levelUp" : (streakScene || "flag"));
+      else if (streakScene) showMotivation(streakScene === "dance" ? copy.rewardDance : streakScene === "horn" ? copy.rewardParty : copy.rewardFlag, copy.rightInRow(state.streak), advance, streakScene);
       else if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, copy.rightInRow(state.streak), advance, "flag");
       else window.setTimeout(advance, 850);
       return;
@@ -1288,8 +1274,7 @@ function makePowerProblem(max, mastered) {
     const adaptiveMessage = updateAdaptiveProgress(state.problem, state.attempt === 1, false, elapsed);
     state.streak = 0;
     $("streakPill").classList.add("hidden");
-    setMascot("try");
-    sound("wrong");
+    kapi.trigger("wrong", { surface: "game" });
     if (state.attempt === 1) {
       registerProblemError(state.problem);
       state.attempt = 2;
@@ -1641,14 +1626,6 @@ function makePowerProblem(max, mastered) {
     });
   }
 
-  function setMascot(mode) {
-    const mascot = $("gameMascot");
-    mascot.className = `mini-mascot mascot-${mode}`;
-    if (mode !== "idle") {
-      window.setTimeout(() => { mascot.className = "mini-mascot mascot-idle"; }, 700);
-    }
-  }
-
   function finishTraining() {
     const average = state.results.length
       ? state.results.reduce((sum, item) => sum + item.seconds, 0) / state.results.length
@@ -1677,7 +1654,7 @@ function makePowerProblem(max, mastered) {
       : `${state.stage === CURRICULUM_STAGE_COUNT ? copy.maxLevelNote : copy.stayNote}${freshProfile.errorQueue.length ? ` ${copy.reviewsLeft(freshProfile.errorQueue.length)}` : ""}`;
     $("progressFill").style.width = "100%";
     makeConfetti();
-    showMotivation(advanced ? copy.rewardHandshake : pick(messages.complete), `+${state.score} XP`, null, advanced ? "handshake" : "dance");
+    showMotivation(advanced ? copy.rewardHandshake : pick(messages.complete), `+${state.score} XP`, null, advanced ? "levelUp" : "dance");
     showScreen($("resultScreen"));
   }
 
@@ -1764,43 +1741,26 @@ function makePowerProblem(max, mastered) {
   }
 
   let motivationTimer = 0;
-  let motivationAction = null;
-
-  const motivationScenes = {
-    flag: "assets/kapi-flag.webp",
-    party: "assets/kapi-party.webp",
-    dance: "assets/kapi-dance.webp",
-    handshake: "assets/kapi-handshake.webp"
-  };
-  const motivationSounds = { flag: "flag", party: "party", dance: "dance", handshake: "handshake" };
-
   function showMotivation(title, subtitle, action = null, scene = "flag") {
     dismissMotivation(false);
     const pop = $("motivationPop");
     const card = pop.querySelector(".motivation-card");
-    card.dataset.scene = scene;
-    $("motivationMascot").src = motivationScenes[scene] || motivationScenes.flag;
-    $("motivationBurst").innerHTML = scene === "dance" || scene === "party"
-      ? Array.from({ length: 9 }, (_, index) => `<i style="--burst-index:${index}"></i>`).join("")
-      : "";
+    kapi.renderBanner(scene);
     $("motivationText").textContent = title;
     $("motivationSubtext").textContent = subtitle;
     pop.classList.remove("hidden");
     card.style.animation = "none";
     void card.offsetWidth;
     card.style.animation = "";
-    sound(motivationSounds[scene] || "flag");
-    motivationAction = action;
-    motivationTimer = window.setTimeout(() => dismissMotivation(true), 3000);
+    motivationTimer = window.setTimeout(() => dismissMotivation(false), 5000);
+    if (action) window.setTimeout(action, 0);
   }
 
-  function dismissMotivation(continueTraining) {
+  function dismissMotivation() {
     if (motivationTimer) window.clearTimeout(motivationTimer);
     motivationTimer = 0;
     $("motivationPop").classList.add("hidden");
-    const action = motivationAction;
-    motivationAction = null;
-    if (continueTraining && action) action();
+    kapi?.clearBanner();
   }
 
   let audioContext;
@@ -1834,6 +1794,30 @@ function makePowerProblem(max, mastered) {
         oscillator.stop(now + delay + duration + .02);
       });
     } catch { /* Sound remains optional. */ }
+  }
+
+  function createKapiController() {
+    const animator = new window.CssKapiAnimator({
+      homeHost: $("homeMascot"),
+      gameHost: $("gameMascot"),
+      gameImage: $("gameMascotImage"),
+      resultHost: $("resultMascot"),
+      resultImage: $("resultMascotImage"),
+      bannerCard: $("motivationPop").querySelector(".motivation-card"),
+      bannerImage: $("motivationMascot"),
+      bannerBurst: $("motivationBurst")
+    });
+    return new window.KapiStateMachine(animator, {
+      soundPlayer(type, animationState) {
+        if (animationState === "hey") {
+          window.setTimeout(() => {
+            if (kapi?.surface === "home" && kapi.state === "hey") speakHomeGreeting();
+          }, 520);
+          return;
+        }
+        sound(type);
+      }
+    });
   }
 
   async function shareResult() {
@@ -2129,7 +2113,8 @@ function makePowerProblem(max, mastered) {
   $("startButton").addEventListener("click", startTraining);
   $("homeMascot").addEventListener("click", playHomeReaction);
   document.querySelector(".app-shell").addEventListener("pointerdown", (event) => {
-    if (homeReactionTimer && !event.target.closest("#homeMascot")) clearHomeReaction();
+    if (!$("motivationPop").classList.contains("hidden")) dismissMotivation();
+    if (kapi?.surface === "home" && !["idle", "idleBlink"].includes(kapi.state) && !event.target.closest("#homeMascot")) clearHomeReaction();
   });
   $("againButton").addEventListener("click", startTraining);
   $("shareButton").addEventListener("click", shareResult);
@@ -2173,10 +2158,6 @@ function makePowerProblem(max, mastered) {
   });
   $("settingsContent").addEventListener("submit", openFeedbackInWhatsApp);
   $("settingsContent").addEventListener("focusin", (event) => keepSettingsFieldVisible(event.target));
-  $("motivationPop").addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    dismissMotivation(true);
-  });
   $("installButton").addEventListener("click", () => installApp($("installButton")));
   $("installHomeButton").addEventListener("click", installFromHome);
   $("installContinue").addEventListener("click", () => dismissInstallPrompt(true));
@@ -2194,6 +2175,7 @@ function makePowerProblem(max, mastered) {
 
   loadSettings();
   applyLanguage();
+  kapi = createKapiController();
   updateHomeStats();
   if (runsStandalone()) localStorage.setItem(INSTALLED_KEY, "1");
   updateInstallHomeButton();
