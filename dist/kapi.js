@@ -37,10 +37,10 @@
   const RIG_PARTS = {
     head: "assets/kapi-rig-v2/head.png",
     torso: "assets/kapi-rig-v2/torso.png",
-    armLeftUpper: "assets/kapi-rig-v3/arm-left-upper.png",
-    armRightUpper: "assets/kapi-rig-v3/arm-right-upper.png",
-    armLeftForearm: "assets/kapi-rig-v3/arm-left-forearm.png",
-    armRightForearm: "assets/kapi-rig-v3/arm-right-forearm.png",
+    armLeftUpper: "assets/kapi-rig-v4/arm-left-upper.png",
+    armRightUpper: "assets/kapi-rig-v4/arm-right-upper.png",
+    armLeftForearm: "assets/kapi-rig-v4/arm-left-forearm.png",
+    armRightForearm: "assets/kapi-rig-v4/arm-right-forearm.png",
     pawLeft: "assets/kapi-rig-v3/paw-left.png",
     pawRight: "assets/kapi-rig-v3/paw-right.png",
     legLeft: "assets/kapi-rig-v3/leg-left.png",
@@ -50,8 +50,8 @@
   };
 
   const ARM_JOINTS = {
-    left: { upper: "armLeftUpper", forearm: "armLeftForearm", paw: "pawLeft", shoulder: [242, 54], elbow: [53, 286], forearmElbow: [208, 46], wrist: [46, 230], pawWrist: [168, 16] },
-    right: { upper: "armRightUpper", forearm: "armRightForearm", paw: "pawRight", shoulder: [49, 54], elbow: [238, 287], forearmElbow: [34, 46], wrist: [196, 230], pawWrist: [31, 16] }
+    left: { upper: "armLeftUpper", forearm: "armLeftForearm", paw: "pawLeft", shoulder: [244, 54], elbow: [58, 287], forearmElbow: [210, 48], wrist: [47, 231], pawWrist: [168, 16] },
+    right: { upper: "armRightUpper", forearm: "armRightForearm", paw: "pawRight", shoulder: [50, 54], elbow: [236, 288], forearmElbow: [35, 48], wrist: [198, 230], pawWrist: [31, 16] }
   };
 
   const LEG_JOINTS = {
