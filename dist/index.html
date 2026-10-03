@@ -36,7 +36,7 @@
       <div class="mascot-stage start-mascot">
         <div class="spark spark-one">✦</div>
         <div class="spark spark-two">✦</div>
-        <button class="home-mascot-sprite" id="homeMascot" type="button" aria-label="Kapi reagieren lassen"></button>
+        <button class="home-mascot-sprite kapi-host" id="homeMascot" type="button" aria-label="Kapi reagieren lassen"><canvas class="kapi-rive-canvas" id="homeMascotCanvas" aria-hidden="true"></canvas></button>
       </div>
     </section>
 
@@ -54,9 +54,7 @@
       <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
 
       <div class="play-card">
-        <div class="mini-mascot kapi-host" id="gameMascot" aria-hidden="true">
-          <img id="gameMascotImage" src="assets/capybara.webp" alt="" width="700" height="700">
-        </div>
+        <div class="mini-mascot kapi-host" id="gameMascot" aria-hidden="true"><canvas class="kapi-rive-canvas" id="gameMascotCanvas"></canvas></div>
         <div class="feedback" id="feedback" role="status" aria-live="polite">Считай внимательно</div>
         <div class="problem" id="problemText">12 − 5 = ?</div>
         <div class="hint hidden" id="hint" aria-live="polite"></div>
@@ -67,9 +65,7 @@
     <section class="screen result-screen" id="resultScreen" aria-labelledby="resultTitle">
       <div class="confetti" id="confetti" aria-hidden="true"></div>
       <div class="result-card">
-        <div class="result-mascot kapi-host" id="resultMascot" aria-hidden="true">
-          <img id="resultMascotImage" src="assets/kapi-dance.webp" alt="" width="700" height="700">
-        </div>
+        <div class="result-mascot kapi-host" id="resultMascot" aria-hidden="true"><canvas class="kapi-rive-canvas" id="resultMascotCanvas"></canvas></div>
         <span class="eyebrow" id="resultEyebrow">Тренировка завершена</span>
         <h1 id="resultTitle">Отличная работа!</h1>
         <div class="result-grid">
@@ -106,7 +102,7 @@
   <div class="motivation-pop hidden" id="motivationPop" role="status" aria-live="polite">
     <div class="motivation-card" data-kapi-state="flag">
       <div class="motivation-art" aria-hidden="true">
-        <img id="motivationMascot" src="assets/kapi-flag.webp" alt="" width="700" height="700">
+        <canvas class="kapi-rive-canvas" id="motivationMascot" aria-hidden="true"></canvas>
         <div class="motivation-burst" id="motivationBurst"></div>
       </div>
       <div class="motivation-copy">
@@ -127,6 +123,7 @@
     </div>
   </div>
 
+  <script src="vendor/rive.js" defer></script>
   <script src="kapi.js" defer></script>
   <script src="app.js" defer></script>
 </body>

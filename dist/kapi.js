@@ -112,6 +112,120 @@
     }
   }
 
+  class RiveKapiAnimator extends KapiAnimator {
+    constructor(elements) {
+      super();
+      this.elements = elements;
+      this.surface = "home";
+      this.instances = new Map();
+      this.pendingStates = new Map();
+      this.failed = false;
+      if (!window.rive?.Rive) {
+        this.failed = true;
+        return;
+      }
+      window.rive.RuntimeLoader?.setWasmUrl?.("vendor/rive.wasm");
+      window.rive.RuntimeLoader?.setWasmFallbackUrl?.("vendor/rive_fallback.wasm");
+    }
+
+    setSurface(surface) {
+      this.surface = surface;
+      this.ensure(surface);
+    }
+
+    setLoop() {}
+
+    getCanvas(surface) {
+      if (surface === "banner") return this.elements.bannerImage;
+      return this.elements[`${surface}Host`]?.querySelector("canvas") || null;
+    }
+
+    ensure(surface) {
+      if (this.failed || this.instances.has(surface)) return this.instances.get(surface);
+      const canvas = this.getCanvas(surface);
+      if (!(canvas instanceof HTMLCanvasElement)) return null;
+      const record = { rive: null, inputs: new Map(), ready: false, observer: null };
+      this.instances.set(surface, record);
+      try {
+        record.rive = new window.rive.Rive({
+          src: "assets/kapi.riv",
+          canvas,
+          autoplay: true,
+          stateMachines: "Kapi State Machine",
+          layout: new window.rive.Layout({ fit: window.rive.Fit.Contain, alignment: window.rive.Alignment.Center }),
+          onLoad: () => {
+            record.rive.resizeDrawingSurfaceToCanvas();
+            const inputs = record.rive.stateMachineInputs("Kapi State Machine") || [];
+            record.inputs = new Map(inputs.map((input) => [input.name, input]));
+            record.ready = true;
+            canvas.closest(".kapi-host, .motivation-art")?.classList.add("kapi-rive-ready");
+            const pending = this.pendingStates.get(surface);
+            if (pending) {
+              this.pendingStates.delete(surface);
+              this.fire(surface, pending);
+            }
+          },
+          onLoadError: () => {
+            this.instances.delete(surface);
+            canvas.closest(".kapi-host, .motivation-art")?.classList.add("kapi-rive-error");
+          }
+        });
+        if (typeof ResizeObserver === "function") {
+          record.observer = new ResizeObserver(() => record.rive?.resizeDrawingSurfaceToCanvas());
+          record.observer.observe(canvas);
+        }
+      } catch (error) {
+        this.instances.delete(surface);
+        console.error("Kapi Rive could not start", error);
+      }
+      return record;
+    }
+
+    fire(surface, state) {
+      const record = this.ensure(surface);
+      if (!record?.ready) {
+        this.pendingStates.set(surface, state);
+        return;
+      }
+      const inputName = state === "idle" || state === "idleBlink" ? "reset" : state;
+      record.inputs.get(inputName)?.fire?.();
+    }
+
+    play(state, options = {}) {
+      const surface = options.surface || this.surface;
+      const host = this.elements[`${surface}Host`];
+      if (host) {
+        host.dataset.kapiState = state;
+        host.classList.add("kapi-rive-active");
+      }
+      this.fire(surface, state);
+    }
+
+    stop(surface = this.surface) {
+      this.fire(surface, "idle");
+      const host = this.elements[`${surface}Host`];
+      if (host) delete host.dataset.kapiState;
+    }
+
+    renderBanner(state) {
+      const card = this.elements.bannerCard;
+      if (card) card.dataset.kapiState = state;
+      this.fire("banner", state);
+      if (this.elements.bannerBurst) {
+        this.elements.bannerBurst.innerHTML = ["horn", "dance", "levelUp", "trainingFinished"].includes(state)
+          ? Array.from({ length: 9 }, (_, index) => `<i style="--burst-index:${index}"></i>`).join("")
+          : "";
+      }
+    }
+
+    clearBanner() {
+      const card = this.elements.bannerCard;
+      if (card) delete card.dataset.kapiState;
+      this.fire("banner", "idle");
+      if (this.elements.bannerBurst) this.elements.bannerBurst.innerHTML = "";
+    }
+  }
+
   class KapiStateMachine {
     constructor(animator, options = {}) {
       this.animator = animator;
@@ -233,6 +347,7 @@
 
   window.KapiAnimator = KapiAnimator;
   window.CssKapiAnimator = CssKapiAnimator;
+  window.RiveKapiAnimator = RiveKapiAnimator;
   window.KapiStateMachine = KapiStateMachine;
   window.KAPI_STATE_CONFIG = Object.freeze({ ...STATE_CONFIG });
 })();

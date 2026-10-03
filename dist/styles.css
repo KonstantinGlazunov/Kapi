@@ -188,6 +188,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .mascot-stage { position: relative; width: min(42vw, 410px); aspect-ratio: 1; }
 .mascot-stage img, .mini-mascot img, .result-mascot img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 18px 18px rgba(90,56,25,.17)); }
 .home-mascot-sprite { display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 32%; background: url("assets/kapi-welcome-sprite.webp") 0 0 / 400% 100% no-repeat; filter: drop-shadow(0 18px 18px rgba(90,56,25,.17)); transform-origin: 50% 88%; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.home-mascot-sprite.kapi-rive-active, .home-mascot-sprite.kapi-rive-ready { background: none; }
 .home-mascot-sprite:focus-visible { outline: 4px solid rgba(15,118,110,.45); outline-offset: 5px; }
 .home-mascot-sprite.kapi-state-idle { animation: kapi-home-idle 4.8s ease-in-out infinite; }
 .home-mascot-sprite.kapi-state-idleBlink { animation: kapi-home-blink .34s step-end both; }
@@ -244,6 +245,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 }
 
 .kapi-host { position: relative; flex: 0 0 auto; overflow: visible; transform-origin: 50% 82%; }
+.kapi-rive-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 12px 12px rgba(90,56,25,.16)); }
 .kapi-host img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .mini-mascot { width: 104px; height: 104px; margin-top: -8px; }
 .kapi-host.kapi-state-idle img { animation: kapi-idle-life 4.8s ease-in-out infinite; }
@@ -405,6 +407,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .motivation-card { width: min(94vw, 430px); min-height: 132px; padding: 9px 16px 9px 8px; border: 4px solid white; border-radius: 28px; background: linear-gradient(135deg, #fff4a8, var(--yellow)); color: #5d4300; box-shadow: 0 18px 48px rgba(78,55,0,.25); display: grid; grid-template-columns: 132px 1fr; align-items: center; gap: 4px; overflow: visible; animation: reward-pop .45s cubic-bezier(.2,1.4,.4,1) both; }
 .motivation-art { position: relative; width: 132px; height: 132px; align-self: end; }
 .motivation-art img { position: absolute; inset: -24px -8px -5px -5px; width: 155px; height: 155px; object-fit: contain; filter: drop-shadow(0 9px 9px rgba(90,56,25,.17)); }
+.motivation-art .kapi-rive-canvas { inset: -24px -8px -5px -5px; width: 155px; height: 155px; }
 .motivation-card[data-kapi-state="flag"] .motivation-art img { animation: flag-wave .7s ease-in-out infinite alternate; transform-origin: 48% 80%; }
 .motivation-card[data-kapi-state="horn"] .motivation-art img { animation: party-bounce .55s ease-in-out infinite alternate; }
 .motivation-card[data-kapi-state="dance"] .motivation-art img, .motivation-card[data-kapi-state="trainingFinished"] .motivation-art img { animation: kapi-dance .5s ease-in-out infinite alternate; }

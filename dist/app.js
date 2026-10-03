@@ -1797,12 +1797,10 @@ function makePowerProblem(max, mastered) {
   }
 
   function createKapiController() {
-    const animator = new window.CssKapiAnimator({
+    const animator = new window.RiveKapiAnimator({
       homeHost: $("homeMascot"),
       gameHost: $("gameMascot"),
-      gameImage: $("gameMascotImage"),
       resultHost: $("resultMascot"),
-      resultImage: $("resultMascotImage"),
       bannerCard: $("motivationPop").querySelector(".motivation-card"),
       bannerImage: $("motivationMascot"),
       bannerBurst: $("motivationBurst")
