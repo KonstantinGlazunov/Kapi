@@ -121,6 +121,20 @@
   };
   translations.ru.stageNames[8] = "состав чисел 11–20: 10 + n";
   translations.de.stageNames[8] = "Zahlen 11–20 als 10 + n";
+  translations.ru.homeMascotAction = "Запустить реакцию Капи";
+  translations.de.homeMascotAction = "Kapis Reaktion starten";
+  translations.ru.homeReactions = {
+    flag: ["Ура!", "Вперёд!"],
+    party: ["Вот это да!", "Праздник!"],
+    dance: ["Танцуем!", "Отлично!"],
+    handshake: ["Договорились!", "Мы команда!"]
+  };
+  translations.de.homeReactions = {
+    flag: ["Juhu!", "Los geht's!"],
+    party: ["Wow!", "Party!"],
+    dance: ["Tanzen!", "Klasse!"],
+    handshake: ["Abgemacht!", "Wir sind ein Team!"]
+  };
   let copy = translations[language];
   let messages = copy.messages;
   let deferredInstallPrompt = null;
@@ -162,6 +176,7 @@
     $("startButton").innerHTML = `${copy.start} <span aria-hidden="true">→</span>`;
     $("statsButton").textContent = copy.history;
     $("speechBubble").textContent = copy.speech;
+    $("homeMascot").setAttribute("aria-label", copy.homeMascotAction);
     $("homeStats").setAttribute("aria-label", copy.gameProgress);
     $("homeButton").setAttribute("aria-label", copy.home);
     $("settingsButton").setAttribute("aria-label", copy.settings);
@@ -413,9 +428,26 @@
 
   let homeGreetingTimer = 0;
   let homeIdleTimer = 0;
+  let homeReactionTimer = 0;
+  let homeReactionLockedUntil = 0;
+  let lastHomeReaction = "";
+  const HOME_REACTION_COOLDOWN = 5000;
+  const homeReactionScenes = ["flag", "party", "dance", "handshake"];
+
+  function clearHomeReaction(restoreSpeech = true) {
+    const mascot = $("homeMascot");
+    if (!mascot) return;
+    window.clearTimeout(homeReactionTimer);
+    homeReactionTimer = 0;
+    mascot.classList.remove("is-reacting", ...homeReactionScenes.map((scene) => `home-reaction-${scene}`));
+    $("speechBubble").classList.remove("is-reacting");
+    if (restoreSpeech) $("speechBubble").textContent = copy.speech;
+  }
+
   function restartHomeGreeting() {
     const mascot = $("homeMascot");
     if (!mascot) return;
+    clearHomeReaction();
     window.clearTimeout(homeIdleTimer);
     mascot.classList.remove("is-greeting");
     void mascot.offsetWidth;
@@ -425,6 +457,25 @@
     homeIdleTimer = window.setTimeout(() => {
       mascot.classList.remove("is-greeting");
     }, 3400);
+  }
+
+  function playHomeReaction() {
+    if (!$("startScreen").classList.contains("active") || Date.now() < homeReactionLockedUntil) return;
+    const mascot = $("homeMascot");
+    const candidates = homeReactionScenes.filter((scene) => scene !== lastHomeReaction);
+    const scene = pick(candidates);
+    lastHomeReaction = scene;
+    homeReactionLockedUntil = Date.now() + HOME_REACTION_COOLDOWN;
+    window.clearTimeout(homeGreetingTimer);
+    window.clearTimeout(homeIdleTimer);
+    clearHomeReaction(false);
+    mascot.classList.remove("is-greeting");
+    mascot.classList.add("is-reacting", `home-reaction-${scene}`);
+    const phrases = copy.homeReactions[scene];
+    $("speechBubble").textContent = pick(phrases);
+    $("speechBubble").classList.add("is-reacting");
+    sound(motivationSounds[scene]);
+    homeReactionTimer = window.setTimeout(() => clearHomeReaction(), 2600);
   }
 
   function speakHomeGreeting() {
@@ -2076,6 +2127,10 @@ function makePowerProblem(max, mastered) {
   }
 
   $("startButton").addEventListener("click", startTraining);
+  $("homeMascot").addEventListener("click", playHomeReaction);
+  document.querySelector(".app-shell").addEventListener("pointerdown", (event) => {
+    if (homeReactionTimer && !event.target.closest("#homeMascot")) clearHomeReaction();
+  });
   $("againButton").addEventListener("click", startTraining);
   $("shareButton").addEventListener("click", shareResult);
   $("statsButton").addEventListener("click", showStats);
