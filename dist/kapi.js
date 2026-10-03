@@ -37,14 +37,26 @@
   const RIG_PARTS = {
     head: "assets/kapi-rig-v2/head.png",
     torso: "assets/kapi-rig-v2/torso.png",
-    armLeftUpper: "assets/kapi-rig-v2/arm-left-upper.png",
-    armLeftLower: "assets/kapi-rig-v2/arm-left-lower.png",
-    armRightUpper: "assets/kapi-rig-v2/arm-right-upper.png",
-    armRightLower: "assets/kapi-rig-v2/arm-right-lower.png",
-    legLeft: "assets/kapi-rig-v2/leg-left.png",
-    legRight: "assets/kapi-rig-v2/leg-right.png",
-    footLeft: "assets/kapi-rig-v2/foot-left.png",
-    footRight: "assets/kapi-rig-v2/foot-right.png"
+    armLeftUpper: "assets/kapi-rig-v3/arm-left-upper.png",
+    armRightUpper: "assets/kapi-rig-v3/arm-right-upper.png",
+    armLeftForearm: "assets/kapi-rig-v3/arm-left-forearm.png",
+    armRightForearm: "assets/kapi-rig-v3/arm-right-forearm.png",
+    pawLeft: "assets/kapi-rig-v3/paw-left.png",
+    pawRight: "assets/kapi-rig-v3/paw-right.png",
+    legLeft: "assets/kapi-rig-v3/leg-left.png",
+    legRight: "assets/kapi-rig-v3/leg-right.png",
+    footLeft: "assets/kapi-rig-v3/foot-left.png",
+    footRight: "assets/kapi-rig-v3/foot-right.png"
+  };
+
+  const ARM_JOINTS = {
+    left: { upper: "armLeftUpper", forearm: "armLeftForearm", paw: "pawLeft", shoulder: [242, 54], elbow: [53, 286], forearmElbow: [208, 46], wrist: [46, 230], pawWrist: [168, 16] },
+    right: { upper: "armRightUpper", forearm: "armRightForearm", paw: "pawRight", shoulder: [49, 54], elbow: [238, 287], forearmElbow: [34, 46], wrist: [196, 230], pawWrist: [31, 16] }
+  };
+
+  const LEG_JOINTS = {
+    left: { leg: "legLeft", foot: "footLeft", hip: [229, 48], ankle: [211, 288], footAnkle: [238, 24] },
+    right: { leg: "legRight", foot: "footRight", hip: [41, 48], ankle: [59, 286], footAnkle: [52, 24] }
   };
 
   class KapiAnimator {
@@ -205,29 +217,27 @@
       const pose = { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 };
       if (this.reducedMotion) return pose;
       if (state === "idle") {
-        pose.y = -3.8 + Math.sin(t * 1.55) * 3.8;
-        pose.x = Math.sin(t * .78) * 1.6;
-        pose.rotation = Math.sin(t * .72) * .012;
-        pose.scaleX = 1 + Math.sin(t * 1.55) * .006;
-        pose.scaleY = 1 - Math.sin(t * 1.55) * .009;
+        pose.y = -3.5 + Math.sin(t * 1.55) * 3.5;
+        pose.x = Math.sin(t * .78) * 1.4;
+        pose.rotation = Math.sin(t * .72) * .009;
+        pose.scaleX = 1 + Math.sin(t * 1.55) * .004;
+        pose.scaleY = 1 - Math.sin(t * 1.55) * .007;
       } else if (state === "idleBlink") {
         const blink = Math.sin(Math.min(1, elapsed / 340) * Math.PI);
         pose.y = blink * 2;
         pose.scaleY = 1 - blink * .035;
         pose.scaleX = 1 + blink * .012;
       } else if (state === "hey") {
-        const wave = Math.sin(t * 7.4);
-        pose.y = -5 - Math.abs(Math.sin(t * 3.7)) * 7;
-        pose.rotation = wave * .027;
-        pose.scaleX = 1 + Math.abs(wave) * .012;
-        pose.scaleY = 1 - Math.abs(wave) * .007;
+        const wave = Math.sin(t * 8.2);
+        pose.y = -6 - Math.abs(Math.sin(t * 3.8)) * 5;
+        pose.rotation = wave * .018;
       } else if (state === "correct") {
         const progress = Math.min(1, elapsed / 680);
         const lift = Math.sin(progress * Math.PI);
         pose.y = -lift * 22;
-        pose.rotation = Math.sin(progress * Math.PI * 2) * .055 * (1 - progress);
-        pose.scaleX = 1 + lift * .035;
-        pose.scaleY = 1 + lift * .065;
+        pose.rotation = Math.sin(progress * Math.PI * 2) * .035 * (1 - progress);
+        pose.scaleX = 1 + lift * .025;
+        pose.scaleY = 1 + lift * .055;
       } else if (state === "wrong") {
         const progress = Math.min(1, elapsed / 720);
         const damping = 1 - progress;
@@ -246,12 +256,12 @@
         pose.scaleX = 1 + bounce * .025;
         pose.scaleY = 1 + bounce * .045;
       } else if (state === "dance" || state === "trainingFinished") {
-        const beat = Math.sin(t * 7.2);
-        pose.x = beat * 8;
-        pose.y = -Math.abs(Math.sin(t * 7.2)) * 12;
-        pose.rotation = beat * .085;
-        pose.scaleX = 1 + Math.abs(beat) * .025;
-        pose.scaleY = 1 + Math.abs(beat) * .035;
+        const beat = Math.sin(t * 6.4);
+        pose.x = beat * 7;
+        pose.y = -Math.abs(beat) * 8;
+        pose.rotation = beat * .055;
+        pose.scaleX = 1 + Math.abs(beat) * .014;
+        pose.scaleY = 1 + Math.abs(beat) * .022;
       } else if (state === "levelUp") {
         const pulse = Math.sin(Math.min(1, elapsed / 1500) * Math.PI);
         pose.x = pulse * 6;
@@ -267,70 +277,84 @@
       const t = elapsed / 1000;
       const idle = Math.sin(t * 1.55);
       const result = {
-        head: idle * .018,
-        leftUpper: .16 + idle * .018,
-        leftLower: -.08 + idle * .022,
-        rightUpper: -.16 - idle * .018,
-        rightLower: .08 - idle * .022,
-        leftLeg: .03,
-        rightLeg: -.03,
-        leftFoot: 0,
-        rightFoot: 0
+        head: idle * .015,
+        leftShoulder: .04 + idle * .012,
+        leftElbow: -1.22 + idle * .018,
+        leftWrist: .10 - idle * .015,
+        rightShoulder: -.04 - idle * .012,
+        rightElbow: 1.22 - idle * .018,
+        rightWrist: -.10 + idle * .015,
+        leftHip: .02,
+        rightHip: -.02,
+        leftAnkle: -.03,
+        rightAnkle: .03
       };
       if (this.reducedMotion) return result;
       if (state === "hey") {
-        const wave = Math.sin(t * 8.5);
-        result.head = -.045 + wave * .012;
-        result.rightUpper = -2.18 + wave * .08;
-        result.rightLower = -.62 + wave * .42;
-        result.leftUpper = .24;
+        const wave = Math.sin(t * 8.2);
+        result.head = -.035 + wave * .012;
+        result.rightShoulder = -1.62 + wave * .045;
+        result.rightElbow = -.52 + wave * .16;
+        result.rightWrist = wave * .34;
+        result.leftShoulder = .06;
+        result.leftElbow = -1.20;
+        result.leftWrist = .08;
       } else if (state === "correct") {
         const p = Math.min(1, elapsed / 680);
         const lift = Math.sin(p * Math.PI);
-        result.head = Math.sin(p * Math.PI * 2) * .035;
-        result.leftUpper = .16 + lift * 2.04;
-        result.rightUpper = -.16 - lift * 2.04;
-        result.leftLower = -.1 - lift * .28;
-        result.rightLower = .1 + lift * .28;
-        result.leftFoot = -lift * .15;
-        result.rightFoot = lift * .15;
+        result.head = Math.sin(p * Math.PI * 2) * .025;
+        result.leftShoulder = .04 + lift * 2.10;
+        result.rightShoulder = -.04 - lift * 2.10;
+        result.leftElbow = -1.22 + lift * 1.22;
+        result.rightElbow = 1.22 - lift * 1.22;
+        result.leftWrist = .10 - lift * .10;
+        result.rightWrist = -.10 + lift * .10;
+        result.leftHip = .02 + lift * .08;
+        result.rightHip = -.02 - lift * .08;
+        result.leftAnkle = -.03 - lift * .16;
+        result.rightAnkle = .03 + lift * .16;
       } else if (state === "wrong") {
         const p = Math.min(1, elapsed / 720);
         const shake = Math.sin(p * Math.PI * 5) * (1 - p);
         result.head = shake * .08;
-        result.leftUpper = .32;
-        result.rightUpper = -.32;
-        result.leftLower = .18;
-        result.rightLower = -.18;
+        result.leftShoulder = .14;
+        result.rightShoulder = -.14;
+        result.leftElbow = -1.30;
+        result.rightElbow = 1.30;
       } else if (state === "flag") {
         const wave = Math.sin(t * 5.6);
-        result.rightUpper = -2.12 + wave * .13;
-        result.rightLower = -.25 + wave * .18;
-        result.leftUpper = .28 + wave * .025;
+        result.rightShoulder = -1.72 + wave * .10;
+        result.rightElbow = -.42 + wave * .14;
+        result.rightWrist = wave * .22;
         result.head = wave * .025;
       } else if (state === "horn") {
         const pulse = Math.sin(t * 5.4);
-        result.leftUpper = 1.22 + pulse * .11;
-        result.rightUpper = -1.22 - pulse * .11;
-        result.leftLower = -.68 - pulse * .08;
-        result.rightLower = .68 + pulse * .08;
+        result.leftShoulder = 1.05 + pulse * .10;
+        result.rightShoulder = -1.05 - pulse * .10;
+        result.leftElbow = -.72 - pulse * .08;
+        result.rightElbow = .72 + pulse * .08;
         result.head = pulse * .022;
       } else if (state === "dance" || state === "trainingFinished") {
-        const beat = Math.sin(t * 7.2);
-        result.head = beat * .055;
-        result.leftUpper = .25 + beat * .62;
-        result.rightUpper = -.25 + beat * .62;
-        result.leftLower = -.12 - beat * .22;
-        result.rightLower = .12 - beat * .22;
-        result.leftLeg = beat * .13;
-        result.rightLeg = beat * .13;
-        result.leftFoot = -beat * .12;
-        result.rightFoot = -beat * .12;
+        const beat = Math.sin(t * 6.4);
+        const half = Math.sin(t * 3.2);
+        const upLeft = .5 + .5 * half;
+        const upRight = .5 - .5 * half;
+        result.head = -beat * .035;
+        result.leftShoulder = .04 + upLeft * .82;
+        result.rightShoulder = -.04 - upRight * .82;
+        result.leftElbow = -1.22 + upLeft * .52;
+        result.rightElbow = 1.22 - upRight * .52;
+        result.leftWrist = .10 - upLeft * .12;
+        result.rightWrist = -.10 + upRight * .12;
+        result.leftHip = .02 - beat * .10;
+        result.rightHip = -.02 - beat * .10;
+        result.leftAnkle = -.03 + beat * .14;
+        result.rightAnkle = .03 + beat * .14;
       } else if (state === "levelUp") {
         const p = Math.sin(Math.min(1, elapsed / 1500) * Math.PI);
-        result.rightUpper = -.16 - p * 1.25;
-        result.rightLower = .08 + p * .75;
-        result.leftUpper = .16 + p * .3;
+        result.rightShoulder = -.04 - p * 1.25;
+        result.rightElbow = 1.22 - p * .62;
+        result.leftShoulder = .04 + p * .30;
         result.head = -p * .035;
       }
       return result;
@@ -347,31 +371,56 @@
       context.restore();
     }
 
-    drawArm(context, side, shoulderX, shoulderY, scale, upperRotation, lowerRotation) {
-      const upperName = side === "left" ? "armLeftUpper" : "armRightUpper";
-      const lowerName = side === "left" ? "armLeftLower" : "armRightLower";
-      const upper = this.loadImage(RIG_PARTS[upperName]);
-      const lower = this.loadImage(RIG_PARTS[lowerName]);
-      if (!upper.ready || !lower.ready) return;
-      const upperPivotX = upper.image.naturalWidth / 2;
-      const lowerPivotX = lower.image.naturalWidth / 2;
+    drawArmLayer(context, side, shoulderX, shoulderY, scale, shoulderRotation, elbowRotation, wristRotation, layer) {
+      const joint = ARM_JOINTS[side];
+      const upper = this.loadImage(RIG_PARTS[joint.upper]);
+      const forearm = this.loadImage(RIG_PARTS[joint.forearm]);
+      const paw = this.loadImage(RIG_PARTS[joint.paw]);
+      if (!upper.ready || !forearm.ready || !paw.ready) return;
       context.save();
       context.translate(shoulderX, shoulderY);
-      context.rotate(upperRotation);
+      context.rotate(shoulderRotation);
       context.scale(scale, scale);
-      context.drawImage(upper.image, -upperPivotX, -18);
-      context.translate(0, upper.image.naturalHeight * .72);
-      context.rotate(lowerRotation);
-      context.drawImage(lower.image, -lowerPivotX, -20);
+      if (layer === "upper") {
+        context.drawImage(upper.image, -joint.shoulder[0], -joint.shoulder[1]);
+      } else {
+        context.translate(joint.elbow[0] - joint.shoulder[0], joint.elbow[1] - joint.shoulder[1]);
+        context.rotate(elbowRotation);
+        context.drawImage(forearm.image, -joint.forearmElbow[0], -joint.forearmElbow[1]);
+        context.translate(joint.wrist[0] - joint.forearmElbow[0], joint.wrist[1] - joint.forearmElbow[1]);
+        context.rotate(wristRotation);
+        context.drawImage(paw.image, -joint.pawWrist[0], -joint.pawWrist[1]);
+      }
       context.restore();
     }
 
-    drawRig(record, state, elapsed, opacity) {
+    drawLegLayer(context, side, hipX, hipY, scale, hipRotation, ankleRotation, layer) {
+      const joint = LEG_JOINTS[side];
+      const leg = this.loadImage(RIG_PARTS[joint.leg]);
+      const foot = this.loadImage(RIG_PARTS[joint.foot]);
+      if (!leg.ready || !foot.ready) return;
+      context.save();
+      context.translate(hipX, hipY);
+      context.rotate(hipRotation);
+      context.scale(scale, scale);
+      if (layer === "leg") {
+        context.drawImage(leg.image, -joint.hip[0], -joint.hip[1]);
+      } else {
+        context.translate(joint.ankle[0] - joint.hip[0], joint.ankle[1] - joint.hip[1]);
+        context.rotate(ankleRotation);
+        context.drawImage(foot.image, -joint.footAnkle[0], -joint.footAnkle[1]);
+      }
+      context.restore();
+    }
+
+    blendValues(from, to, progress) {
+      return Object.fromEntries(Object.keys(to).map((key) => [key, from[key] + (to[key] - from[key]) * progress]));
+    }
+
+    drawRigPose(record, pose, limbs, opacity = 1) {
       if (opacity <= 0) return;
       const context = record.context;
       const canvas = record.canvas;
-      const pose = this.pose(state, elapsed);
-      const limbs = this.limbPose(state, elapsed);
       const unit = Math.min(canvas.width, canvas.height) / 700;
       context.save();
       context.globalAlpha = opacity;
@@ -380,13 +429,21 @@
       context.scale(unit * pose.scaleX, unit * pose.scaleY);
       context.translate(-350, -350);
 
-      this.drawPart(context, "footLeft", 290, 568, .60, limbs.leftFoot, 111, 28);
-      this.drawPart(context, "footRight", 410, 568, .60, limbs.rightFoot, 112, 28);
+      this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "leg");
+      this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "leg");
+      this.drawArmLayer(context, "left", 275, 304, .35, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "upper");
+      this.drawArmLayer(context, "right", 425, 304, .35, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
       this.drawPart(context, "torso", 350, 389, .69, 0, 280.5, 229);
-      this.drawArm(context, "left", 236, 300, .58, limbs.leftUpper, limbs.leftLower);
-      this.drawArm(context, "right", 464, 300, .58, limbs.rightUpper, limbs.rightLower);
+      this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "foot");
+      this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "foot");
+      this.drawArmLayer(context, "left", 275, 304, .35, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
+      this.drawArmLayer(context, "right", 425, 304, .35, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
       this.drawPart(context, "head", 350, 190, .70, limbs.head, 244, 215);
       context.restore();
+    }
+
+    drawRig(record, state, elapsed, opacity = 1) {
+      this.drawRigPose(record, this.pose(state, elapsed), this.limbPose(state, elapsed), opacity);
     }
 
     render(record, now) {
@@ -398,11 +455,15 @@
         : 1;
       const eased = 1 - Math.pow(1 - transitionProgress, 3);
       if (record.previousState && transitionProgress < 1) {
-        this.drawRig(record, record.previousState, now - record.previousStartedAt, 1 - eased);
+        const previousElapsed = now - record.previousStartedAt;
+        const currentElapsed = now - record.stateStartedAt;
+        const pose = this.blendValues(this.pose(record.previousState, previousElapsed), this.pose(record.state, currentElapsed), eased);
+        const limbs = this.blendValues(this.limbPose(record.previousState, previousElapsed), this.limbPose(record.state, currentElapsed), eased);
+        this.drawRigPose(record, pose, limbs);
       } else {
         record.previousState = null;
+        this.drawRig(record, record.state, now - record.stateStartedAt);
       }
-      this.drawRig(record, record.state, now - record.stateStartedAt, eased);
       record.frameRequest = requestAnimationFrame((time) => this.render(record, time));
     }
 
