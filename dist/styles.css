@@ -339,7 +339,26 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .result-card .text-button { margin: 18px auto 0; }
 
 .confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.confetti-piece { position: absolute; top: -20px; width: 11px; height: 18px; border-radius: 3px; animation: confetti-fall 2.7s linear infinite; }
+.confetti-piece { position: absolute; top: -20px; width: 11px; height: 18px; border-radius: 3px; animation: confetti-fall 2.7s linear 1 both; }
+
+.kapi-demo-active .app-shell, .kapi-demo-active .install-prompt { display: none; }
+body.kapi-demo-active { height: auto; min-height: 100dvh; overflow: auto; }
+.kapi-demo { width: min(100% - 32px, 1040px); margin: 32px auto; display: grid; grid-template-columns: 1fr 1.1fr; gap: 32px; align-items: start; }
+.kapi-demo-preview { text-align: center; position: sticky; top: 24px; }
+.kapi-demo-stage { width: min(100%, 410px); aspect-ratio: 1; margin: 0 auto; }
+.kapi-demo-stage canvas { width: 100%; height: 100%; display: block; }
+.kapi-demo-status { display: block; min-height: 1.5em; font-size: 1.2rem; }
+.kapi-demo p { font-size: .9rem; line-height: 1.5; color: var(--muted); }
+.kapi-demo-scenarios, .kapi-demo-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.kapi-demo-actions { margin-bottom: 20px; }
+.kapi-demo button { min-height: 48px; padding: 12px; border: 1px solid #b9d9d2; border-radius: 14px; background: white; color: #134e4a; font: inherit; font-size: .95rem; cursor: pointer; }
+.kapi-demo button[aria-pressed="true"] { background: #0f766e; color: white; border-color: #0f766e; }
+.kapi-demo button:focus-visible, .kapi-demo a:focus-visible { outline: 3px solid #e4a70c; outline-offset: 3px; }
+@media (max-width: 650px) {
+  .kapi-demo { grid-template-columns: 1fr; gap: 16px; margin: 16px auto; }
+  .kapi-demo-preview { position: static; }
+  .kapi-demo-stage { width: min(100%, 280px); }
+}
 
 .stats-dialog, .settings-dialog { width: min(calc(100% - 28px), 650px); max-height: min(calc(var(--app-height) - 24px), 820px); overflow: auto; overscroll-behavior: contain; scroll-padding-block: 84px 28px; border: 0; border-radius: 28px; padding: 24px; color: var(--ink); background: var(--paper); box-shadow: 0 30px 90px rgba(15,55,52,.28); }
 .stats-dialog::backdrop, .settings-dialog::backdrop { background: rgba(10,45,42,.48); backdrop-filter: blur(4px); }

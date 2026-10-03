@@ -10,15 +10,22 @@
 
   const STATE_CONFIG = {
     idle: { priority: 0, loop: true },
-    idleBlink: { priority: 5, duration: 340 },
-    hey: { priority: 30, duration: 3400, sound: "hey" },
-    correct: { priority: 40, duration: 680, sound: "correct" },
-    wrong: { priority: 50, duration: 720, sound: "wrong" },
-    flag: { priority: 60, duration: 2300, sound: "flag" },
-    horn: { priority: 70, duration: 2500, sound: "party" },
-    dance: { priority: 80, duration: 2700, sound: "dance" },
-    levelUp: { priority: 90, duration: 1500, sound: "handshake", next: "dance" },
-    trainingFinished: { priority: 100, loop: true, sound: "complete" }
+    idleBlink: { priority: 1, duration: 340 },
+    idleHeadMove: { priority: 1, duration: 1200 },
+    idleLookLeft: { priority: 1, duration: 1400 },
+    idleLookRight: { priority: 1, duration: 1400 },
+    hey: { priority: 5, duration: 3400, sound: "hey" },
+    correct: { priority: 10, duration: 680, sound: "correct" },
+    wrong: { priority: 20, duration: 850, sound: "wrong" },
+    errorRecovered: { priority: 30, duration: 1050, sound: "recovered" },
+    errorMastered: { priority: 35, duration: 1300, sound: "mastered" },
+    flag: { priority: 40, duration: 1600, sound: "flag" },
+    horn: { priority: 50, duration: 2100, sound: "party" },
+    dance: { priority: 60, duration: 2400, sound: "dance" },
+    levelUp: { priority: 80, duration: 1500, sound: "levelUp", next: "dance" },
+    completion: { priority: 90, duration: 1900, sound: "complete20", next: "trainingFinished" },
+    perfectTraining: { priority: 95, duration: 2400, sound: "perfect", next: "trainingFinished" },
+    trainingFinished: { priority: 90, loop: true }
   };
 
   const ASSETS = {
@@ -144,13 +151,20 @@
       this.surface = "home";
       this.instances = new Map();
       this.images = new Map();
-      this.reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+      const motionPreference = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+      this.reducedMotion = motionPreference?.matches === true;
+      motionPreference?.addEventListener?.("change", (event) => { this.reducedMotion = event.matches; });
       Object.values(RIG_PARTS).forEach((source) => this.loadImage(source));
     }
 
     setSurface(surface) {
+      if (this.surface !== surface) this.pause(this.surface);
       this.surface = surface;
-      this.ensure(surface);
+      const record = this.ensure(surface);
+      if (record && !record.frameRequest) {
+        this.resize(record);
+        this.render(record, performance.now());
+      }
     }
 
     setLoop() {}
@@ -168,10 +182,11 @@
         canvas,
         context: canvas.getContext("2d", { alpha: true }),
         state: "idle",
-        previousState: null,
+        variant: "hop",
+        transitionFrom: null,
         stateStartedAt: performance.now(),
         transitionStartedAt: 0,
-        transitionDuration: 260,
+        transitionDuration: 180,
         observer: null,
         frameRequest: 0
       };
@@ -212,11 +227,30 @@
       }
     }
 
-    pose(state, elapsed) {
+    motion(state, elapsed, variant = "hop") {
+      if (state === "errorRecovered") return { state: "correct", elapsed: elapsed * 680 / 1050, variant: "recovered" };
+      if (state === "errorMastered") return { state: "correct", elapsed: elapsed * 680 / 1300, variant: "mastered" };
+      return { state, elapsed, variant };
+    }
+
+    finalePose(method, state, elapsed) {
+      const perfect = state === "perfectTraining";
+      const introDuration = perfect ? 800 : 600;
+      const introState = perfect ? "correct" : "levelUp";
+      const introEnd = perfect ? 680 : 1500;
+      if (elapsed < introDuration) return this[method](introState, elapsed * introEnd / introDuration, "mastered");
+      const progress = Math.min(1, (elapsed - introDuration) / 240);
+      const eased = progress * progress * (3 - 2 * progress);
+      return this.blendValues(this[method](introState, introEnd, "mastered"), this[method]("dance", elapsed - introDuration), eased);
+    }
+
+    pose(state, elapsed, variant) {
+      if (state === "completion" || state === "perfectTraining") return this.finalePose("pose", state, elapsed);
+      ({ state, elapsed, variant } = this.motion(state, elapsed, variant));
       const t = elapsed / 1000;
       const pose = { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 };
       if (this.reducedMotion) return pose;
-      if (state === "idle") {
+      if (state === "idle" || state.startsWith("idleLook") || state === "idleHeadMove") {
         pose.y = -3.5 + Math.sin(t * 1.55) * 3.5;
         pose.x = Math.sin(t * .78) * 1.4;
         pose.rotation = Math.sin(t * .72) * .009;
@@ -234,16 +268,16 @@
       } else if (state === "correct") {
         const progress = Math.min(1, elapsed / 680);
         const lift = Math.sin(progress * Math.PI);
-        pose.y = -lift * 22;
-        pose.rotation = Math.sin(progress * Math.PI * 2) * .035 * (1 - progress);
-        pose.scaleX = 1 + lift * .025;
-        pose.scaleY = 1 + lift * .055;
+        const strength = { nod: .12, hop: .50, cheer: .65, recovered: .70, mastered: 1 }[variant] ?? .50;
+        pose.y = -lift * 22 * strength;
+        pose.rotation = Math.sin(progress * Math.PI * 2) * .025 * (1 - progress) * strength;
+        pose.scaleX = 1 + lift * .018 * strength;
+        pose.scaleY = 1 + lift * .035 * strength;
       } else if (state === "wrong") {
-        const progress = Math.min(1, elapsed / 720);
-        const damping = 1 - progress;
-        pose.x = Math.sin(progress * Math.PI * 5) * 9 * damping;
-        pose.rotation = Math.sin(progress * Math.PI * 5) * .04 * damping;
-        pose.y = Math.sin(progress * Math.PI) * 3;
+        // A curious lean, never a punitive shake.
+        const thinking = Math.sin(Math.min(1, elapsed / 850) * Math.PI);
+        pose.rotation = thinking * -.012;
+        pose.y = thinking * 2;
       } else if (state === "flag") {
         pose.y = -5 - Math.abs(Math.sin(t * 4.1)) * 7;
         pose.rotation = Math.sin(t * 4.1) * .038;
@@ -267,17 +301,21 @@
         pose.x = pulse * 6;
         pose.y = -pulse * 8;
         pose.rotation = -pulse * .025;
-        pose.scaleX = 1 + pulse * .085;
-        pose.scaleY = 1 + pulse * .055;
+        pose.scaleX = 1 + pulse * .03;
+        pose.scaleY = 1 + pulse * .025;
       }
       return pose;
     }
 
-    limbPose(state, elapsed) {
+    limbPose(state, elapsed, variant) {
+      if (state === "completion" || state === "perfectTraining") return this.finalePose("limbPose", state, elapsed);
+      ({ state, elapsed, variant } = this.motion(state, elapsed, variant));
       const t = elapsed / 1000;
-      const idle = Math.sin(t * 1.55);
+      const idle = this.reducedMotion ? 0 : Math.sin(t * 1.55);
       const result = {
         head: idle * .015,
+        headX: 0,
+        headY: 0,
         leftShoulder: .04 + idle * .012,
         leftElbow: -1.22 + idle * .018,
         leftWrist: .10 - idle * .015,
@@ -289,7 +327,22 @@
         leftAnkle: -.03,
         rightAnkle: .03
       };
-      if (this.reducedMotion) return result;
+      if (this.reducedMotion) {
+        if (state === "wrong") result.head = -.035;
+        else if (state !== "idle" && !state.startsWith("idle")) {
+          result.head = .02;
+          result.rightShoulder = -.30;
+          result.rightElbow = 1.05;
+        }
+        return result;
+      }
+      if (state.startsWith("idleLook") || state === "idleHeadMove") {
+        const micro = Math.sin(Math.min(1, elapsed / (state === "idleHeadMove" ? 1200 : 1400)) * Math.PI);
+        const direction = state === "idleLookLeft" ? -1 : 1;
+        result.head = micro * .025 * direction;
+        result.headX = state === "idleHeadMove" ? 0 : micro * 3 * direction;
+        result.headY = state === "idleHeadMove" ? micro * 3 : 0;
+      }
       if (state === "hey") {
         const wave = Math.sin(t * 8.2);
         result.head = -.035 + wave * .012;
@@ -302,21 +355,23 @@
       } else if (state === "correct") {
         const p = Math.min(1, elapsed / 680);
         const lift = Math.sin(p * Math.PI);
-        result.head = Math.sin(p * Math.PI * 2) * .025;
-        result.leftShoulder = .04 + lift * 2.10;
-        result.rightShoulder = -.04 - lift * 2.10;
-        result.leftElbow = -1.22 + lift * 1.22;
-        result.rightElbow = 1.22 - lift * 1.22;
+        const strength = { nod: .04, hop: .16, cheer: .50, recovered: .65, mastered: 1 }[variant] ?? .16;
+        result.head = Math.sin(p * Math.PI * 2) * (variant === "nod" ? .05 : .025);
+        result.headY = variant === "nod" ? lift * 6 : 0;
+        result.leftShoulder = .04 + lift * 2.10 * strength;
+        result.rightShoulder = -.04 - lift * 2.10 * strength;
+        result.leftElbow = -1.22 + lift * 1.22 * strength;
+        result.rightElbow = 1.22 - lift * 1.22 * strength;
         result.leftWrist = .10 - lift * .10;
         result.rightWrist = -.10 + lift * .10;
-        result.leftHip = .02 + lift * .08;
-        result.rightHip = -.02 - lift * .08;
-        result.leftAnkle = -.03 - lift * .16;
-        result.rightAnkle = .03 + lift * .16;
+        result.leftHip = .02 + lift * .08 * strength;
+        result.rightHip = -.02 - lift * .08 * strength;
+        result.leftAnkle = -.03 - lift * .16 * strength;
+        result.rightAnkle = .03 + lift * .16 * strength;
       } else if (state === "wrong") {
-        const p = Math.min(1, elapsed / 720);
-        const shake = Math.sin(p * Math.PI * 5) * (1 - p);
-        result.head = shake * .08;
+        const p = Math.min(1, elapsed / 850);
+        result.head = -Math.sin(p * Math.PI) * .055;
+        result.headY = Math.sin(p * Math.PI) * 3;
         result.leftShoulder = .14;
         result.rightShoulder = -.14;
         result.leftElbow = -1.30;
@@ -353,7 +408,7 @@
       } else if (state === "levelUp") {
         const p = Math.sin(Math.min(1, elapsed / 1500) * Math.PI);
         result.rightShoulder = -.04 - p * 1.25;
-        result.rightElbow = 1.22 - p * .62;
+        result.rightElbow = 1.22 - p * .28;
         result.leftShoulder = .04 + p * .30;
         result.head = -p * .035;
       }
@@ -438,32 +493,39 @@
       this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "foot");
       this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
       this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
-      this.drawPart(context, "head", 350, 190, .70, limbs.head, 244, 215);
+      this.drawPart(context, "head", 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215);
       context.restore();
     }
 
     drawRig(record, state, elapsed, opacity = 1) {
-      this.drawRigPose(record, this.pose(state, elapsed), this.limbPose(state, elapsed), opacity);
+      this.drawRigPose(record, this.pose(state, elapsed, record.variant), this.limbPose(state, elapsed, record.variant), opacity);
+    }
+
+    snapshot(record, now) {
+      const target = {
+        pose: this.pose(record.state, now - record.stateStartedAt, record.variant),
+        limbs: this.limbPose(record.state, now - record.stateStartedAt, record.variant)
+      };
+      const transitionProgress = record.transitionFrom
+        ? Math.min(1, (now - record.transitionStartedAt) / record.transitionDuration)
+        : 1;
+      if (record.transitionFrom && transitionProgress < 1) {
+        const eased = transitionProgress * transitionProgress * (3 - 2 * transitionProgress);
+        return {
+          pose: this.blendValues(record.transitionFrom.pose, target.pose, eased),
+          limbs: this.blendValues(record.transitionFrom.limbs, target.limbs, eased)
+        };
+      }
+      record.transitionFrom = null;
+      return target;
     }
 
     render(record, now) {
       const context = record.context;
       if (!context) return;
       context.clearRect(0, 0, record.canvas.width, record.canvas.height);
-      const transitionProgress = record.previousState
-        ? Math.min(1, (now - record.transitionStartedAt) / record.transitionDuration)
-        : 1;
-      const eased = 1 - Math.pow(1 - transitionProgress, 3);
-      if (record.previousState && transitionProgress < 1) {
-        const previousElapsed = now - record.previousStartedAt;
-        const currentElapsed = now - record.stateStartedAt;
-        const pose = this.blendValues(this.pose(record.previousState, previousElapsed), this.pose(record.state, currentElapsed), eased);
-        const limbs = this.blendValues(this.limbPose(record.previousState, previousElapsed), this.limbPose(record.state, currentElapsed), eased);
-        this.drawRigPose(record, pose, limbs);
-      } else {
-        record.previousState = null;
-        this.drawRig(record, record.state, now - record.stateStartedAt);
-      }
+      const current = this.snapshot(record, now);
+      this.drawRigPose(record, current.pose, current.limbs);
       record.frameRequest = requestAnimationFrame((time) => this.render(record, time));
     }
 
@@ -475,25 +537,33 @@
         host.classList.add("kapi-rive-active");
       }
       const record = this.ensure(surface);
-      if (!record || record.state === state) return;
+      if (!record) return;
       const now = performance.now();
-      record.previousState = record.state;
-      record.previousStartedAt = record.stateStartedAt;
+      record.transitionFrom = this.snapshot(record, now);
       record.state = state;
+      record.variant = options.variant || "hop";
       record.stateStartedAt = now;
       record.transitionStartedAt = now;
+      if (!record.frameRequest) this.render(record, now);
     }
 
     stop(surface = this.surface) {
-      this.play("idle", { surface });
+      this.pause(surface);
     }
 
-    renderBanner(state) {
+    pause(surface) {
+      const record = this.instances.get(surface);
+      if (!record) return;
+      cancelAnimationFrame(record.frameRequest);
+      record.frameRequest = 0;
+    }
+
+    renderBanner(state, options = {}) {
       const card = this.elements.bannerCard;
       if (card) card.dataset.kapiState = state;
-      this.play(state, { surface: "banner" });
+      this.play(state, { ...options, surface: "banner" });
       if (this.elements.bannerBurst) {
-        this.elements.bannerBurst.innerHTML = ["horn", "dance", "levelUp", "trainingFinished"].includes(state)
+        this.elements.bannerBurst.innerHTML = !this.reducedMotion && ["horn", "dance", "levelUp", "trainingFinished", "errorMastered", "completion", "perfectTraining"].includes(state)
           ? Array.from({ length: 9 }, (_, index) => `<i style="--burst-index:${index}"></i>`).join("")
           : "";
       }
@@ -502,7 +572,7 @@
     clearBanner() {
       const card = this.elements.bannerCard;
       if (card) delete card.dataset.kapiState;
-      this.play("idle", { surface: "banner" });
+      this.pause("banner");
       if (this.elements.bannerBurst) this.elements.bannerBurst.innerHTML = "";
     }
   }
@@ -517,6 +587,7 @@
       this.state = "idle";
       this.currentOptions = {};
       this.queue = [];
+      this.lastIdleVariant = null;
       this.stateTimer = 0;
       this.idleTimer = 0;
       this.animator.setSurface(this.surface);
@@ -551,23 +622,31 @@
         this.enter("idle", { surface: options.surface || this.surface }, true);
         return true;
       }
-      if (next.priority > current.priority || this.state === "idle" || this.state === "idleBlink") {
-        this.queue = this.queue.filter((item) => STATE_CONFIG[item.state].priority >= next.priority);
+      const nextPriority = options.priority ?? next.priority;
+      const currentPriority = this.currentOptions.priority ?? current.priority;
+      const replaceFeedback = nextPriority <= 20 && currentPriority <= 20;
+      if (nextPriority > currentPriority || this.state.startsWith("idle") || replaceFeedback) {
+        // Never replay stale feedback after a celebration.
+        this.queue = [];
         this.enter(state, options, true);
-        return true;
-      }
-      if (next.priority === current.priority && this.queue.length < 4) {
-        this.queue.push({ state, options });
         return true;
       }
       return false;
     }
 
-    renderBanner(rawState) {
-      this.animator.renderBanner?.(this.normalize(rawState));
+    renderBanner(rawState, options = {}) {
+      window.clearTimeout(this.bannerTimer);
+      const state = this.normalize(rawState);
+      this.animator.renderBanner?.(state, options);
+      const config = STATE_CONFIG[state] || STATE_CONFIG.idle;
+      const duration = options.duration ?? config.duration;
+      if (duration) this.bannerTimer = window.setTimeout(() => {
+        this.animator.play(config.next === "trainingFinished" ? "trainingFinished" : "idle", { surface: "banner" });
+      }, duration);
     }
 
     clearBanner() {
+      window.clearTimeout(this.bannerTimer);
       this.animator.clearBanner?.();
     }
 
@@ -584,10 +663,12 @@
       this.animator.setLoop(Boolean(config.loop));
       this.animator.play(state, { ...options, surface: this.surface });
       this.onStateChange(state, this.surface);
-      if (config.sound && options.silent !== true) this.soundPlayer(config.sound, state);
+      const sound = options.sound ?? config.sound;
+      if (sound && options.silent !== true) this.soundPlayer(sound, state);
 
-      if (config.duration) {
-        this.stateTimer = window.setTimeout(() => this.finishState(), config.duration);
+      const duration = options.duration ?? config.duration;
+      if (duration) {
+        this.stateTimer = window.setTimeout(() => this.finishState(), duration);
       } else if (state === "idle") {
         this.scheduleIdleMicroAnimation();
       }
@@ -601,20 +682,22 @@
       this.stateTimer = 0;
 
       if (config.next) {
-        this.enter(config.next, { ...finishedOptions, silent: false }, true);
+        const { duration, sound, variant, ...continuation } = finishedOptions;
+        this.enter(config.next, { ...continuation, silent: true }, true);
         return;
       }
       if (typeof finishedOptions.onComplete === "function") finishedOptions.onComplete(finishedState);
-      const queued = this.queue.shift();
-      if (queued) this.enter(queued.state, queued.options, true);
-      else this.enter("idle", { surface: this.surface }, true);
+      this.enter("idle", { surface: this.surface }, true);
     }
 
     scheduleIdleMicroAnimation() {
-      if (this.surface === "result") return;
+      if (this.surface === "result" || this.animator.reducedMotion) return;
       const delay = 3200 + Math.round(this.random() * 4200);
       this.idleTimer = window.setTimeout(() => {
-        if (this.state === "idle") this.enter("idleBlink", { surface: this.surface, silent: true }, true);
+        if (this.state !== "idle") return;
+        const variants = ["idleHeadMove", "idleLookLeft", "idleLookRight"].filter((name) => name !== this.lastIdleVariant);
+        this.lastIdleVariant = variants[Math.min(variants.length - 1, Math.floor(this.random() * variants.length))];
+        this.enter(this.lastIdleVariant, { surface: this.surface, silent: true }, true);
       }, delay);
     }
 

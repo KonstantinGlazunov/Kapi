@@ -123,6 +123,18 @@
   translations.de.stageNames[8] = "Zahlen 11–20 als 10 + n";
   translations.ru.homeMascotAction = "Запустить реакцию Капи";
   translations.de.homeMascotAction = "Kapis Reaktion starten";
+  Object.assign(translations.ru, {
+    recoveredTitle: "Получилось!", recoveredNote: "Этот пример уже получается.",
+    masteredTitle: "Закрепили!", masteredNote: "Два верных повтора — уверенно!",
+    perfectTitle: "Ни одной ошибки!", perfectNote: "Всё получилось с первой попытки!",
+    completedCount: (count) => `${count} примеров позади!`, demoTitle: "Проверка реакций Капи"
+  });
+  Object.assign(translations.de, {
+    recoveredTitle: "Geschafft!", recoveredNote: "Diese Aufgabe klappt schon.",
+    masteredTitle: "Sicher gelöst!", masteredNote: "Zweimal richtig wiederholt!",
+    perfectTitle: "Kein einziger Fehler!", perfectNote: "Alles beim ersten Versuch!",
+    completedCount: (count) => `${count} Aufgaben geschafft!`, demoTitle: "Kapis Reaktionen testen"
+  });
   translations.ru.homeReactions = {
     flag: ["Ура!", "Вперёд!"],
     party: ["Вот это да!", "Праздник!"],
@@ -160,6 +172,9 @@
   const $ = (id) => document.getElementById(id);
   const screens = [$("startScreen"), $("gameScreen"), $("resultScreen")];
   let kapi = null;
+  let motivation = null;
+  let soundManager = null;
+  let advanceTimer = 0;
 
   function applyLanguage() {
     copy = translations[language];
@@ -419,6 +434,9 @@
   }
 
   function showScreen(target) {
+    if (target !== $("gameScreen")) window.clearTimeout(advanceTimer);
+    dismissMotivation();
+    soundManager?.stopAll();
     screens.forEach((screen) => screen.classList.toggle("active", screen === target));
     $("homeButton").classList.toggle("hidden", target === $("startScreen"));
     document.body.classList.toggle("game-active", target === $("gameScreen"));
@@ -427,7 +445,6 @@
     else if (target === $("gameScreen")) kapi?.setSurface("game", "idle");
     else if (target === $("resultScreen")) {
       kapi?.setSurface("result", "idle");
-      kapi?.trigger("trainingFinished", { surface: "result" });
     }
     scheduleFitCheck();
   }
@@ -452,6 +469,7 @@
   }
 
   function playHomeReaction() {
+    soundManager?.unlock();
     if (!$("startScreen").classList.contains("active") || Date.now() < homeReactionLockedUntil) return;
     const candidates = homeReactionScenes.filter((scene) => scene !== lastHomeReaction);
     const scene = pick(candidates);
@@ -465,16 +483,7 @@
   }
 
   function speakHomeGreeting() {
-    if (!state.sound || !("speechSynthesis" in window)) return;
-    try {
-      const utterance = new SpeechSynthesisUtterance("Hey!");
-      utterance.lang = language === "ru" ? "ru-RU" : "de-DE";
-      utterance.rate = 1.12;
-      utterance.pitch = 1.25;
-      utterance.volume = .8;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    } catch { /* Voice greeting remains optional. */ }
+    soundManager?.speak("Hey!", language === "ru" ? "ru-RU" : "de-DE");
   }
 
   function randomInt(min, max) {
@@ -1060,6 +1069,9 @@ function makePowerProblem(max, mastered) {
   }
 
   function startTraining() {
+    window.clearTimeout(advanceTimer);
+    soundManager?.unlock();
+    motivation?.resetSession();
     dismissMotivation();
     TOTAL = appSettings.problemCount;
     $("problemTotal").textContent = String(TOTAL);
@@ -1068,7 +1080,8 @@ function makePowerProblem(max, mastered) {
     const trainingStage = appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
     Object.assign(state, {
       index: 0, score: 0, correct: 0, streak: 0, stage: trainingStage,
-      attempt: 1, problem: null, results: [], locked: false, enteredAnswer: "", stageAdvancedDuringSession: false
+      attempt: 1, problem: null, results: [], locked: false, enteredAnswer: "", stageAdvancedDuringSession: false,
+      finalMotivationEvents: []
     });
     showScreen($("gameScreen"));
     $("feedback").textContent = copy.careful;
@@ -1253,34 +1266,37 @@ function makePowerProblem(max, mastered) {
       state.score += earned;
       state.correct += state.attempt === 1 ? 1 : 0;
       state.streak = state.attempt === 1 ? state.streak + 1 : 0;
-      if (state.attempt === 1) registerCorrectAnswer(state.problem);
+      const recovery = state.attempt === 1 ? registerCorrectAnswer(state.problem) : "";
       recordResult(true, elapsed, state.attempt);
       const stageBeforeAnswer = state.stage;
       const adaptiveMessage = updateAdaptiveProgress(state.problem, state.attempt === 1, true, elapsed);
       const reachedNewStage = state.stage > stageBeforeAnswer;
-      const text = state.streak > 0 && state.streak % 3 === 0 ? pick(messages.streak) : pick(messages.correct);
+      const text = recovery === "errorMastered" ? copy.masteredTitle : recovery === "errorRecovered" ? copy.recoveredTitle : pick(messages.correct);
       $("feedback").textContent = `${text} +${earned} ★`;
-      const streakScene = state.streak === 10 ? "dance" : state.streak === 6 ? "horn" : state.streak === 3 ? "flag" : "";
-      const genericStreak = state.streak > 0 && state.streak % 3 === 0;
-      const reaction = reachedNewStage ? "levelUp" : (streakScene || (operationMessage || adaptiveMessage || genericStreak ? "flag" : "correct"));
-      kapi.trigger(reaction, { surface: "game" });
-      if (operationMessage || adaptiveMessage) showMotivation(operationMessage || adaptiveMessage, copy.adaptiveAdjusted, advance, reachedNewStage ? "levelUp" : (streakScene || "flag"));
-      else if (streakScene) showMotivation(streakScene === "dance" ? copy.rewardDance : streakScene === "horn" ? copy.rewardParty : copy.rewardFlag, copy.rightInRow(state.streak), advance, streakScene);
-      else if (state.streak > 0 && state.streak % 3 === 0) showMotivation(text, copy.rightInRow(state.streak), advance, "flag");
-      else window.setTimeout(advance, 850);
+      const events = [{ type: "correct" }];
+      if (recovery) events.push({ type: recovery });
+      if ([3, 6, 10].includes(state.streak)) events.push({ type: "streakMilestone", count: state.streak });
+      if (reachedNewStage) events.push({ type: "levelUp" });
+      if (state.index === TOTAL - 1) {
+        // Final-answer rewards and completion are selected in one batch.
+        state.finalMotivationEvents = events;
+      } else {
+        motivation.handle(events, { batchId: `answer:${state.index}:${state.attempt}`, notice: operationMessage || adaptiveMessage });
+      }
+      scheduleAdvance(350);
       return;
     }
 
     const adaptiveMessage = updateAdaptiveProgress(state.problem, state.attempt === 1, false, elapsed);
     state.streak = 0;
     $("streakPill").classList.add("hidden");
-    kapi.trigger("wrong", { surface: "game" });
+    motivation.handle([{ type: "wrong" }], { batchId: `answer:${state.index}:${state.attempt}` });
     if (state.attempt === 1) {
       registerProblemError(state.problem);
       state.attempt = 2;
       state.enteredAnswer = "";
       $("feedback").textContent = pick(messages.tryAgain);
-      if (adaptiveMessage) showMotivation(adaptiveMessage, copy.adaptiveAdjusted);
+      if (adaptiveMessage) showMotivation(adaptiveMessage, copy.adaptiveAdjusted, null, "wrong");
       showHint();
       renderAnswer();
       return;
@@ -1289,7 +1305,7 @@ function makePowerProblem(max, mastered) {
     state.locked = true;
     recordResult(false, elapsed, 2);
     $("feedback").textContent = copy.finalAnswer(displayAnswer(state.problem.answer, state.problem.answerType));
-    window.setTimeout(advance, 1300);
+    scheduleAdvance(1300);
   }
 
   function recordResult(success, elapsed, attempt) {
@@ -1512,11 +1528,20 @@ function makePowerProblem(max, mastered) {
   function registerCorrectAnswer(problem) {
     const profile = getProfile();
     const item = profile.errorQueue.find((entry) => entry.key === problem.key);
-    if (!item) return;
+    if (!item) return "";
     item.correctStreak = (item.correctStreak || 0) + 1;
     item.lastShown = Date.now();
     if (item.correctStreak >= 2) profile.errorQueue = profile.errorQueue.filter((entry) => entry.key !== problem.key);
     saveProfile(profile);
+    return item.correctStreak >= 2 ? "errorMastered" : "errorRecovered";
+  }
+
+  function scheduleAdvance(delay) {
+    window.clearTimeout(advanceTimer);
+    const problem = state.problem;
+    advanceTimer = window.setTimeout(() => {
+      if (state.problem === problem && state.locked && $("gameScreen").classList.contains("active")) advance();
+    }, delay);
   }
 
   function advance() {
@@ -1627,6 +1652,7 @@ function makePowerProblem(max, mastered) {
   }
 
   function finishTraining() {
+    const perfect = state.results.length === TOTAL && state.results.every((item) => item.firstTry);
     const average = state.results.length
       ? state.results.reduce((sum, item) => sum + item.seconds, 0) / state.results.length
       : 0;
@@ -1641,21 +1667,25 @@ function makePowerProblem(max, mastered) {
       stage: state.stage,
       curriculumVersion: CURRICULUM_VERSION,
       advanced,
+      perfect,
       trouble: state.results.filter((item) => !item.firstTry).map((item) => item.key).slice(0, 5)
     };
     saveSession(session);
     $("correctValue").textContent = String(state.correct);
     $("averageValue").textContent = `${formatSeconds(average)} ${copy.seconds}`;
     $("starsValue").textContent = `${state.score} XP`;
-    $("resultTitle").textContent = advanced ? copy.levelUpTitle : copy.completeTitle;
+    $("resultTitle").textContent = perfect ? copy.perfectTitle : copy.completeTitle;
     const freshProfile = getProfile();
     $("resultNote").textContent = advanced
       ? copy.levelUpNote(freshProfile.currentStage, copy.stageNames[freshProfile.currentStage - 1])
       : `${state.stage === CURRICULUM_STAGE_COUNT ? copy.maxLevelNote : copy.stayNote}${freshProfile.errorQueue.length ? ` ${copy.reviewsLeft(freshProfile.errorQueue.length)}` : ""}`;
     $("progressFill").style.width = "100%";
-    makeConfetti();
-    showMotivation(advanced ? copy.rewardHandshake : pick(messages.complete), `+${state.score} XP`, null, advanced ? "levelUp" : "dance");
     showScreen($("resultScreen"));
+    const events = [...(state.finalMotivationEvents || []), { type: "trainingComplete", total: TOTAL }];
+    if (perfect) events.push({ type: "perfectTraining", total: TOTAL });
+    motivation.handle(events, { batchId: "completion", surface: "result" });
+    state.finalMotivationEvents = [];
+    makeConfetti(perfect ? 36 : TOTAL === 10 ? 16 : 28);
   }
 
   function saveSession(session) {
@@ -1733,19 +1763,39 @@ function makePowerProblem(max, mastered) {
     return new Intl.DateTimeFormat(copy.locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
   }
 
-  function makeConfetti() {
+  function makeConfetti(count = 28) {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+      $("confetti").innerHTML = "";
+      return;
+    }
     const colors = ["#0f766e", "#f8c438", "#e76555", "#46b8aa", "#ffffff"];
-    $("confetti").innerHTML = Array.from({ length: 28 }, (_, i) =>
+    $("confetti").innerHTML = Array.from({ length: count }, (_, i) =>
       `<i class="confetti-piece" style="left:${randomInt(2, 98)}%;background:${colors[i % colors.length]};animation-delay:${(Math.random() * 1.8).toFixed(2)}s;animation-duration:${(2.1 + Math.random() * 1.7).toFixed(2)}s"></i>`
     ).join("");
   }
 
   let motivationTimer = 0;
-  function showMotivation(title, subtitle, action = null, scene = "flag") {
+  function onMotivationReaction(reaction, context) {
+    const titles = {
+      errorRecovered: copy.recoveredTitle, errorMastered: copy.masteredTitle,
+      streak3: copy.rewardFlag, streak6: copy.rewardParty, streak10: copy.rewardDance,
+      levelUp: copy.levelUpTitle, trainingComplete: copy.completeTitle, perfectTraining: copy.perfectTitle
+    };
+    const subtitles = {
+      errorRecovered: copy.recoveredNote, errorMastered: copy.masteredNote,
+      streak3: copy.rightInRow(3), streak6: copy.rightInRow(6), streak10: copy.rightInRow(10),
+      levelUp: context.notice || copy.rewardHandshake,
+      trainingComplete: copy.completedCount(reaction.total), perfectTraining: copy.perfectNote
+    };
+    if (reaction.banner) showMotivation(titles[reaction.type], subtitles[reaction.type], null, reaction.scene, reaction);
+    else if (context.notice) showMotivation(context.notice, copy.adaptiveAdjusted, null, reaction.scene, reaction);
+  }
+
+  function showMotivation(title, subtitle, action = null, scene = "flag", options = {}) {
     dismissMotivation(false);
     const pop = $("motivationPop");
     const card = pop.querySelector(".motivation-card");
-    kapi.renderBanner(scene);
+    kapi.renderBanner(scene, options);
     $("motivationText").textContent = title;
     $("motivationSubtext").textContent = subtitle;
     pop.classList.remove("hidden");
@@ -1763,41 +1813,13 @@ function makePowerProblem(max, mastered) {
     kapi?.clearBanner();
   }
 
-  let audioContext;
   function sound(type) {
-    if (!state.sound) return;
-    try {
-      audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
-      const now = audioContext.currentTime;
-      const patterns = {
-        start: [[440, 0, .09], [660, .1, .12]],
-        correct: [[520, 0, .08], [700, .09, .1]],
-        wrong: [[220, 0, .11], [185, .1, .12]],
-        streak: [[520, 0, .07], [660, .08, .07], [880, .16, .14]],
-        complete: [[440, 0, .1], [554, .11, .1], [660, .22, .1], [880, .34, .2]],
-        flag: [[523, 0, .08], [659, .08, .08], [784, .16, .18]],
-        party: [[392, 0, .12], [523, .12, .12], [659, .24, .12], [784, .36, .22]],
-        dance: [[659, 0, .08], [784, .1, .08], [880, .2, .08], [784, .3, .08], [988, .4, .18]],
-        handshake: [[523, 0, .18], [659, 0, .18], [784, 0, .24]]
-        ,tap: [[360, 0, .035]]
-      };
-      (patterns[type] || patterns.correct).forEach(([frequency, delay, duration]) => {
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        oscillator.type = "sine";
-        oscillator.frequency.value = frequency;
-        gain.gain.setValueAtTime(.0001, now + delay);
-        gain.gain.exponentialRampToValueAtTime(.12, now + delay + .015);
-        gain.gain.exponentialRampToValueAtTime(.0001, now + delay + duration);
-        oscillator.connect(gain).connect(audioContext.destination);
-        oscillator.start(now + delay);
-        oscillator.stop(now + delay + duration + .02);
-      });
-    } catch { /* Sound remains optional. */ }
+    return soundManager?.play(type);
   }
 
   function createKapiController() {
-    const animator = new window.RiveKapiAnimator({
+    let greetingTimer = 0;
+    const animator = new window.CanvasKapiAnimator({
       homeHost: $("homeMascot"),
       gameHost: $("gameMascot"),
       resultHost: $("resultMascot"),
@@ -1808,7 +1830,8 @@ function makePowerProblem(max, mastered) {
     return new window.KapiStateMachine(animator, {
       soundPlayer(type, animationState) {
         if (animationState === "hey") {
-          window.setTimeout(() => {
+          window.clearTimeout(greetingTimer);
+          greetingTimer = window.setTimeout(() => {
             if (kapi?.surface === "home" && kapi.state === "hey") speakHomeGreeting();
           }, 520);
           return;
@@ -2108,11 +2131,87 @@ function makePowerProblem(max, mastered) {
     } catch { /* Unsupported experimental API. */ }
   }
 
+  function installMotivationDemo() {
+    const ru = language === "ru";
+    const scenarios = [
+      ["correct", ru ? "Верный ответ" : "Richtige Antwort", ["correct"]],
+      ["wrong", ru ? "Ошибка" : "Fehler", ["wrong"]],
+      ["recovered", ru ? "Первое исправление" : "Erste Verbesserung", ["correct", "errorRecovered"]],
+      ["mastered", ru ? "Два верных повтора" : "Fehler gemeistert", ["correct", "errorMastered"]],
+      ["streak3", ru ? "3 подряд" : "3 in Folge", ["correct", "streak3"]],
+      ["streak6", ru ? "6 подряд" : "6 in Folge", ["correct", "streak6"]],
+      ["streak10", ru ? "10 подряд" : "10 in Folge", ["correct", "streak10"]],
+      ["levelUp", ru ? "Новый уровень" : "Neues Level", ["correct", "levelUp"]],
+      ...[10, 20, 30].map((total) => [`complete${total}`, ru ? `Финиш: ${total} примеров` : `Ziel: ${total} Aufgaben`, [{ type: "trainingComplete", total }]]),
+      ["perfect", ru ? "Без ошибок" : "Fehlerfreie Runde", ["correct", "streak10", { type: "trainingComplete", total: 10 }, "perfectTraining"]],
+      ["combined", ru ? "Серия + новый уровень" : "Serie + neues Level", ["correct", "streak10", "levelUp"]]
+    ];
+    const panel = document.createElement("section");
+    panel.className = "kapi-demo";
+    panel.setAttribute("aria-label", copy.demoTitle);
+    panel.innerHTML = `<div class="kapi-demo-preview">
+      <span class="eyebrow">${copy.demoTitle}</span>
+      <div class="kapi-demo-stage kapi-host"><canvas aria-hidden="true"></canvas></div>
+      <strong class="kapi-demo-status" role="status" aria-live="polite">${ru ? "Выбери реакцию" : "Wähle eine Reaktion"}</strong>
+      <p>${ru ? "Прогресс и история занятий не меняются." : "Lernfortschritt und Verlauf bleiben unverändert."}</p>
+      <a class="text-button" href="./">${ru ? "Вернуться к тренировке" : "Zurück zum Training"}</a>
+    </div><div class="kapi-demo-controls">
+      <div class="kapi-demo-actions"><button type="button" data-demo-idle>${ru ? "Спокойное ожидание" : "Ruhiges Warten"}</button><button type="button" data-demo-sound></button></div>
+      <div class="kapi-demo-scenarios">${scenarios.map(([id, title]) => `<button type="button" data-demo-scene="${id}">${title}</button>`).join("")}</div>
+      <p>${ru ? "Нажми «Верный ответ» несколько раз, чтобы сравнить три варианта жеста. Последняя кнопка проверяет одну общую реакцию на два достижения." : "Tippe mehrmals auf „Richtige Antwort“, um drei Gesten zu vergleichen. Die letzte Taste zeigt eine gemeinsame Reaktion auf zwei Erfolge."}</p>
+    </div>`;
+    document.body.append(panel);
+    document.body.classList.add("kapi-demo-active");
+    kapi.clearTimers();
+    kapi.animator.pause("home");
+    const animator = new window.CanvasKapiAnimator({ homeHost: panel.querySelector(".kapi-demo-stage") });
+    const demoMachine = new window.KapiStateMachine(animator, { soundPlayer: (type) => soundManager.play(type) });
+    const demoMotivation = new window.KapiMotivationController(demoMachine);
+    const status = panel.querySelector(".kapi-demo-status");
+    const soundButton = panel.querySelector("[data-demo-sound]");
+    const updateDemoSound = () => {
+      soundButton.textContent = state.sound ? (ru ? "Звук включён" : "Ton an") : (ru ? "Звук выключен" : "Ton aus");
+      soundButton.setAttribute("aria-pressed", String(state.sound));
+    };
+    const reset = () => {
+      soundManager.stopAll();
+      demoMachine.reset("home", "idle");
+      panel.querySelectorAll("[data-demo-scene]").forEach((button) => button.setAttribute("aria-pressed", "false"));
+    };
+    const play = (id) => {
+      const scenario = scenarios.find(([name]) => name === id);
+      if (!scenario) return;
+      reset();
+      soundManager.unlock();
+      const reaction = demoMotivation.handle(scenario[2], { surface: "home" });
+      const variantLabels = ru ? { nod: "кивок", hop: "подскок", cheer: "радостный жест" } : { nod: "Nicken", hop: "Hüpfen", cheer: "Jubelgeste" };
+      status.textContent = scenario[1] + (reaction?.variant ? ` · ${variantLabels[reaction.variant]}` : "");
+      panel.querySelector(`[data-demo-scene="${id}"]`).setAttribute("aria-pressed", "true");
+      return reaction;
+    };
+    panel.addEventListener("click", (event) => {
+      const scene = event.target.closest("[data-demo-scene]")?.dataset.demoScene;
+      if (scene) play(scene);
+      if (event.target.closest("[data-demo-idle]")) {
+        reset();
+        status.textContent = ru ? "Капи спокойно ждёт" : "Kapi wartet ruhig";
+      }
+      if (event.target.closest("[data-demo-sound]")) {
+        state.sound = !state.sound;
+        soundManager.setEnabled(state.sound);
+        updateDemoSound();
+      }
+    });
+    updateDemoSound();
+    window.__kapiTest = demoMachine;
+    window.__kapiDemo = { play, reset, getOutfit: () => demoMotivation.getOutfit() };
+  }
+
   $("startButton").addEventListener("click", startTraining);
   $("homeMascot").addEventListener("click", playHomeReaction);
   document.querySelector(".app-shell").addEventListener("pointerdown", (event) => {
     if (!$("motivationPop").classList.contains("hidden")) dismissMotivation();
-    if (kapi?.surface === "home" && !["idle", "idleBlink"].includes(kapi.state) && !event.target.closest("#homeMascot")) clearHomeReaction();
+    if (kapi?.surface === "home" && !kapi.state.startsWith("idle") && !event.target.closest("#homeMascot")) clearHomeReaction();
   });
   $("againButton").addEventListener("click", startTraining);
   $("shareButton").addEventListener("click", shareResult);
@@ -2149,6 +2248,7 @@ function makePowerProblem(max, mastered) {
     }
     if (event.target.closest("#soundButton")) {
       state.sound = !state.sound;
+      soundManager?.setEnabled(state.sound);
       saveSettings();
       updateSoundButton();
       if (state.sound) sound("correct");
@@ -2173,8 +2273,13 @@ function makePowerProblem(max, mastered) {
 
   loadSettings();
   applyLanguage();
+  soundManager = new window.KapiSoundManager({ isEnabled: () => state.sound });
   kapi = createKapiController();
-  if (new URLSearchParams(window.location.search).get("kapiTest") === "1") window.__kapiTest = kapi;
+  motivation = new window.KapiMotivationController(kapi, { onReaction: onMotivationReaction });
+  if (new URLSearchParams(window.location.search).get("kapiTest") === "1") {
+    window.__kapiTest = kapi;
+    installMotivationDemo();
+  }
   updateHomeStats();
   if (runsStandalone()) localStorage.setItem(INSTALLED_KEY, "1");
   updateInstallHomeButton();
@@ -2182,8 +2287,13 @@ function makePowerProblem(max, mastered) {
   if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !runsStandalone()) showInstallPrompt("ios");
   registerWebMcp();
   syncViewportSize();
-  window.setTimeout(restartHomeGreeting, 360);
+  if (!window.__kapiDemo) window.setTimeout(() => {
+    if ($("startScreen").classList.contains("active")) restartHomeGreeting();
+  }, 360);
   window.addEventListener("resize", syncViewportSize, { passive: true });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) soundManager.stopAll();
+  });
   window.visualViewport?.addEventListener("resize", syncViewportSize, { passive: true });
   window.visualViewport?.addEventListener("scroll", syncViewportSize, { passive: true });
   registerServiceWorker();
