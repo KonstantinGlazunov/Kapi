@@ -431,13 +431,13 @@
 
       this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "leg");
       this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "leg");
-      this.drawArmLayer(context, "left", 275, 304, .35, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "upper");
-      this.drawArmLayer(context, "right", 425, 304, .35, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
       this.drawPart(context, "torso", 350, 389, .69, 0, 280.5, 229);
+      this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "upper");
+      this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
       this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "foot");
       this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "foot");
-      this.drawArmLayer(context, "left", 275, 304, .35, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
-      this.drawArmLayer(context, "right", 425, 304, .35, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
+      this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
+      this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
       this.drawPart(context, "head", 350, 190, .70, limbs.head, 244, 215);
       context.restore();
     }
