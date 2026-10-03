@@ -2174,6 +2174,7 @@ function makePowerProblem(max, mastered) {
   loadSettings();
   applyLanguage();
   kapi = createKapiController();
+  if (new URLSearchParams(window.location.search).get("kapiTest") === "1") window.__kapiTest = kapi;
   updateHomeStats();
   if (runsStandalone()) localStorage.setItem(INSTALLED_KEY, "1");
   updateInstallHomeButton();
