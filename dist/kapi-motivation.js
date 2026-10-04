@@ -66,6 +66,7 @@
         const requested = ["nod", "hop", "cheer"].includes(event.variant) ? event.variant : null;
         const variants = ["nod", "hop", "cheer"].filter((variant) => variant !== this.lastVariant);
         reaction.variant = requested || variants[Math.min(variants.length - 1, Math.floor(this.random() * variants.length))];
+        reaction.duration = { nod: 760, hop: 1050, cheer: 1200 }[reaction.variant];
       }
       if (event.type === "trainingComplete") {
         reaction.total = [10, 20, 30].includes(event.total) ? event.total : 20;

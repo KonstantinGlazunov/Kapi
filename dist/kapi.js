@@ -15,8 +15,8 @@
     idleLookLeft: { priority: 1, duration: 1400 },
     idleLookRight: { priority: 1, duration: 1400 },
     hey: { priority: 5, duration: 3400, sound: "hey" },
-    correct: { priority: 10, duration: 900, sound: "correct" },
-    wrong: { priority: 20, duration: 1000, sound: "wrong" },
+    correct: { priority: 10, duration: 1050, sound: "correct" },
+    wrong: { priority: 20, duration: 1200, sound: "wrong" },
     errorRecovered: { priority: 30, duration: 1050, sound: "recovered" },
     errorMastered: { priority: 35, duration: 1300, sound: "mastered" },
     flag: { priority: 40, duration: 1600, sound: "flag" },
@@ -228,8 +228,8 @@
     }
 
     motion(state, elapsed, variant = "hop") {
-      if (state === "errorRecovered") return { state: "correct", elapsed: elapsed * 900 / 1050, variant: "recovered" };
-      if (state === "errorMastered") return { state: "correct", elapsed: elapsed * 900 / 1300, variant: "mastered" };
+      if (state === "errorRecovered") return { state: "correct", elapsed, variant: "recovered" };
+      if (state === "errorMastered") return { state: "correct", elapsed, variant: "mastered" };
       return { state, elapsed, variant };
     }
 
@@ -237,7 +237,7 @@
       const perfect = state === "perfectTraining";
       const introDuration = perfect ? 800 : 600;
       const introState = perfect ? "correct" : "levelUp";
-      const introEnd = perfect ? 900 : 1500;
+      const introEnd = perfect ? 1300 : 1500;
       if (elapsed < introDuration) return this[method](introState, elapsed * introEnd / introDuration, "mastered");
       const progress = Math.min(1, (elapsed - introDuration) / 240);
       const eased = progress * progress * (3 - 2 * progress);
@@ -266,22 +266,22 @@
         pose.y = -6 - Math.abs(Math.sin(t * 3.8)) * 5;
         pose.rotation = wave * .018;
       } else if (state === "correct") {
-        const p = Math.min(1, elapsed / 900);
+        const duration = { nod: 760, hop: 1050, cheer: 1200, recovered: 1050, mastered: 1300 }[variant] || 1050;
+        const p = Math.min(1, elapsed / duration);
         const gesture = Math.sin(p * Math.PI);
         if (variant === "nod") {
-          const nod = Math.sin(p * Math.PI * 3) * Math.sin(p * Math.PI);
-          const down = Math.max(0, nod);
-          pose.y = down * 3.5;
-          pose.rotation = nod * .008;
-          pose.scaleX = 1 + down * .006;
-          pose.scaleY = 1 - down * .008;
+          const down = Math.sin(p * Math.PI);
+          pose.y = down * 5;
+          pose.rotation = Math.sin(p * Math.PI * 2) * .008;
+          pose.scaleX = 1 + down * .009;
+          pose.scaleY = 1 - down * .012;
         } else if (variant === "hop") {
           const anticipation = p < .18 ? Math.sin(p / .18 * Math.PI) : 0;
           const flight = p < .18 ? 0 : Math.sin(Math.min(1, (p - .18) / .82) * Math.PI);
           const landing = p > .82 ? Math.sin((p - .82) / .18 * Math.PI) : 0;
-          pose.y = anticipation * 5 - flight * 25 + landing * 4;
-          pose.scaleX = 1 + anticipation * .025 - flight * .012 + landing * .035;
-          pose.scaleY = 1 - anticipation * .035 + flight * .025 - landing * .045;
+          pose.y = anticipation * 8 - flight * 30 + landing * 7;
+          pose.scaleX = 1 + anticipation * .04 - flight * .025 + landing * .055;
+          pose.scaleY = 1 - anticipation * .055 - flight * .02 - landing * .065;
         } else {
           const strength = { cheer: .72, recovered: .82, mastered: 1 }[variant] ?? .72;
           pose.y = -gesture * 7 * strength;
@@ -290,9 +290,10 @@
           pose.scaleY = 1 + gesture * .018 * strength;
         }
       } else if (state === "wrong") {
-        const thinking = Math.sin(Math.min(1, elapsed / 1000) * Math.PI);
-        pose.rotation = thinking * -.018;
-        pose.y = thinking * 3;
+        const thinking = Math.sin(Math.min(1, elapsed / 1200) * Math.PI);
+        pose.rotation = thinking * -.035;
+        pose.x = thinking * -4;
+        pose.y = thinking * 4;
       } else if (state === "flag") {
         pose.y = -5 - Math.abs(Math.sin(t * 4.1)) * 7;
         pose.rotation = Math.sin(t * 4.1) * .038;
@@ -331,6 +332,8 @@
         head: idle * .015,
         headX: 0,
         headY: 0,
+        headScaleX: 1,
+        headScaleY: 1,
         leftShoulder: .04 + idle * .012,
         leftElbow: -1.22 + idle * .018,
         leftWrist: .10 - idle * .015,
@@ -368,24 +371,27 @@
         result.leftElbow = -1.20;
         result.leftWrist = .08;
       } else if (state === "correct") {
-        const p = Math.min(1, elapsed / 900);
+        const duration = { nod: 760, hop: 1050, cheer: 1200, recovered: 1050, mastered: 1300 }[variant] || 1050;
+        const p = Math.min(1, elapsed / duration);
         const gesture = Math.sin(p * Math.PI);
         if (variant === "nod") {
-          const nod = Math.sin(p * Math.PI * 3) * Math.sin(p * Math.PI);
-          result.head = nod * .026;
-          result.headY = Math.max(0, nod) * 14;
+          const down = Math.sin(p * Math.PI);
+          result.head = Math.sin(p * Math.PI * 2) * .035;
+          result.headY = down * 31;
+          result.headScaleX = 1 + down * .025;
+          result.headScaleY = 1 - down * .075;
         } else if (variant === "hop") {
           const anticipation = p < .18 ? Math.sin(p / .18 * Math.PI) : 0;
           const flight = p < .18 ? 0 : Math.sin(Math.min(1, (p - .18) / .82) * Math.PI);
           result.head = -flight * .018;
-          result.leftShoulder = .04 + flight * .30 - anticipation * .08;
-          result.rightShoulder = -.04 - flight * .30 + anticipation * .08;
-          result.leftElbow = -1.22 + flight * .18;
-          result.rightElbow = 1.22 - flight * .18;
-          result.leftHip = .02 + flight * .07;
-          result.rightHip = -.02 - flight * .07;
-          result.leftAnkle = -.03 - flight * .18 + anticipation * .08;
-          result.rightAnkle = .03 + flight * .18 - anticipation * .08;
+          result.leftShoulder = .04 + flight * .48 - anticipation * .12;
+          result.rightShoulder = -.04 - flight * .48 + anticipation * .12;
+          result.leftElbow = -1.22 + flight * .26;
+          result.rightElbow = 1.22 - flight * .26;
+          result.leftHip = .02 + flight * .13;
+          result.rightHip = -.02 - flight * .13;
+          result.leftAnkle = -.03 - flight * .28 + anticipation * .12;
+          result.rightAnkle = .03 + flight * .28 - anticipation * .12;
         } else {
           const strength = { cheer: 1, recovered: .88, mastered: 1 }[variant] ?? 1;
           result.head = Math.sin(p * Math.PI * 2) * .018 * strength;
@@ -399,7 +405,7 @@
           result.rightHip = -.02 - gesture * .05 * strength;
         }
       } else if (state === "wrong") {
-        const p = Math.min(1, elapsed / 1000);
+        const p = Math.min(1, elapsed / 1200);
         const thinking = Math.sin(p * Math.PI);
         result.head = -thinking * .055;
         result.headY = thinking * 3;
@@ -447,13 +453,13 @@
       return result;
     }
 
-    drawPart(context, name, x, y, scale, rotation, pivotX, pivotY) {
+    drawPart(context, name, x, y, scale, rotation, pivotX, pivotY, scaleX = 1, scaleY = 1) {
       const entry = this.loadImage(RIG_PARTS[name]);
       if (!entry.ready) return;
       context.save();
       context.translate(x, y);
       context.rotate(rotation);
-      context.scale(scale, scale);
+      context.scale(scale * scaleX, scale * scaleY);
       context.drawImage(entry.image, -pivotX, -pivotY);
       context.restore();
     }
@@ -525,12 +531,61 @@
       this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "foot");
       this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
       this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
-      this.drawPart(context, "head", 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215);
+      this.drawPart(context, "head", 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215, limbs.headScaleX, limbs.headScaleY);
       context.restore();
     }
 
     drawRig(record, state, elapsed, opacity = 1) {
       this.drawRigPose(record, this.pose(state, elapsed, record.variant), this.limbPose(state, elapsed, record.variant), opacity);
+    }
+
+    drawEffects(record, state, elapsed, variant) {
+      const context = record.context;
+      const unit = Math.min(record.canvas.width, record.canvas.height) / 700;
+      if (state === "wrong") {
+        const p = Math.min(1, elapsed / 1200);
+        const alpha = Math.sin(p * Math.PI);
+        if (alpha <= 0) return;
+        context.save();
+        context.globalAlpha = alpha;
+        context.translate(record.canvas.width / 2 + 158 * unit, record.canvas.height / 2 - 213 * unit);
+        context.rotate(Math.sin(p * Math.PI * 2) * .08);
+        context.font = `900 ${68 * unit}px Nunito, system-ui, sans-serif`;
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.lineWidth = 9 * unit;
+        context.strokeStyle = "#713f12";
+        context.fillStyle = "#f8c438";
+        context.strokeText("?", 0, 0);
+        context.fillText("?", 0, 0);
+        context.restore();
+      } else if (state === "correct" && variant === "cheer") {
+        const p = Math.min(1, elapsed / 1200);
+        const alpha = Math.sin(p * Math.PI);
+        const points = [[-190, -165, .9], [185, -185, 1], [-220, -25, .62], [220, -42, .68]];
+        context.save();
+        context.translate(record.canvas.width / 2, record.canvas.height / 2);
+        context.globalAlpha = alpha;
+        context.fillStyle = "#f8c438";
+        for (const [x, y, scale] of points) {
+          const radius = 14 * unit * scale * (.8 + alpha * .35);
+          context.save();
+          context.translate(x * unit, y * unit);
+          context.rotate(p * Math.PI + x);
+          context.beginPath();
+          for (let index = 0; index < 8; index += 1) {
+            const angle = index * Math.PI / 4 - Math.PI / 2;
+            const length = index % 2 ? radius * .36 : radius;
+            const px = Math.cos(angle) * length;
+            const py = Math.sin(angle) * length;
+            if (index === 0) context.moveTo(px, py); else context.lineTo(px, py);
+          }
+          context.closePath();
+          context.fill();
+          context.restore();
+        }
+        context.restore();
+      }
     }
 
     snapshot(record, now) {
@@ -558,6 +613,7 @@
       context.clearRect(0, 0, record.canvas.width, record.canvas.height);
       const current = this.snapshot(record, now);
       this.drawRigPose(record, current.pose, current.limbs);
+      this.drawEffects(record, record.state, now - record.stateStartedAt, record.variant);
       record.frameRequest = requestAnimationFrame((time) => this.render(record, time));
     }
 
