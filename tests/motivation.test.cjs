@@ -185,7 +185,7 @@ test('ordinary reactions select distinct complete head layers', () => {
   assert.equal(animator.headAsset('perfectTraining'), 'headPerfect');
   assert.equal(animator.headAsset('idle'), 'head');
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-  for (const name of ['head-nod.png', 'head-hop.png', 'head-cheer.png', 'head-wrong.png', 'head-recovered.png', 'head-mastered.png', 'head-flag.png', 'head-horn.png', 'head-dance.png', 'head-level.png', 'head-complete.png', 'head-perfect.png']) {
+  for (const name of ['head-nod.png', 'head-hop.png', 'head-cheer.png', 'head-wrong.png', 'head-recovered.png', 'head-mastered.png', 'head-flag.png', 'head-horn-v2.png', 'arm-right-flag.png', 'head-dance.png', 'head-level.png', 'head-complete.png', 'head-perfect.png']) {
     assert.ok(fs.existsSync(path.join(root, 'assets/kapi-rig-v2', name)), name);
     assert.ok(sw.includes(name), `${name} must work offline`);
   }

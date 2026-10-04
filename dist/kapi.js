@@ -50,11 +50,12 @@
     headRecovered: "assets/kapi-rig-v2/head-recovered.png",
     headMastered: "assets/kapi-rig-v2/head-mastered.png",
     headFlag: "assets/kapi-rig-v2/head-flag.png",
-    headHorn: "assets/kapi-rig-v2/head-horn.png",
+    headHorn: "assets/kapi-rig-v2/head-horn-v2.png",
     headDance: "assets/kapi-rig-v2/head-dance.png",
     headLevel: "assets/kapi-rig-v2/head-level.png",
     headComplete: "assets/kapi-rig-v2/head-complete.png",
     headPerfect: "assets/kapi-rig-v2/head-perfect.png",
+    armRightFlag: "assets/kapi-rig-v2/arm-right-flag.png",
     torso: "assets/kapi-rig-v2/torso.png",
     armLeftUpper: "assets/kapi-rig-v4/arm-left-upper.png",
     armRightUpper: "assets/kapi-rig-v4/arm-right-upper.png",
@@ -455,12 +456,12 @@
         result.head = wave * .025;
       } else if (state === "horn") {
         const pulse = Math.sin(t * 5.4);
-        result.leftShoulder = -.80 + pulse * .025;
-        result.rightShoulder = .80 - pulse * .025;
-        result.leftElbow = -2.40 - pulse * .05;
-        result.rightElbow = 2.40 + pulse * .05;
-        result.leftWrist = .02 + pulse * .04;
-        result.rightWrist = -.02 - pulse * .04;
+        result.leftShoulder = .18 + pulse * .08;
+        result.rightShoulder = -.18 - pulse * .08;
+        result.leftElbow = -1.12 + pulse * .10;
+        result.rightElbow = 1.12 - pulse * .10;
+        result.leftWrist = .08 - pulse * .05;
+        result.rightWrist = -.08 + pulse * .05;
         result.head = pulse * .022;
       } else if (state === "dance" || state === "trainingFinished") {
         const beat = Math.sin(t * 6.4);
@@ -576,22 +577,25 @@
       context.translate(-350, -350);
 
       if (drawBody) {
+        const flagArm = options.state === "flag" && this.loadImage(RIG_PARTS.armRightFlag).ready;
+        const flagWave = Math.sin((options.elapsed || 0) / 1000 * 5.6);
         this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "leg");
         this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "leg");
         this.drawPart(context, "torso", 350, 389, .69, 0, 280.5, 229);
         this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "upper");
-        this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
+        if (flagArm) this.drawPart(context, "armRightFlag", 440, 345, .58, flagWave * .035, 150, 570);
+        else this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
         this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "foot");
         this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "foot");
         this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
-        this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
+        if (!flagArm) this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
       }
       if (drawHead) this.drawPart(context, headAsset, 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215, limbs.headScaleX, limbs.headScaleY);
       context.restore();
     }
 
     drawRig(record, state, elapsed, opacity = 1) {
-      this.drawRigPose(record, this.pose(state, elapsed, record.variant), this.limbPose(state, elapsed, record.variant), opacity, { headAsset: this.headAsset(state, record.variant) });
+      this.drawRigPose(record, this.pose(state, elapsed, record.variant), this.limbPose(state, elapsed, record.variant), opacity, { headAsset: this.headAsset(state, record.variant), state, elapsed });
     }
 
     drawEffects(record, state, elapsed, variant) {
@@ -636,66 +640,6 @@
         context.strokeStyle = "#16a34a";
         context.lineWidth = 10 * unit;
         context.stroke();
-        context.restore();
-      } else if (state === "flag") {
-        const wave = Math.sin(elapsed / 1000 * 5.6);
-        context.save();
-        context.translate(record.canvas.width / 2 + (153 + wave * 5) * unit, record.canvas.height / 2 - 86 * unit);
-        context.rotate(-.08 + wave * .07);
-        context.lineCap = "round";
-        context.strokeStyle = "#7c4a24";
-        context.lineWidth = 8 * unit;
-        context.beginPath();
-        context.moveTo(0, 88 * unit);
-        context.lineTo(0, -142 * unit);
-        context.stroke();
-        context.fillStyle = "#11a9b8";
-        context.strokeStyle = "#087b88";
-        context.lineWidth = 4 * unit;
-        context.beginPath();
-        context.moveTo(3 * unit, -137 * unit);
-        context.quadraticCurveTo(74 * unit, -119 * unit, 126 * unit, -137 * unit);
-        context.lineTo(111 * unit, -64 * unit);
-        context.quadraticCurveTo(58 * unit, -44 * unit, 3 * unit, -64 * unit);
-        context.closePath();
-        context.fill();
-        context.stroke();
-        context.fillStyle = "#ffd43b";
-        context.beginPath();
-        for (let index = 0; index < 10; index += 1) {
-          const angle = index * Math.PI / 5 - Math.PI / 2;
-          const radius = (index % 2 ? 12 : 25) * unit;
-          const x = 61 * unit + Math.cos(angle) * radius;
-          const y = -94 * unit + Math.sin(angle) * radius;
-          if (!index) context.moveTo(x, y); else context.lineTo(x, y);
-        }
-        context.closePath();
-        context.fill();
-        context.restore();
-      } else if (state === "horn") {
-        const pulse = .82 + .18 * Math.max(0, Math.sin(elapsed / 1000 * 5.4));
-        context.save();
-        context.translate(record.canvas.width / 2 + 42 * unit, record.canvas.height / 2 - 88 * unit);
-        context.rotate(-.10);
-        context.fillStyle = "#ffd43b";
-        context.strokeStyle = "#d97706";
-        context.lineWidth = 5 * unit;
-        context.beginPath();
-        context.moveTo(-6 * unit, -8 * unit);
-        context.lineTo(148 * unit * pulse, -28 * unit);
-        context.lineTo(148 * unit * pulse, 28 * unit);
-        context.lineTo(-6 * unit, 8 * unit);
-        context.closePath();
-        context.fill();
-        context.stroke();
-        context.strokeStyle = "#0f9eaa";
-        context.lineWidth = 10 * unit;
-        for (let x = 30; x < 130 * pulse; x += 38) {
-          context.beginPath();
-          context.moveTo(x * unit, -18 * unit);
-          context.lineTo((x + 7) * unit, 18 * unit);
-          context.stroke();
-        }
         context.restore();
       } else if (state === "correct" && variant === "cheer") {
         const p = Math.min(1, elapsed / 1200);
@@ -755,7 +699,7 @@
       const eased = transitionProgress * transitionProgress * (3 - 2 * transitionProgress);
       const targetHead = this.headAsset(record.state, record.variant);
       const current = this.snapshot(record, now);
-      this.drawRigPose(record, current.pose, current.limbs, 1, { drawHead: false });
+      this.drawRigPose(record, current.pose, current.limbs, 1, { drawHead: false, state: record.state, elapsed: now - record.stateStartedAt });
       if (record.previousHead !== targetHead && transitionProgress < 1) {
         this.drawRigPose(record, current.pose, current.limbs, 1 - eased, { drawBody: false, headAsset: record.previousHead });
         this.drawRigPose(record, current.pose, current.limbs, eased, { drawBody: false, headAsset: targetHead });
