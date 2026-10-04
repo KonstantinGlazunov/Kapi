@@ -294,7 +294,10 @@
           const anticipation = p < .18 ? Math.sin(p / .18 * Math.PI) : 0;
           const flight = p < .18 ? 0 : Math.sin(Math.min(1, (p - .18) / .82) * Math.PI);
           const landing = p > .82 ? Math.sin((p - .82) / .18 * Math.PI) : 0;
-          pose.y = anticipation * 8 - flight * 30 + landing * 7;
+          // The canvas is much smaller in the exercise view than in the demo.
+          // Keep only the body deformation here; CSS moves the whole canvas by
+          // a fixed visual distance so the jump remains readable at every size.
+          pose.y = anticipation * 4 + landing * 4;
           pose.scaleX = 1 + anticipation * .04 - flight * .025 + landing * .055;
           pose.scaleY = 1 - anticipation * .055 - flight * .02 - landing * .065;
         } else {
@@ -726,9 +729,11 @@
 
     play(state, options = {}) {
       const surface = options.surface || this.surface;
+      const variant = options.variant || "hop";
       const host = this.elements[`${surface}Host`];
       if (host) {
         host.dataset.kapiState = state;
+        host.dataset.kapiVariant = variant;
         host.classList.add("kapi-rive-active");
       }
       const record = this.ensure(surface);
@@ -737,7 +742,7 @@
       record.previousHead = record.headOverride || this.headAsset(record.state, record.variant);
       record.transitionFrom = this.snapshot(record, now);
       record.state = state;
-      record.variant = options.variant || "hop";
+      record.variant = variant;
       record.headOverride = options.headAsset || null;
       record.stateStartedAt = now;
       record.transitionStartedAt = now;

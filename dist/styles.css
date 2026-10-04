@@ -245,7 +245,22 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 }
 
 .kapi-host { position: relative; flex: 0 0 auto; overflow: visible; transform-origin: 50% 82%; }
-.kapi-rive-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 12px 12px rgba(90,56,25,.16)); }
+.kapi-rive-canvas { position: absolute; z-index: 1; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 12px 12px rgba(90,56,25,.16)); }
+.kapi-host.kapi-state-correct[data-kapi-variant="hop"] .kapi-rive-canvas { animation: kapi-visible-hop 1.05s cubic-bezier(.28,.72,.32,1) both; }
+.kapi-host.kapi-state-correct[data-kapi-variant="hop"]::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  bottom: 3%;
+  width: 43%;
+  height: 7%;
+  border-radius: 50%;
+  background: rgba(72,55,37,.22);
+  filter: blur(3px);
+  pointer-events: none;
+  animation: kapi-hop-shadow 1.05s ease both;
+}
 .kapi-host img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .mini-mascot { width: 104px; height: 104px; margin-top: -8px; }
 .kapi-host.kapi-state-idle img { animation: kapi-idle-life 4.8s ease-in-out infinite; }
@@ -481,6 +496,18 @@ body.kapi-demo-active { height: auto; min-height: 100dvh; overflow: auto; }
 @keyframes party-bounce { from { transform: scale(1) rotate(-2deg); } to { transform: scale(1.04) rotate(2deg) translateY(-5px); } }
 @keyframes kapi-dance { from { transform: rotate(-5deg) translate(-3px, 0); } to { transform: rotate(5deg) translate(3px, -8px); } }
 @keyframes handshake { from { transform: scale(1) translateX(0); } to { transform: scale(1.04) translateX(5px); } }
+@keyframes kapi-visible-hop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  14% { transform: translateY(3px) scale(1.045,.955); }
+  46% { transform: translateY(-21px) scale(.985,1.025); }
+  78% { transform: translateY(-5px) scale(1.01,.99); }
+  88% { transform: translateY(2px) scale(1.05,.95); }
+}
+@keyframes kapi-hop-shadow {
+  0%, 100% { opacity: .70; transform: translateX(-50%) scale(1); }
+  14%, 88% { opacity: .82; transform: translateX(-50%) scale(1.08,.92); }
+  46% { opacity: .28; transform: translateX(-50%) scale(.62,.72); }
+}
 @keyframes kapi-welcome {
   0%, 10% { background-position: 0 0; transform: translateY(0) rotate(0); }
   11%, 28% { background-position: 33.333% 0; transform: translateY(-3px) rotate(-1deg); }
@@ -497,7 +524,7 @@ body.kapi-demo-active { height: auto; min-height: 100dvh; overflow: auto; }
 @keyframes mini-burst { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; transform: rotate(calc(var(--burst-index) * 40deg)) translateY(-92px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-mascot-sprite[class*="kapi-state-"], .kapi-host[class*="kapi-state-"] img { animation: none !important; }
+  .home-mascot-sprite[class*="kapi-state-"], .kapi-host[class*="kapi-state-"] img, .kapi-host .kapi-rive-canvas, .kapi-host::after { animation: none !important; }
 }
 
 @media (max-width: 680px) {
