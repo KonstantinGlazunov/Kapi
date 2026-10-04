@@ -168,6 +168,21 @@ test('continuous final transitions and interrupted poses have no jumps', () => {
   assert.deepEqual(animator.limbPose('dance', 0), animator.limbPose('dance', 300));
 });
 
+test('ordinary reactions select distinct complete head layers', () => {
+  const { sandbox } = environment();
+  const animator = Object.create(sandbox.CanvasKapiAnimator.prototype);
+  assert.equal(animator.headAsset('correct', 'nod'), 'headNod');
+  assert.equal(animator.headAsset('correct', 'hop'), 'headHop');
+  assert.equal(animator.headAsset('correct', 'cheer'), 'headCheer');
+  assert.equal(animator.headAsset('wrong'), 'headWrong');
+  assert.equal(animator.headAsset('idle'), 'head');
+  const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  for (const name of ['head-nod.png', 'head-hop.png', 'head-cheer.png', 'head-wrong.png']) {
+    assert.ok(fs.existsSync(path.join(root, 'assets/kapi-rig-v2', name)), name);
+    assert.ok(sw.includes(name), `${name} must work offline`);
+  }
+});
+
 function audioContext() {
   const nodes = [];
   const ctx = { currentTime: 0, state: 'running', destination: {}, nodes };

@@ -43,6 +43,10 @@
 
   const RIG_PARTS = {
     head: "assets/kapi-rig-v2/head.png",
+    headNod: "assets/kapi-rig-v2/head-nod.png",
+    headHop: "assets/kapi-rig-v2/head-hop.png",
+    headCheer: "assets/kapi-rig-v2/head-cheer.png",
+    headWrong: "assets/kapi-rig-v2/head-wrong.png",
     torso: "assets/kapi-rig-v2/torso.png",
     armLeftUpper: "assets/kapi-rig-v4/arm-left-upper.png",
     armRightUpper: "assets/kapi-rig-v4/arm-right-upper.png",
@@ -183,6 +187,7 @@
         context: canvas.getContext("2d", { alpha: true }),
         state: "idle",
         variant: "hop",
+        previousHead: "head",
         transitionFrom: null,
         stateStartedAt: performance.now(),
         transitionStartedAt: 0,
@@ -510,8 +515,19 @@
       return Object.fromEntries(Object.keys(to).map((key) => [key, from[key] + (to[key] - from[key]) * progress]));
     }
 
-    drawRigPose(record, pose, limbs, opacity = 1) {
+    headAsset(state, variant) {
+      if (state === "wrong") return "headWrong";
+      if (state === "correct") return variant === "nod" ? "headNod" : variant === "hop" ? "headHop" : "headCheer";
+      if (["errorRecovered", "errorMastered", "perfectTraining"].includes(state)) return "headCheer";
+      return "head";
+    }
+
+    drawRigPose(record, pose, limbs, opacity = 1, options = {}) {
       if (opacity <= 0) return;
+      const drawBody = options.drawBody !== false;
+      const drawHead = options.drawHead !== false;
+      const requestedHead = options.headAsset || "head";
+      const headAsset = this.loadImage(RIG_PARTS[requestedHead]).ready ? requestedHead : "head";
       const context = record.context;
       const canvas = record.canvas;
       const unit = Math.min(canvas.width, canvas.height) / 700;
@@ -522,21 +538,23 @@
       context.scale(unit * pose.scaleX, unit * pose.scaleY);
       context.translate(-350, -350);
 
-      this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "leg");
-      this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "leg");
-      this.drawPart(context, "torso", 350, 389, .69, 0, 280.5, 229);
-      this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "upper");
-      this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
-      this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "foot");
-      this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "foot");
-      this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
-      this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
-      this.drawPart(context, "head", 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215, limbs.headScaleX, limbs.headScaleY);
+      if (drawBody) {
+        this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "leg");
+        this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "leg");
+        this.drawPart(context, "torso", 350, 389, .69, 0, 280.5, 229);
+        this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "upper");
+        this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
+        this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "foot");
+        this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "foot");
+        this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
+        this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
+      }
+      if (drawHead) this.drawPart(context, headAsset, 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215, limbs.headScaleX, limbs.headScaleY);
       context.restore();
     }
 
     drawRig(record, state, elapsed, opacity = 1) {
-      this.drawRigPose(record, this.pose(state, elapsed, record.variant), this.limbPose(state, elapsed, record.variant), opacity);
+      this.drawRigPose(record, this.pose(state, elapsed, record.variant), this.limbPose(state, elapsed, record.variant), opacity, { headAsset: this.headAsset(state, record.variant) });
     }
 
     drawEffects(record, state, elapsed, variant) {
@@ -632,8 +650,20 @@
       const context = record.context;
       if (!context) return;
       context.clearRect(0, 0, record.canvas.width, record.canvas.height);
+      const transitionProgress = record.transitionFrom
+        ? Math.min(1, (now - record.transitionStartedAt) / record.transitionDuration)
+        : 1;
+      const eased = transitionProgress * transitionProgress * (3 - 2 * transitionProgress);
+      const targetHead = this.headAsset(record.state, record.variant);
       const current = this.snapshot(record, now);
-      this.drawRigPose(record, current.pose, current.limbs);
+      this.drawRigPose(record, current.pose, current.limbs, 1, { drawHead: false });
+      if (record.previousHead !== targetHead && transitionProgress < 1) {
+        this.drawRigPose(record, current.pose, current.limbs, 1 - eased, { drawBody: false, headAsset: record.previousHead });
+        this.drawRigPose(record, current.pose, current.limbs, eased, { drawBody: false, headAsset: targetHead });
+      } else {
+        this.drawRigPose(record, current.pose, current.limbs, 1, { drawBody: false, headAsset: targetHead });
+        record.previousHead = targetHead;
+      }
       this.drawEffects(record, record.state, now - record.stateStartedAt, record.variant);
       record.frameRequest = requestAnimationFrame((time) => this.render(record, time));
     }
@@ -648,6 +678,7 @@
       const record = this.ensure(surface);
       if (!record) return;
       const now = performance.now();
+      record.previousHead = this.headAsset(record.state, record.variant);
       record.transitionFrom = this.snapshot(record, now);
       record.state = state;
       record.variant = options.variant || "hop";
