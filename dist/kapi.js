@@ -47,6 +47,14 @@
     headHop: "assets/kapi-rig-v2/head-hop.png",
     headCheer: "assets/kapi-rig-v2/head-cheer.png",
     headWrong: "assets/kapi-rig-v2/head-wrong.png",
+    headRecovered: "assets/kapi-rig-v2/head-recovered.png",
+    headMastered: "assets/kapi-rig-v2/head-mastered.png",
+    headFlag: "assets/kapi-rig-v2/head-flag.png",
+    headHorn: "assets/kapi-rig-v2/head-horn.png",
+    headDance: "assets/kapi-rig-v2/head-dance.png",
+    headLevel: "assets/kapi-rig-v2/head-level.png",
+    headComplete: "assets/kapi-rig-v2/head-complete.png",
+    headPerfect: "assets/kapi-rig-v2/head-perfect.png",
     torso: "assets/kapi-rig-v2/torso.png",
     armLeftUpper: "assets/kapi-rig-v4/arm-left-upper.png",
     armRightUpper: "assets/kapi-rig-v4/arm-right-upper.png",
@@ -400,25 +408,45 @@
         } else {
           const strength = { cheer: 1, recovered: .88, mastered: 1 }[variant] ?? 1;
           result.head = Math.sin(p * Math.PI * 2) * .018 * strength;
-          result.leftShoulder = .04 + gesture * 1.96 * strength;
-          result.rightShoulder = -.04 - gesture * 1.96 * strength;
-          result.leftElbow = -1.22 + gesture * .82 * strength;
-          result.rightElbow = 1.22 - gesture * .82 * strength;
-          result.leftWrist = .10 - gesture * .12;
-          result.rightWrist = -.10 + gesture * .12;
+          if (variant === "recovered") {
+            // A single relieved clap close to the chest.
+            result.leftShoulder = .04 - gesture * .39;
+            result.rightShoulder = -.04 + gesture * .39;
+            result.leftElbow = -1.22 - gesture * .68;
+            result.rightElbow = 1.22 + gesture * .68;
+            result.leftWrist = .10 - gesture * .20;
+            result.rightWrist = -.10 + gesture * .20;
+          } else if (variant === "mastered") {
+            // One confident paw rises beside the star clip; the other stays grounded.
+            result.rightShoulder = -.04 - gesture * .82;
+            result.rightElbow = 1.22 - gesture * 2.72;
+            result.rightWrist = -.10 + gesture * .28;
+            result.leftShoulder = .08;
+            result.leftElbow = -1.28;
+          } else {
+            result.leftShoulder = .04 + gesture * 1.96 * strength;
+            result.rightShoulder = -.04 - gesture * 1.96 * strength;
+            result.leftElbow = -1.22 + gesture * .82 * strength;
+            result.rightElbow = 1.22 - gesture * .82 * strength;
+            result.leftWrist = .10 - gesture * .12;
+            result.rightWrist = -.10 + gesture * .12;
+          }
           result.leftHip = .02 + gesture * .05 * strength;
           result.rightHip = -.02 - gesture * .05 * strength;
         }
       } else if (state === "wrong") {
         const p = Math.min(1, elapsed / 1200);
-        const thinking = Math.sin(p * Math.PI);
-        result.head = -thinking * .055;
-        result.headY = thinking * 3;
+        const reach = Math.sin(p * Math.PI);
+        const scratch = Math.sin(p * Math.PI * 6);
+        result.head = -reach * .055 + scratch * .006;
+        result.headY = reach * 3;
         result.leftShoulder = .08;
         result.leftElbow = -1.25;
-        result.rightShoulder = -.04 - thinking * .96;
-        result.rightElbow = 1.22 + thinking * 1.58;
-        result.rightWrist = -.10 - thinking * .12;
+        // Lift the elbow outward, then fold the forearm behind the ear.
+        // The head is drawn last and naturally occludes the paw/forearm.
+        result.rightShoulder = -.04 - reach * .81 + scratch * .018;
+        result.rightElbow = 1.22 - reach * 3.47 + scratch * .075;
+        result.rightWrist = -.10 + reach * .34 + scratch * .12;
       } else if (state === "flag") {
         const wave = Math.sin(t * 5.6);
         result.rightShoulder = -1.72 + wave * .10;
@@ -427,10 +455,12 @@
         result.head = wave * .025;
       } else if (state === "horn") {
         const pulse = Math.sin(t * 5.4);
-        result.leftShoulder = 1.05 + pulse * .10;
-        result.rightShoulder = -1.05 - pulse * .10;
-        result.leftElbow = -.72 - pulse * .08;
-        result.rightElbow = .72 + pulse * .08;
+        result.leftShoulder = -.80 + pulse * .025;
+        result.rightShoulder = .80 - pulse * .025;
+        result.leftElbow = -2.40 - pulse * .05;
+        result.rightElbow = 2.40 + pulse * .05;
+        result.leftWrist = .02 + pulse * .04;
+        result.rightWrist = -.02 - pulse * .04;
         result.head = pulse * .022;
       } else if (state === "dance" || state === "trainingFinished") {
         const beat = Math.sin(t * 6.4);
@@ -518,7 +548,14 @@
     headAsset(state, variant) {
       if (state === "wrong") return "headWrong";
       if (state === "correct") return variant === "nod" ? "headNod" : variant === "hop" ? "headHop" : "headCheer";
-      if (["errorRecovered", "errorMastered", "perfectTraining"].includes(state)) return "headCheer";
+      if (state === "errorRecovered") return "headRecovered";
+      if (state === "errorMastered") return "headMastered";
+      if (state === "flag") return "headFlag";
+      if (state === "horn") return "headHorn";
+      if (["dance", "trainingFinished"].includes(state)) return "headDance";
+      if (state === "levelUp") return "headLevel";
+      if (state === "completion") return "headComplete";
+      if (state === "perfectTraining") return "headPerfect";
       return "head";
     }
 
@@ -565,17 +602,19 @@
         const alpha = Math.sin(p * Math.PI);
         if (alpha <= 0) return;
         context.save();
-        context.globalAlpha = alpha;
-        context.translate(record.canvas.width / 2 + 158 * unit, record.canvas.height / 2 - 213 * unit);
-        context.rotate(Math.sin(p * Math.PI * 2) * .08);
-        context.font = `900 ${68 * unit}px Nunito, system-ui, sans-serif`;
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-        context.lineWidth = 9 * unit;
-        context.strokeStyle = "#713f12";
-        context.fillStyle = "#f8c438";
-        context.strokeText("?", 0, 0);
-        context.fillText("?", 0, 0);
+        context.globalAlpha = alpha * .8;
+        context.translate(record.canvas.width / 2 + 104 * unit, record.canvas.height / 2 - 214 * unit);
+        context.strokeStyle = "#8b5a2b";
+        context.lineWidth = 5 * unit;
+        context.lineCap = "round";
+        for (let index = 0; index < 3; index += 1) {
+          const phase = p * Math.PI * 6 + index * .7;
+          const x = (index * 9 + Math.sin(phase) * 3) * unit;
+          context.beginPath();
+          context.moveTo(x, -10 * unit);
+          context.quadraticCurveTo(x + 5 * unit, 0, x, 10 * unit);
+          context.stroke();
+        }
         context.restore();
       } else if (state === "correct" && variant === "nod") {
         const p = Math.min(1, elapsed / 760);
@@ -597,6 +636,66 @@
         context.strokeStyle = "#16a34a";
         context.lineWidth = 10 * unit;
         context.stroke();
+        context.restore();
+      } else if (state === "flag") {
+        const wave = Math.sin(elapsed / 1000 * 5.6);
+        context.save();
+        context.translate(record.canvas.width / 2 + (153 + wave * 5) * unit, record.canvas.height / 2 - 86 * unit);
+        context.rotate(-.08 + wave * .07);
+        context.lineCap = "round";
+        context.strokeStyle = "#7c4a24";
+        context.lineWidth = 8 * unit;
+        context.beginPath();
+        context.moveTo(0, 88 * unit);
+        context.lineTo(0, -142 * unit);
+        context.stroke();
+        context.fillStyle = "#11a9b8";
+        context.strokeStyle = "#087b88";
+        context.lineWidth = 4 * unit;
+        context.beginPath();
+        context.moveTo(3 * unit, -137 * unit);
+        context.quadraticCurveTo(74 * unit, -119 * unit, 126 * unit, -137 * unit);
+        context.lineTo(111 * unit, -64 * unit);
+        context.quadraticCurveTo(58 * unit, -44 * unit, 3 * unit, -64 * unit);
+        context.closePath();
+        context.fill();
+        context.stroke();
+        context.fillStyle = "#ffd43b";
+        context.beginPath();
+        for (let index = 0; index < 10; index += 1) {
+          const angle = index * Math.PI / 5 - Math.PI / 2;
+          const radius = (index % 2 ? 12 : 25) * unit;
+          const x = 61 * unit + Math.cos(angle) * radius;
+          const y = -94 * unit + Math.sin(angle) * radius;
+          if (!index) context.moveTo(x, y); else context.lineTo(x, y);
+        }
+        context.closePath();
+        context.fill();
+        context.restore();
+      } else if (state === "horn") {
+        const pulse = .82 + .18 * Math.max(0, Math.sin(elapsed / 1000 * 5.4));
+        context.save();
+        context.translate(record.canvas.width / 2 + 42 * unit, record.canvas.height / 2 - 88 * unit);
+        context.rotate(-.10);
+        context.fillStyle = "#ffd43b";
+        context.strokeStyle = "#d97706";
+        context.lineWidth = 5 * unit;
+        context.beginPath();
+        context.moveTo(-6 * unit, -8 * unit);
+        context.lineTo(148 * unit * pulse, -28 * unit);
+        context.lineTo(148 * unit * pulse, 28 * unit);
+        context.lineTo(-6 * unit, 8 * unit);
+        context.closePath();
+        context.fill();
+        context.stroke();
+        context.strokeStyle = "#0f9eaa";
+        context.lineWidth = 10 * unit;
+        for (let x = 30; x < 130 * pulse; x += 38) {
+          context.beginPath();
+          context.moveTo(x * unit, -18 * unit);
+          context.lineTo((x + 7) * unit, 18 * unit);
+          context.stroke();
+        }
         context.restore();
       } else if (state === "correct" && variant === "cheer") {
         const p = Math.min(1, elapsed / 1200);

@@ -175,9 +175,17 @@ test('ordinary reactions select distinct complete head layers', () => {
   assert.equal(animator.headAsset('correct', 'hop'), 'headHop');
   assert.equal(animator.headAsset('correct', 'cheer'), 'headCheer');
   assert.equal(animator.headAsset('wrong'), 'headWrong');
+  assert.equal(animator.headAsset('errorRecovered'), 'headRecovered');
+  assert.equal(animator.headAsset('errorMastered'), 'headMastered');
+  assert.equal(animator.headAsset('flag'), 'headFlag');
+  assert.equal(animator.headAsset('horn'), 'headHorn');
+  assert.equal(animator.headAsset('dance'), 'headDance');
+  assert.equal(animator.headAsset('levelUp'), 'headLevel');
+  assert.equal(animator.headAsset('completion'), 'headComplete');
+  assert.equal(animator.headAsset('perfectTraining'), 'headPerfect');
   assert.equal(animator.headAsset('idle'), 'head');
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-  for (const name of ['head-nod.png', 'head-hop.png', 'head-cheer.png', 'head-wrong.png']) {
+  for (const name of ['head-nod.png', 'head-hop.png', 'head-cheer.png', 'head-wrong.png', 'head-recovered.png', 'head-mastered.png', 'head-flag.png', 'head-horn.png', 'head-dance.png', 'head-level.png', 'head-complete.png', 'head-perfect.png']) {
     assert.ok(fs.existsSync(path.join(root, 'assets/kapi-rig-v2', name)), name);
     assert.ok(sw.includes(name), `${name} must work offline`);
   }
