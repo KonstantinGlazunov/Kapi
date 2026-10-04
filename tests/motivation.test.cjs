@@ -83,6 +83,7 @@ test('one answer selects one reaction, preserving every earned session reward', 
   assert.equal(r.motivation.getOutfit().hat, 'party');
   assert.equal(r.motivation.handle(['levelUp'], { batchId: 'one' }), null);
   r.advance(1500); assert.equal(r.machine.state, 'dance');
+  assert.equal(r.plays.at(-1)[1].headAsset, 'headLevel', 'level-up cap stays on during its dance continuation');
   assert.deepEqual(r.sounds, ['levelUp'], 'continuation must be silent');
   r.advance(2400); assert.equal(r.machine.state, 'idle');
   r.motivation.handle(['wrong']);
@@ -96,6 +97,7 @@ test('perfect completion outranks final-answer milestones, looping silently', ()
   assert.equal(r.machine.state, 'perfectTraining');
   r.advance(2400);
   assert.equal(r.machine.state, 'trainingFinished');
+  assert.equal(r.plays.at(-1)[1].headAsset, 'headPerfect', 'perfect crown stays on for the continuous dance');
   r.advance(20000);
   assert.deepEqual(r.sounds, ['perfect']);
   assert.equal(r.machine.trigger('correct'), false);
@@ -108,6 +110,7 @@ test('10, 20 and 30 task completions have separate duration and sound', () => {
     r.motivation.handle([{ type: 'trainingComplete', total }]);
     r.advance(duration - 1); assert.equal(r.machine.state, 'completion');
     r.advance(1); assert.equal(r.machine.state, 'trainingFinished');
+    assert.equal(r.plays.at(-1)[1].headAsset, 'headComplete', 'laurel stays on for the continuous dance');
     assert.deepEqual(r.sounds, [`complete${total}`]);
   }
 });

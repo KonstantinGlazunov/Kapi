@@ -22,9 +22,9 @@
     flag: { priority: 40, duration: 1600, sound: "flag" },
     horn: { priority: 50, duration: 2100, sound: "party" },
     dance: { priority: 60, duration: 2400, sound: "dance" },
-    levelUp: { priority: 80, duration: 1500, sound: "levelUp", next: "dance" },
-    completion: { priority: 90, duration: 1900, sound: "complete20", next: "trainingFinished" },
-    perfectTraining: { priority: 95, duration: 2400, sound: "perfect", next: "trainingFinished" },
+    levelUp: { priority: 80, duration: 1500, sound: "levelUp", next: "dance", continuationHead: "headLevel" },
+    completion: { priority: 90, duration: 1900, sound: "complete20", next: "trainingFinished", continuationHead: "headComplete" },
+    perfectTraining: { priority: 95, duration: 2400, sound: "perfect", next: "trainingFinished", continuationHead: "headPerfect" },
     trainingFinished: { priority: 90, loop: true }
   };
 
@@ -197,6 +197,7 @@
         state: "idle",
         variant: "hop",
         previousHead: "head",
+        headOverride: null,
         transitionFrom: null,
         stateStartedAt: performance.now(),
         transitionStartedAt: 0,
@@ -709,7 +710,7 @@
         ? Math.min(1, (now - record.transitionStartedAt) / record.transitionDuration)
         : 1;
       const eased = transitionProgress * transitionProgress * (3 - 2 * transitionProgress);
-      const targetHead = this.headAsset(record.state, record.variant);
+      const targetHead = record.headOverride || this.headAsset(record.state, record.variant);
       const current = this.snapshot(record, now);
       this.drawRigPose(record, current.pose, current.limbs, 1, { drawHead: false, state: record.state, elapsed: now - record.stateStartedAt });
       if (record.previousHead !== targetHead && transitionProgress < 1) {
@@ -733,10 +734,11 @@
       const record = this.ensure(surface);
       if (!record) return;
       const now = performance.now();
-      record.previousHead = this.headAsset(record.state, record.variant);
+      record.previousHead = record.headOverride || this.headAsset(record.state, record.variant);
       record.transitionFrom = this.snapshot(record, now);
       record.state = state;
       record.variant = options.variant || "hop";
+      record.headOverride = options.headAsset || null;
       record.stateStartedAt = now;
       record.transitionStartedAt = now;
       if (!record.frameRequest) this.render(record, now);
@@ -836,7 +838,10 @@
       const config = STATE_CONFIG[state] || STATE_CONFIG.idle;
       const duration = options.duration ?? config.duration;
       if (duration) this.bannerTimer = window.setTimeout(() => {
-        this.animator.play(config.next === "trainingFinished" ? "trainingFinished" : "idle", { surface: "banner" });
+        this.animator.play(config.next === "trainingFinished" ? "trainingFinished" : "idle", {
+          surface: "banner",
+          headAsset: config.continuationHead
+        });
       }, duration);
     }
 
@@ -878,7 +883,7 @@
 
       if (config.next) {
         const { duration, sound, variant, ...continuation } = finishedOptions;
-        this.enter(config.next, { ...continuation, silent: true }, true);
+        this.enter(config.next, { ...continuation, headAsset: config.continuationHead, silent: true }, true);
         return;
       }
       if (typeof finishedOptions.onComplete === "function") finishedOptions.onComplete(finishedState);
