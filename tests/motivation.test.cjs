@@ -213,11 +213,16 @@ test('ordinary reactions select distinct complete head layers', () => {
 
 function audioContext() {
   const nodes = [];
-  const ctx = { currentTime: 0, state: 'running', destination: {}, nodes };
+  const sources = [];
+  const ctx = { currentTime: 0, state: 'running', destination: {}, nodes, sources };
   ctx.createGain = () => ({ gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, disconnect() {}, connect() {} });
   ctx.createOscillator = () => {
     const node = { frequency: {}, connect(gain) { return gain; }, start() {}, stop(at) { if (at == null) this.cancelled = true; }, disconnect() {} };
     nodes.push(node); return node;
+  };
+  ctx.createBufferSource = () => {
+    const source = { playbackRate: { value: 1 }, connect(gain) { return gain; }, start() { this.started = true; }, stop() { this.cancelled = true; }, disconnect() {} };
+    sources.push(source); return source;
   };
   return ctx;
 }
@@ -250,6 +255,18 @@ test('audio variants alternate and completed nodes are released', () => {
   ctx.nodes.forEach(n => n.onended());
   assert.equal(sound.channels.get('feedback').size, 0);
   sound.play('correct'); assert.notEqual(first, ctx.nodes[2].frequency.value);
+});
+
+test('loaded scene samples replace oscillator patterns and remain interruptible', () => {
+  const { sandbox } = environment(), ctx = audioContext();
+  const sound = new sandbox.KapiSoundManager({ contextFactory: () => ctx });
+  sound.unlock();
+  sound.samples.set('party', { duration: 1.18 });
+  assert.equal(sound.play('party'), true);
+  assert.equal(ctx.sources.length, 1);
+  assert.equal(ctx.sources[0].started, true);
+  sound.setEnabled(false);
+  assert.equal(ctx.sources[0].cancelled, true);
 });
 
 test('application completes 10/20/30 answers once, with only one final cue', () => {
@@ -325,4 +342,12 @@ test('offline cache includes all scripts loaded by HTML', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
   for (const [, name] of html.matchAll(/<script src="([^"]+)"/g)) assert.ok(sw.includes(`"${name}"`), name);
+});
+
+test('offline cache includes every rendered scene sound sample', () => {
+  const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  for (const name of ['start', 'correct', 'wrong', 'recovered', 'mastered', 'flag', 'party', 'dance', 'level-up', 'complete-10', 'complete-20', 'complete-30', 'perfect']) {
+    assert.ok(fs.existsSync(path.join(root, 'assets', 'sounds', `${name}.wav`)), name);
+    assert.ok(sw.includes(`assets/sounds/${name}.wav`), `${name} must work offline`);
+  }
 });

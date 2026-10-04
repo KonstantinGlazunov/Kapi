@@ -20,6 +20,21 @@
   };
   const PRIORITY = { start: 1, correct: 10, wrong: 20, recovered: 30, mastered: 35, flag: 40, party: 50, dance: 60, levelUp: 80, complete10: 90, complete20: 90, complete30: 90, perfect: 95 };
   const ALIASES = { streak: "flag", handshake: "levelUp", complete: "complete20" };
+  const SAMPLE_SOURCES = {
+    start: "assets/sounds/start.wav",
+    correct: "assets/sounds/correct.wav",
+    wrong: "assets/sounds/wrong.wav",
+    recovered: "assets/sounds/recovered.wav",
+    mastered: "assets/sounds/mastered.wav",
+    flag: "assets/sounds/flag.wav",
+    party: "assets/sounds/party.wav",
+    dance: "assets/sounds/dance.wav",
+    levelUp: "assets/sounds/level-up.wav",
+    complete10: "assets/sounds/complete-10.wav",
+    complete20: "assets/sounds/complete-20.wav",
+    complete30: "assets/sounds/complete-30.wav",
+    perfect: "assets/sounds/perfect.wav"
+  };
 
   class KapiSoundManager {
     constructor(options = {}) {
@@ -30,6 +45,8 @@
       this.unlocked = false;
       this.channels = new Map(["feedback", "achievement", "voice", "foley"].map((name) => [name, new Set()]));
       this.lastCorrect = -1;
+      this.samples = new Map();
+      this.preloadStarted = false;
     }
 
     unlock() {
@@ -38,7 +55,20 @@
       try {
         this.context ||= this.contextFactory();
         if (this.context.state === "suspended") this.context.resume()?.catch(() => {});
+        this.preloadSamples();
       } catch { /* Audio is optional; learning must always continue. */ }
+    }
+
+    preloadSamples() {
+      if (this.preloadStarted || !this.context?.decodeAudioData || typeof window.fetch !== "function") return;
+      this.preloadStarted = true;
+      Object.entries(SAMPLE_SOURCES).forEach(([type, source]) => {
+        window.fetch(source)
+          .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error("audio unavailable")))
+          .then((buffer) => this.context.decodeAudioData(buffer))
+          .then((buffer) => this.samples.set(type, buffer))
+          .catch(() => {});
+      });
     }
 
     setEnabled(enabled) {
@@ -49,9 +79,10 @@
     stopChannel(channel) {
       const active = this.channels.get(channel);
       active?.forEach((entry) => {
-        entry.nodes.forEach(({ oscillator, gain }) => {
-          try { oscillator.stop(); } catch { /* Already stopped. */ }
-          oscillator.disconnect();
+        entry.nodes.forEach(({ oscillator, source, gain }) => {
+          const node = source || oscillator;
+          try { node.stop(); } catch { /* Already stopped. */ }
+          node.disconnect();
           gain.disconnect();
         });
       });
@@ -89,6 +120,25 @@
       const entry = { priority, until: now, nodes: [] };
       this.channels.get(channel).add(entry);
       try {
+        const sample = this.samples.get(type);
+        if (sample && typeof this.context.createBufferSource === "function") {
+          const source = this.context.createBufferSource();
+          const gain = this.context.createGain();
+          source.buffer = sample;
+          source.playbackRate.value = transpose;
+          gain.gain.value = channel === "achievement" ? .30 : type === "wrong" ? .20 : .24;
+          source.connect(gain).connect(this.context.destination);
+          const node = { source, gain };
+          entry.nodes.push(node);
+          source.onended = () => {
+            source.disconnect(); gain.disconnect();
+            entry.nodes = entry.nodes.filter((item) => item !== node);
+            if (!entry.nodes.length) this.channels.get(channel).delete(entry);
+          };
+          source.start(now);
+          entry.until = now + sample.duration / transpose;
+          return true;
+        }
         const volume = channel === "achievement" ? .065 : type === "wrong" ? .035 : .05;
         for (const [frequency, delay, duration] of PATTERNS[type]) {
           const oscillator = this.context.createOscillator();
