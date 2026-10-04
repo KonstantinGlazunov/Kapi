@@ -2153,7 +2153,7 @@ function makePowerProblem(max, mastered) {
     panel.setAttribute("aria-label", copy.demoTitle);
     panel.innerHTML = `<div class="kapi-demo-preview">
       <span class="eyebrow">${copy.demoTitle}</span>
-      <div class="kapi-demo-stage kapi-host"><canvas aria-hidden="true"></canvas></div>
+      <div class="kapi-demo-stage kapi-host"><canvas class="kapi-rive-canvas" aria-hidden="true"></canvas></div>
       <strong class="kapi-demo-status" role="status" aria-live="polite">${ru ? "Выбери реакцию" : "Wähle eine Reaktion"}</strong>
       <p>${ru ? "Прогресс и история занятий не меняются." : "Lernfortschritt und Verlauf bleiben unverändert."}</p>
       <a class="text-button" href="./">${ru ? "Вернуться к тренировке" : "Zurück zum Training"}</a>
