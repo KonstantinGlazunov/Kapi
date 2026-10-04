@@ -63,8 +63,9 @@
       if (!event) return null;
       const reaction = { ...EVENTS[event.type], ...event, surface: context.surface || "game" };
       if (event.type === "correct") {
+        const requested = ["nod", "hop", "cheer"].includes(event.variant) ? event.variant : null;
         const variants = ["nod", "hop", "cheer"].filter((variant) => variant !== this.lastVariant);
-        reaction.variant = variants[Math.min(variants.length - 1, Math.floor(this.random() * variants.length))];
+        reaction.variant = requested || variants[Math.min(variants.length - 1, Math.floor(this.random() * variants.length))];
       }
       if (event.type === "trainingComplete") {
         reaction.total = [10, 20, 30].includes(event.total) ? event.total : 20;

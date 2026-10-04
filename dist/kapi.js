@@ -15,8 +15,8 @@
     idleLookLeft: { priority: 1, duration: 1400 },
     idleLookRight: { priority: 1, duration: 1400 },
     hey: { priority: 5, duration: 3400, sound: "hey" },
-    correct: { priority: 10, duration: 680, sound: "correct" },
-    wrong: { priority: 20, duration: 850, sound: "wrong" },
+    correct: { priority: 10, duration: 900, sound: "correct" },
+    wrong: { priority: 20, duration: 1000, sound: "wrong" },
     errorRecovered: { priority: 30, duration: 1050, sound: "recovered" },
     errorMastered: { priority: 35, duration: 1300, sound: "mastered" },
     flag: { priority: 40, duration: 1600, sound: "flag" },
@@ -228,8 +228,8 @@
     }
 
     motion(state, elapsed, variant = "hop") {
-      if (state === "errorRecovered") return { state: "correct", elapsed: elapsed * 680 / 1050, variant: "recovered" };
-      if (state === "errorMastered") return { state: "correct", elapsed: elapsed * 680 / 1300, variant: "mastered" };
+      if (state === "errorRecovered") return { state: "correct", elapsed: elapsed * 900 / 1050, variant: "recovered" };
+      if (state === "errorMastered") return { state: "correct", elapsed: elapsed * 900 / 1300, variant: "mastered" };
       return { state, elapsed, variant };
     }
 
@@ -237,7 +237,7 @@
       const perfect = state === "perfectTraining";
       const introDuration = perfect ? 800 : 600;
       const introState = perfect ? "correct" : "levelUp";
-      const introEnd = perfect ? 680 : 1500;
+      const introEnd = perfect ? 900 : 1500;
       if (elapsed < introDuration) return this[method](introState, elapsed * introEnd / introDuration, "mastered");
       const progress = Math.min(1, (elapsed - introDuration) / 240);
       const eased = progress * progress * (3 - 2 * progress);
@@ -266,18 +266,33 @@
         pose.y = -6 - Math.abs(Math.sin(t * 3.8)) * 5;
         pose.rotation = wave * .018;
       } else if (state === "correct") {
-        const progress = Math.min(1, elapsed / 680);
-        const lift = Math.sin(progress * Math.PI);
-        const strength = { nod: .12, hop: .50, cheer: .65, recovered: .70, mastered: 1 }[variant] ?? .50;
-        pose.y = -lift * 22 * strength;
-        pose.rotation = Math.sin(progress * Math.PI * 2) * .025 * (1 - progress) * strength;
-        pose.scaleX = 1 + lift * .018 * strength;
-        pose.scaleY = 1 + lift * .035 * strength;
+        const p = Math.min(1, elapsed / 900);
+        const gesture = Math.sin(p * Math.PI);
+        if (variant === "nod") {
+          const nod = Math.sin(p * Math.PI * 3) * Math.sin(p * Math.PI);
+          const down = Math.max(0, nod);
+          pose.y = down * 3.5;
+          pose.rotation = nod * .008;
+          pose.scaleX = 1 + down * .006;
+          pose.scaleY = 1 - down * .008;
+        } else if (variant === "hop") {
+          const anticipation = p < .18 ? Math.sin(p / .18 * Math.PI) : 0;
+          const flight = p < .18 ? 0 : Math.sin(Math.min(1, (p - .18) / .82) * Math.PI);
+          const landing = p > .82 ? Math.sin((p - .82) / .18 * Math.PI) : 0;
+          pose.y = anticipation * 5 - flight * 25 + landing * 4;
+          pose.scaleX = 1 + anticipation * .025 - flight * .012 + landing * .035;
+          pose.scaleY = 1 - anticipation * .035 + flight * .025 - landing * .045;
+        } else {
+          const strength = { cheer: .72, recovered: .82, mastered: 1 }[variant] ?? .72;
+          pose.y = -gesture * 7 * strength;
+          pose.rotation = Math.sin(p * Math.PI * 2) * .012 * strength;
+          pose.scaleX = 1 + gesture * .012 * strength;
+          pose.scaleY = 1 + gesture * .018 * strength;
+        }
       } else if (state === "wrong") {
-        // A curious lean, never a punitive shake.
-        const thinking = Math.sin(Math.min(1, elapsed / 850) * Math.PI);
-        pose.rotation = thinking * -.012;
-        pose.y = thinking * 2;
+        const thinking = Math.sin(Math.min(1, elapsed / 1000) * Math.PI);
+        pose.rotation = thinking * -.018;
+        pose.y = thinking * 3;
       } else if (state === "flag") {
         pose.y = -5 - Math.abs(Math.sin(t * 4.1)) * 7;
         pose.rotation = Math.sin(t * 4.1) * .038;
@@ -353,29 +368,46 @@
         result.leftElbow = -1.20;
         result.leftWrist = .08;
       } else if (state === "correct") {
-        const p = Math.min(1, elapsed / 680);
-        const lift = Math.sin(p * Math.PI);
-        const strength = { nod: .04, hop: .16, cheer: .50, recovered: .65, mastered: 1 }[variant] ?? .16;
-        result.head = Math.sin(p * Math.PI * 2) * (variant === "nod" ? .05 : .025);
-        result.headY = variant === "nod" ? lift * 6 : 0;
-        result.leftShoulder = .04 + lift * 2.10 * strength;
-        result.rightShoulder = -.04 - lift * 2.10 * strength;
-        result.leftElbow = -1.22 + lift * 1.22 * strength;
-        result.rightElbow = 1.22 - lift * 1.22 * strength;
-        result.leftWrist = .10 - lift * .10;
-        result.rightWrist = -.10 + lift * .10;
-        result.leftHip = .02 + lift * .08 * strength;
-        result.rightHip = -.02 - lift * .08 * strength;
-        result.leftAnkle = -.03 - lift * .16 * strength;
-        result.rightAnkle = .03 + lift * .16 * strength;
+        const p = Math.min(1, elapsed / 900);
+        const gesture = Math.sin(p * Math.PI);
+        if (variant === "nod") {
+          const nod = Math.sin(p * Math.PI * 3) * Math.sin(p * Math.PI);
+          result.head = nod * .026;
+          result.headY = Math.max(0, nod) * 14;
+        } else if (variant === "hop") {
+          const anticipation = p < .18 ? Math.sin(p / .18 * Math.PI) : 0;
+          const flight = p < .18 ? 0 : Math.sin(Math.min(1, (p - .18) / .82) * Math.PI);
+          result.head = -flight * .018;
+          result.leftShoulder = .04 + flight * .30 - anticipation * .08;
+          result.rightShoulder = -.04 - flight * .30 + anticipation * .08;
+          result.leftElbow = -1.22 + flight * .18;
+          result.rightElbow = 1.22 - flight * .18;
+          result.leftHip = .02 + flight * .07;
+          result.rightHip = -.02 - flight * .07;
+          result.leftAnkle = -.03 - flight * .18 + anticipation * .08;
+          result.rightAnkle = .03 + flight * .18 - anticipation * .08;
+        } else {
+          const strength = { cheer: 1, recovered: .88, mastered: 1 }[variant] ?? 1;
+          result.head = Math.sin(p * Math.PI * 2) * .018 * strength;
+          result.leftShoulder = .04 + gesture * 1.96 * strength;
+          result.rightShoulder = -.04 - gesture * 1.96 * strength;
+          result.leftElbow = -1.22 + gesture * .82 * strength;
+          result.rightElbow = 1.22 - gesture * .82 * strength;
+          result.leftWrist = .10 - gesture * .12;
+          result.rightWrist = -.10 + gesture * .12;
+          result.leftHip = .02 + gesture * .05 * strength;
+          result.rightHip = -.02 - gesture * .05 * strength;
+        }
       } else if (state === "wrong") {
-        const p = Math.min(1, elapsed / 850);
-        result.head = -Math.sin(p * Math.PI) * .055;
-        result.headY = Math.sin(p * Math.PI) * 3;
-        result.leftShoulder = .14;
-        result.rightShoulder = -.14;
-        result.leftElbow = -1.30;
-        result.rightElbow = 1.30;
+        const p = Math.min(1, elapsed / 1000);
+        const thinking = Math.sin(p * Math.PI);
+        result.head = -thinking * .055;
+        result.headY = thinking * 3;
+        result.leftShoulder = .08;
+        result.leftElbow = -1.25;
+        result.rightShoulder = -.04 - thinking * .96;
+        result.rightElbow = 1.22 + thinking * 1.58;
+        result.rightWrist = -.10 - thinking * .12;
       } else if (state === "flag") {
         const wave = Math.sin(t * 5.6);
         result.rightShoulder = -1.72 + wave * .10;

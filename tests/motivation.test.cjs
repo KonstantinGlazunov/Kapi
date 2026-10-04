@@ -129,6 +129,13 @@ test('rapid feedback replaces feedback and never queues behind a celebration', (
   assert.deepEqual(r.sounds, ['correct', 'correct', 'wrong', 'correct', 'party']);
 });
 
+test('demo can request each ordinary reaction explicitly', () => {
+  const r = rig();
+  for (const variant of ['nod', 'hop', 'cheer']) {
+    assert.equal(r.motivation.handle([{ type: 'correct', variant }]).variant, variant);
+  }
+});
+
 test('idle micro gestures alternate and reduced-motion skips them', () => {
   const r = rig();
   r.advance(3200); assert.equal(r.machine.state, 'idleHeadMove');
@@ -264,7 +271,7 @@ test('leaving or restarting cancels delayed advancement', () => {
 test('demo mode is isolated from learning progress and history', () => {
   const env = environment({ app: true, query: '?kapiTest=1' });
   const before = JSON.stringify([...env.storage]);
-  for (const scene of ['correct', 'wrong', 'recovered', 'mastered', 'streak6', 'streak10', 'levelUp', 'complete10', 'complete20', 'complete30', 'perfect', 'combined']) {
+  for (const scene of ['nod', 'hop', 'cheer', 'wrong', 'recovered', 'mastered', 'streak6', 'streak10', 'levelUp', 'complete10', 'complete20', 'complete30', 'perfect', 'combined']) {
     assert.ok(env.sandbox.__kapiDemo.play(scene)); env.advance(3000);
   }
   assert.equal(JSON.stringify([...env.storage]), before);

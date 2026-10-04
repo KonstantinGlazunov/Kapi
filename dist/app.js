@@ -2134,7 +2134,9 @@ function makePowerProblem(max, mastered) {
   function installMotivationDemo() {
     const ru = language === "ru";
     const scenarios = [
-      ["correct", ru ? "Верный ответ" : "Richtige Antwort", ["correct"]],
+      ["nod", ru ? "Кивок" : "Nicken", [{ type: "correct", variant: "nod" }]],
+      ["hop", ru ? "Подскок" : "Hüpfen", [{ type: "correct", variant: "hop" }]],
+      ["cheer", ru ? "Обе лапы вверх" : "Beide Pfoten hoch", [{ type: "correct", variant: "cheer" }]],
       ["wrong", ru ? "Ошибка" : "Fehler", ["wrong"]],
       ["recovered", ru ? "Первое исправление" : "Erste Verbesserung", ["correct", "errorRecovered"]],
       ["mastered", ru ? "Два верных повтора" : "Fehler gemeistert", ["correct", "errorMastered"]],
@@ -2158,7 +2160,7 @@ function makePowerProblem(max, mastered) {
     </div><div class="kapi-demo-controls">
       <div class="kapi-demo-actions"><button type="button" data-demo-idle>${ru ? "Спокойное ожидание" : "Ruhiges Warten"}</button><button type="button" data-demo-sound></button></div>
       <div class="kapi-demo-scenarios">${scenarios.map(([id, title]) => `<button type="button" data-demo-scene="${id}">${title}</button>`).join("")}</div>
-      <p>${ru ? "Нажми «Верный ответ» несколько раз, чтобы сравнить три варианта жеста. Последняя кнопка проверяет одну общую реакцию на два достижения." : "Tippe mehrmals auf „Richtige Antwort“, um drei Gesten zu vergleichen. Die letzte Taste zeigt eine gemeinsame Reaktion auf zwei Erfolge."}</p>
+      <p>${ru ? "Три первые кнопки позволяют отдельно сравнить обычные реакции. Последняя кнопка проверяет одну общую реакцию на два достижения." : "Mit den ersten drei Tasten lassen sich die normalen Reaktionen einzeln vergleichen. Die letzte Taste zeigt eine gemeinsame Reaktion auf zwei Erfolge."}</p>
     </div>`;
     document.body.append(panel);
     document.body.classList.add("kapi-demo-active");
