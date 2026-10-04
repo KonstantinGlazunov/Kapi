@@ -16,7 +16,7 @@
     idleLookRight: { priority: 1, duration: 1400 },
     hey: { priority: 5, duration: 3400, sound: "hey" },
     correct: { priority: 10, duration: 1050, sound: "correct" },
-    wrong: { priority: 20, duration: 1200, sound: "wrong" },
+    wrong: { priority: 20, duration: 1500, sound: "wrong" },
     errorRecovered: { priority: 30, duration: 1050, sound: "recovered" },
     errorMastered: { priority: 35, duration: 1300, sound: "mastered" },
     flag: { priority: 40, duration: 1600, sound: "flag" },
@@ -304,10 +304,16 @@
           pose.scaleY = 1 + gesture * .018 * strength;
         }
       } else if (state === "wrong") {
-        const thinking = Math.sin(Math.min(1, elapsed / 1200) * Math.PI);
-        pose.rotation = thinking * -.035;
-        pose.x = thinking * -4;
-        pose.y = thinking * 4;
+        const p = Math.min(1, elapsed / 1500);
+        const reachRaw = p < .24 ? p / .24 : p > .80 ? (1 - p) / .20 : 1;
+        const reach = Math.max(0, Math.min(1, reachRaw));
+        const easedReach = reach * reach * (3 - 2 * reach);
+        const scratchProgress = Math.max(0, Math.min(1, (p - .24) / .56));
+        const scratchEnvelope = p >= .24 && p <= .80 ? Math.sin(scratchProgress * Math.PI) : 0;
+        const scratch = Math.sin(scratchProgress * Math.PI * 6) * scratchEnvelope;
+        pose.rotation = easedReach * -.035 + scratch * .004;
+        pose.x = easedReach * -4;
+        pose.y = easedReach * 4;
       } else if (state === "flag") {
         pose.y = -5 - Math.abs(Math.sin(t * 4.1)) * 7;
         pose.rotation = Math.sin(t * 4.1) * .038;
@@ -436,18 +442,22 @@
           result.rightHip = -.02 - gesture * .05 * strength;
         }
       } else if (state === "wrong") {
-        const p = Math.min(1, elapsed / 1200);
-        const reach = Math.sin(p * Math.PI);
-        const scratch = Math.sin(p * Math.PI * 6);
-        result.head = -reach * .055 + scratch * .006;
-        result.headY = reach * 3;
+        const p = Math.min(1, elapsed / 1500);
+        const reachRaw = p < .24 ? p / .24 : p > .80 ? (1 - p) / .20 : 1;
+        const reach = Math.max(0, Math.min(1, reachRaw));
+        const easedReach = reach * reach * (3 - 2 * reach);
+        const scratchProgress = Math.max(0, Math.min(1, (p - .24) / .56));
+        const scratchEnvelope = p >= .24 && p <= .80 ? Math.sin(scratchProgress * Math.PI) : 0;
+        const scratch = Math.sin(scratchProgress * Math.PI * 6) * scratchEnvelope;
+        result.head = -easedReach * .055 + scratch * .008;
+        result.headY = easedReach * 3;
         result.leftShoulder = .08;
         result.leftElbow = -1.25;
         // Lift the elbow outward, then fold the forearm behind the ear.
         // The head is drawn last and naturally occludes the paw/forearm.
-        result.rightShoulder = -.04 - reach * .81 + scratch * .018;
-        result.rightElbow = 1.22 - reach * 3.47 + scratch * .075;
-        result.rightWrist = -.10 + reach * .34 + scratch * .12;
+        result.rightShoulder = -.04 - easedReach * .55 - scratch * .055;
+        result.rightElbow = 1.22 - easedReach * 3.32 + scratch * .19;
+        result.rightWrist = -.10 + easedReach * .30 + scratch * .28;
       } else if (state === "flag") {
         const wave = Math.sin(t * 5.6);
         result.rightShoulder = -1.72 + wave * .10;
@@ -602,8 +612,10 @@
       const context = record.context;
       const unit = Math.min(record.canvas.width, record.canvas.height) / 700;
       if (state === "wrong") {
-        const p = Math.min(1, elapsed / 1200);
-        const alpha = Math.sin(p * Math.PI);
+        const p = Math.min(1, elapsed / 1500);
+        const scratchProgress = Math.max(0, Math.min(1, (p - .24) / .56));
+        const scratchEnvelope = p >= .24 && p <= .80 ? Math.sin(scratchProgress * Math.PI) : 0;
+        const alpha = scratchEnvelope;
         if (alpha <= 0) return;
         context.save();
         context.globalAlpha = alpha * .8;
@@ -612,7 +624,7 @@
         context.lineWidth = 5 * unit;
         context.lineCap = "round";
         for (let index = 0; index < 3; index += 1) {
-          const phase = p * Math.PI * 6 + index * .7;
+          const phase = scratchProgress * Math.PI * 6 + index * .7;
           const x = (index * 9 + Math.sin(phase) * 3) * unit;
           context.beginPath();
           context.moveTo(x, -10 * unit);

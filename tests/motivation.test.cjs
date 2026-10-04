@@ -168,6 +168,23 @@ test('continuous final transitions and interrupted poses have no jumps', () => {
   assert.deepEqual(animator.limbPose('dance', 0), animator.limbPose('dance', 300));
 });
 
+test('wrong reaction reaches behind the head, scratches three times, then returns', () => {
+  const { sandbox } = environment();
+  const animator = Object.create(sandbox.CanvasKapiAnimator.prototype);
+  animator.reducedMotion = false;
+  const raised = animator.limbPose('wrong', 360);
+  const held = animator.limbPose('wrong', 1200);
+  const returned = animator.limbPose('wrong', 1500);
+  assert.ok(raised.rightShoulder < -.5 && held.rightShoulder < -.5, 'paw stays raised during scratching');
+  assert.ok(Math.abs(returned.rightShoulder + .04) < .001, 'paw returns to idle');
+  const elbows = [480, 600, 720, 840, 960, 1080].map(time => animator.limbPose('wrong', time).rightElbow);
+  for (let index = 1; index < elbows.length - 1; index += 1) {
+    const before = elbows[index] - elbows[index - 1];
+    const after = elbows[index + 1] - elbows[index];
+    assert.ok(before * after < 0, `scratch direction changes at phase ${index}`);
+  }
+});
+
 test('ordinary reactions select distinct complete head layers', () => {
   const { sandbox } = environment();
   const animator = Object.create(sandbox.CanvasKapiAnimator.prototype);
