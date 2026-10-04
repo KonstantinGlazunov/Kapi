@@ -559,6 +559,27 @@
         context.strokeText("?", 0, 0);
         context.fillText("?", 0, 0);
         context.restore();
+      } else if (state === "correct" && variant === "nod") {
+        const p = Math.min(1, elapsed / 760);
+        const alpha = Math.sin(p * Math.PI);
+        if (alpha <= 0) return;
+        context.save();
+        context.globalAlpha = alpha;
+        context.translate(record.canvas.width / 2 - 172 * unit, record.canvas.height / 2 - 202 * unit);
+        context.scale(.82 + alpha * .18, .82 + alpha * .18);
+        context.beginPath();
+        context.moveTo(-24 * unit, -1 * unit);
+        context.lineTo(-7 * unit, 17 * unit);
+        context.lineTo(28 * unit, -24 * unit);
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        context.strokeStyle = "#ffffff";
+        context.lineWidth = 19 * unit;
+        context.stroke();
+        context.strokeStyle = "#16a34a";
+        context.lineWidth = 10 * unit;
+        context.stroke();
+        context.restore();
       } else if (state === "correct" && variant === "cheer") {
         const p = Math.min(1, elapsed / 1200);
         const alpha = Math.sin(p * Math.PI);
