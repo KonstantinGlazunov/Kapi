@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { environment } = require('./helpers/environment.cjs');
+const response = problem => problem.responseAnswer ?? problem.answer;
 
 function training(stage = 5, count = 10) {
   const env = environment({ app: true, seed: 0x52454344 });
@@ -36,7 +37,7 @@ test('first error gives only a small hint; second error shows model and answer',
   assert.equal(app.state.score, 0);
   env.advance(2300);
   assert.equal(app.state.problem.isReview, false);
-  app.submitAnswer(app.state.problem.answer);
+  app.submitAnswer(response(app.state.problem));
   env.advance(350);
   assert.equal(app.state.problem.isReview, true, 'error returns in the actual queue');
   assert.equal(app.state.problem.key, original.key);
@@ -51,24 +52,24 @@ test('correct retry earns one XP and cannot produce a perfect session or speed r
   app.saveProfile(profile);
   const original = app.state.problem;
   app.submitAnswer(original.answer + 1);
-  app.submitAnswer(original.answer);
+  app.submitAnswer(response(original));
   assert.equal(app.state.score, 1);
   assert.equal(app.state.results[0].firstTry, false);
   assert.equal(app.state.results[0].success, true);
   assert.equal(app.getProfile().personalFastTime, 6);
   assert.equal(app.getProfile().errorQueue.find(item => item.key === original.key).correctStreak, 0);
   env.advance(350);
-  app.submitAnswer(app.state.problem.answer);
+  app.submitAnswer(response(app.state.problem));
   env.advance(350);
   assert.equal(app.state.problem.isReview, true);
   const paceBeforeReview = app.getProfile().personalFastTime;
-  app.submitAnswer(app.state.problem.answer);
+  app.submitAnswer(response(app.state.problem));
   assert.equal(app.getProfile().errorQueue.find(item => item.key === original.key).correctStreak, 1);
   assert.equal(app.getProfile().personalFastTime, paceBeforeReview, 'review does not update baseline');
   env.advance(350);
   for (let index = 3; index <= 5; index += 1) {
     if (index === 5) assert.equal(app.state.problem.isReview, true);
-    app.submitAnswer(app.state.problem.answer);
+    app.submitAnswer(response(app.state.problem));
     env.advance(350);
   }
   assert.equal(app.getProfile().errorQueue.some(item => item.key === original.key), false);
@@ -192,7 +193,9 @@ test('minor pace improvement and later record emit mutually exclusive events wit
   app.motivation.handle = (events, context) => { batches.push(events.map(event => event.type)); return originalHandle(events, context); };
   for (let index = 0; index < 6; index += 1) {
     env.advance(index < 3 ? 5700 : 5300);
-    app.submitAnswer(app.state.problem.answer);
+    app.state.problem.taskType = 'equation';
+    delete app.state.problem.responseAnswer;
+    app.submitAnswer(response(app.state.problem));
     assert.equal(app.state.results[index].firstTry, true);
     if (index === 2) assert.equal(app.machine.state, 'speedImproved');
     if (index === 5) assert.equal(app.machine.state, 'personalRecord');

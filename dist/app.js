@@ -13,6 +13,8 @@
   const UNIVERSAL_FAST_TIME = 4;
   const PERSONAL_RECORD_MIN_RATIO = .10;
   const rewards = new window.KapiRewardSystem();
+  const tasks = new window.KapiTaskSystem();
+  const curriculumMap = new window.KapiCurriculumMap();
   const OPERATION_ORDER = ["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"];
   const OPERATION_MIN_STAGE = { add: 2, subtract: 6, multiply: 19, divide: 21, power: 30, fraction: 31, decimal: 34, negative: 36, root: 39 };
   const CURRICULUM_VERSION = 2;
@@ -163,6 +165,16 @@
     newThings: (count) => count === 1 ? "Новинка для Капи!" : `${count} новых предмета для Капи!`,
     rewardUnlocked: "открыт", nextTarget: "Следующая цель"
   });
+  Object.assign(translations.de, {
+    learningPath: "Lernweg", mapIntro: "So wächst dein Können Schritt für Schritt.",
+    mapCurrent: "Jetzt", mapCompleted: "Geschafft", mapLocked: "Kommt noch", mapSteps: (step, total) => `${step} von ${total} Schritten`,
+    chapterFinished: "Kapitel geschafft!", newChapter: (name) => `Nächstes Kapitel: ${name}`
+  });
+  Object.assign(translations.ru, {
+    learningPath: "Путь обучения", mapIntro: "Шаг за шагом ты узнаёшь больше.",
+    mapCurrent: "Сейчас", mapCompleted: "Пройдено", mapLocked: "Впереди", mapSteps: (step, total) => `${step} из ${total} шагов`,
+    chapterFinished: "Глава пройдена!", newChapter: (name) => `Следующая глава: ${name}`
+  });
   translations.ru.homeReactions = {
     flag: ["Ура!", "Вперёд!"],
     party: ["Вот это да!", "Праздник!"],
@@ -222,6 +234,10 @@
     $("startButton").innerHTML = `${copy.start} <span aria-hidden="true">→</span>`;
     $("statsButton").textContent = copy.history;
     $("wardrobeButton").textContent = copy.meinKapi;
+    $("mapButton").textContent = copy.learningPath;
+    $("mapTitle").textContent = copy.learningPath;
+    $("mapIntro").textContent = copy.mapIntro;
+    $("closeMapButton").setAttribute("aria-label", copy.close);
     $("wardrobeTitle").textContent = copy.meinKapi;
     $("wardrobeIntro").textContent = copy.wardrobeIntro;
     $("closeWardrobeButton").setAttribute("aria-label", copy.close);
@@ -515,6 +531,23 @@
     kapi?.animator?.pause("wardrobe");
   }
 
+  function renderCurriculumMap() {
+    const stage = getProfile().currentStage;
+    $("mapChapters").innerHTML = curriculumMap.chaptersAt(stage).map((chapter) => {
+      const status = { completed: copy.mapCompleted, current: copy.mapCurrent, locked: copy.mapLocked }[chapter.status];
+      const currentStep = chapter.status === "current" ? `<small>${copy.mapSteps(chapter.step, chapter.total)} · ${copy.stageNames[stage - 1]}</small>` : "";
+      return `<article class="map-chapter ${chapter.status}" aria-label="${chapter[language]}: ${status}">
+        <div class="map-marker">${chapter.status === "current" ? '<img src="assets/kapi-rig-v2/head.png" alt="">' : chapter.status === "completed" ? "✓" : "🔒"}</div>
+        <div><strong>${chapter[language]}</strong><p>${chapter[language === "de" ? "detailDe" : "detailRu"]}</p>${currentStep}</div>
+        <span class="map-status">${status}</span></article>`;
+    }).join("");
+  }
+
+  function showCurriculumMap() {
+    renderCurriculumMap();
+    $("mapDialog").showModal();
+  }
+
   function updateSoundButton() {
     const button = $("soundButton");
     if (!button) return;
@@ -726,6 +759,7 @@
 
   function finishProblem(problem, operation, index, curriculumStage = state.stage) {
     problem.operation = operation;
+    problem.taskType = "equation";
     problem.mode = index % 2 === 0 ? "choice" : "input";
     problem.isReview = false;
     problem.curriculumStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, curriculumStage || 1));
@@ -1085,7 +1119,8 @@ function makePowerProblem(max, mastered) {
         ...review,
         text: review.text || `${review.a} ${review.operator} ${review.b} = ?`,
         operation: reviewOperation(review),
-        mode: index % 2 === 0 ? "choice" : "input",
+        taskType: review.taskType || "equation",
+        mode: review.taskType === "chooseExpression" || review.placeValue?.variant === "decompose" ? "choice" : index % 2 === 0 ? "choice" : "input",
         isReview: true
       };
     }
@@ -1107,6 +1142,7 @@ function makePowerProblem(max, mastered) {
     Object.assign(state, {
       index: 0, score: 0, correct: 0, streak: 0, stage: trainingStage,
       attempt: 1, problem: null, results: [], locked: false, enteredAnswer: "", stageAdvancedDuringSession: false,
+      previousTaskType: null, trainingStartStage: trainingStage,
       finalMotivationEvents: []
     });
     showScreen($("gameScreen"));
@@ -1121,21 +1157,30 @@ function makePowerProblem(max, mastered) {
     state.hintLevel = 0;
     state.locked = false;
     state.enteredAnswer = "";
-    state.problem = selectProblem(state.stage, state.index);
+    const base = selectProblem(state.stage, state.index);
+    state.problem = base.isReview ? base : tasks.decorate(base, state.previousTaskType);
+    state.previousTaskType = state.problem.taskType;
     state.startedAt = performance.now();
     $("problemNumber").textContent = String(state.index + 1);
     $("scoreValue").textContent = String(state.score);
     $("streakValue").textContent = String(state.streak);
     $("streakPill").classList.toggle("hidden", state.streak < 2);
     $("progressFill").style.width = `${(state.index / TOTAL) * 100}%`;
-    const problemText = state.problem.text;
-    $("problemText").textContent = problemText;
-    $("problemText").classList.toggle("problem-wide", problemText.length > 12);
+    renderProblem(state.problem);
     $("hint").classList.add("hidden");
     $("hint").innerHTML = "";
     $("feedback").textContent = state.index === 0 ? copy.careful : copy.next;
     renderAnswer();
-    if (state.problem.operation === "count" || state.problem.conceptVisual) showHint(2);
+    if ((state.problem.operation === "count" && state.problem.taskType !== "visualCount") || state.problem.conceptVisual) showHint(2);
+  }
+
+  function renderProblem(problem) {
+    const display = tasks.display(problem, language);
+    $("problemText").textContent = display.text;
+    $("problemText").classList.toggle("problem-wide", display.text.length > 12 || problem.taskType === "microStory");
+    $("problemText").classList.toggle("problem-story", problem.taskType === "microStory");
+    $("taskVisual").innerHTML = display.html;
+    $("taskVisual").classList.toggle("hidden", !display.html);
   }
 
   function renderAnswer() {
@@ -1143,12 +1188,14 @@ function makePowerProblem(max, mastered) {
     area.innerHTML = "";
     if (state.problem.mode === "choice") {
       const wrap = document.createElement("div");
-      wrap.className = "choices";
-      makeChoices(state.problem).forEach((value) => {
+      wrap.className = state.problem.expressionChoices || state.problem.placeValue?.options ? "choices task-choice-labels" : "choices";
+      const labels = tasks.choiceLabels(state.problem, language);
+      const values = labels ? labels.map((_, index) => index) : makeChoices({ ...state.problem, answer: tasks.response(state.problem) });
+      values.forEach((value) => {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "answer-button";
-        button.textContent = displayAnswer(value, state.problem.answerType);
+        button.textContent = labels ? labels[value] : displayAnswer(value, state.problem.answerType);
         button.addEventListener("click", () => submitAnswer(value));
         wrap.appendChild(button);
       });
@@ -1183,7 +1230,7 @@ function makePowerProblem(max, mastered) {
       if (canAppendKey(state.enteredAnswer, key, state.problem.answerType, state.problem) && state.enteredAnswer.length < 12) state.enteredAnswer += key;
       updateKeypadDisplay();
       sound("tap");
-      if (state.enteredAnswer !== "" && answersEqual(state.enteredAnswer, state.problem.answer, state.problem.answerType)) {
+      if (state.enteredAnswer !== "" && answersEqual(state.enteredAnswer, tasks.response(state.problem), state.problem.answerType)) {
         submitAnswer(state.enteredAnswer);
       }
       return;
@@ -1207,6 +1254,12 @@ function makePowerProblem(max, mastered) {
   function displayAnswer(value, answerType) {
     if (answerType === "decimal") return String(value).replace(".", ",");
     return String(value);
+  }
+
+  function displayProblemResponse(problem) {
+    const labels = tasks.choiceLabels(problem, language);
+    const response = tasks.response(problem);
+    return labels ? labels[response] : displayAnswer(response, problem.answerType);
   }
 
   function keypadSpecialKeys(problem) {
@@ -1288,7 +1341,7 @@ function makePowerProblem(max, mastered) {
     if (state.locked) return;
     state.paceUpdate = null;
     const elapsed = Math.max(.2, (performance.now() - state.startedAt) / 1000);
-    const isCorrect = answersEqual(value, state.problem.answer, state.problem.answerType);
+    const isCorrect = answersEqual(value, tasks.response(state.problem), state.problem.answerType);
     const operationMessage = state.attempt === 1 && !state.problem.isReview
       ? recordOperationAttempt(state.problem.operation, isCorrect)
       : "";
@@ -1296,7 +1349,9 @@ function makePowerProblem(max, mastered) {
     if (isCorrect) {
       state.locked = true;
       const pace = getProfile().personalFastTime;
-      const fastBonus = pace && elapsed <= pace ? 3 : pace && elapsed <= pace * 1.8 ? 2 : 1;
+      const fastBonus = tasks.isPaceComparableTask(state.problem)
+        ? pace && elapsed <= pace ? 3 : pace && elapsed <= pace * 1.8 ? 2 : 1
+        : 2;
       const earned = state.attempt === 1 ? fastBonus : 1;
       state.score += earned;
       state.correct += state.attempt === 1 ? 1 : 0;
@@ -1346,7 +1401,7 @@ function makePowerProblem(max, mastered) {
     state.hintLevel = 2;
     recordResult(false, elapsed, 2);
     showHint(2);
-    $("feedback").textContent = copy.finalAnswer(displayAnswer(state.problem.answer, state.problem.answerType));
+    $("feedback").textContent = copy.finalAnswer(displayProblemResponse(state.problem));
     scheduleAdvance(2300);
   }
 
@@ -1360,6 +1415,7 @@ function makePowerProblem(max, mastered) {
       operation: state.problem.operation,
       answerType: state.problem.answerType,
       answer: state.problem.answer,
+      taskType: state.problem.taskType || "equation",
       success,
       firstTry: success && attempt === 1,
       seconds: Number(elapsed.toFixed(1)),
@@ -1383,7 +1439,7 @@ function makePowerProblem(max, mastered) {
     const profile = getProfile();
     let item = profile.errorQueue.find((entry) => entry.key === problem.key);
     if (!item) {
-      item = { key: problem.key, text: problem.text, a: problem.a, b: problem.b, operator: problem.operator, operation: problem.operation, answerType: problem.answerType, answer: problem.answer, curriculumStage: state.stage, visualCount: problem.visualCount, groupCount: problem.groupCount, groupSize: problem.groupSize, conceptVisual: problem.conceptVisual, correctStreak: 0, lastShown: Date.now() };
+      item = { ...problem, curriculumStage: state.stage, correctStreak: 0, lastShown: Date.now() };
       profile.errorQueue.push(item);
     } else {
       item.correctStreak = 0;
@@ -1396,23 +1452,25 @@ function makePowerProblem(max, mastered) {
     const profile = getProfile();
     const structured = updateStructuredOperationProgress(profile, problem, isFirstAttempt, isCorrect);
     if (structured.handled) {
-      if (isCorrect && isFirstAttempt && !problem.isReview) state.paceUpdate = updatePersonalPace(profile, elapsed);
+      if (isCorrect && isFirstAttempt && !problem.isReview && tasks.isPaceComparableTask(problem)) state.paceUpdate = updatePersonalPace(profile, elapsed);
       saveProfile(profile);
       return structured.message;
     }
     if (problem.isReview || !isFirstAttempt) return "";
     if (!appSettings.automatic) {
-      if (isCorrect) state.paceUpdate = updatePersonalPace(profile, elapsed);
+      if (isCorrect && tasks.isPaceComparableTask(problem)) state.paceUpdate = updatePersonalPace(profile, elapsed);
       saveProfile(profile);
       return "";
     }
+    // Reading a story is not evidence for lowering arithmetic difficulty.
+    if (problem.taskType === "microStory") return "";
     const stageKey = String(profile.currentStage);
     profile.curriculumStats[stageKey] ||= [];
     profile.curriculumStats[stageKey].push(isCorrect ? 1 : 0);
     profile.curriculumStats[stageKey] = profile.curriculumStats[stageKey].slice(-20);
     profile.adaptiveRecentResults.push(isCorrect ? 1 : 0);
     profile.adaptiveRecentResults = profile.adaptiveRecentResults.slice(-5);
-    if (isCorrect) state.paceUpdate = updatePersonalPace(profile, elapsed);
+    if (isCorrect && tasks.isPaceComparableTask(problem)) state.paceUpdate = updatePersonalPace(profile, elapsed);
 
     const recentFive = profile.adaptiveRecentResults;
     const errorCount = recentFive.filter((value) => value === 0).length;
@@ -1610,6 +1668,14 @@ function makePowerProblem(max, mastered) {
     const { a, b, operator, operation } = state.problem;
     const hint = $("hint");
     if (level === 0) { hint.classList.add("hidden"); hint.innerHTML = ""; return; }
+    const taskHint = tasks.hint(state.problem, level, language);
+    if (taskHint) {
+      if (level === 1) hint.textContent = taskHint.text;
+      else hint.innerHTML = `<span>${taskHint.text}</span>${taskHint.html}`;
+      hint.classList.remove("hidden");
+      scheduleFitCheck();
+      return;
+    }
     if (level === 1) {
       hint.textContent = operation === "subtract" ? copy.hintRemaining : copy.hintLookAgain;
       hint.classList.remove("hidden");
@@ -1728,6 +1794,11 @@ function makePowerProblem(max, mastered) {
       total: TOTAL,
       average: Number(average.toFixed(1)),
       score: state.score,
+      taskTypeStats: state.results.reduce((counts, result) => {
+        const type = result.taskType || "equation";
+        counts[type] = (counts[type] || 0) + 1;
+        return counts;
+      }, {}),
       stage: state.stage,
       curriculumVersion: CURRICULUM_VERSION,
       advanced,
@@ -1740,9 +1811,14 @@ function makePowerProblem(max, mastered) {
     $("starsValue").textContent = `${state.score} XP`;
     $("resultTitle").textContent = perfect ? copy.perfectTitle : copy.completeTitle;
     const freshProfile = getProfile();
+    const chapterBefore = curriculumMap.chapterForStage(state.trainingStartStage);
+    const chapterAfter = curriculumMap.chapterForStage(freshProfile.currentStage);
     $("resultNote").textContent = advanced
       ? copy.levelUpNote(freshProfile.currentStage, copy.stageNames[freshProfile.currentStage - 1])
       : `${state.stage === CURRICULUM_STAGE_COUNT ? copy.maxLevelNote : copy.stayNote}${freshProfile.errorQueue.length ? ` ${copy.reviewsLeft(freshProfile.errorQueue.length)}` : ""}`;
+    if (advanced && chapterBefore?.id !== chapterAfter?.id && chapterAfter) {
+      $("resultNote").textContent += ` ${copy.chapterFinished} ${copy.newChapter(chapterAfter[language])}`;
+    }
     renderRewardGoal("result", freshProfile.totalXp);
     $("resultRewardProgress").classList.toggle("hidden", unlocked.length > 0);
     $("rewardReveal").classList.add("hidden");
@@ -2313,6 +2389,8 @@ function makePowerProblem(max, mastered) {
   $("shareButton").addEventListener("click", shareResult);
   $("statsButton").addEventListener("click", showStats);
   $("wardrobeButton").addEventListener("click", showWardrobe);
+  $("mapButton").addEventListener("click", showCurriculumMap);
+  $("closeMapButton").addEventListener("click", () => $("mapDialog").close());
   $("closeWardrobeButton").addEventListener("click", closeWardrobe);
   $("wardrobeDialog").addEventListener("close", () => kapi?.animator?.pause("wardrobe"));
   $("wardrobeItems").addEventListener("click", (event) => {

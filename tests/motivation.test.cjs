@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { environment, root } = require('./helpers/environment.cjs');
+const response = problem => problem.responseAnswer ?? problem.answer;
 
 function rig() {
   const env = environment();
@@ -261,8 +262,8 @@ test('application completes 10/20/30 answers once, with only one final cue', () 
     app.startTraining();
     for (let i = 0; i < total; i++) {
       const count = sounds.length;
-      app.submitAnswer(app.state.problem.answer);
-      app.submitAnswer(app.state.problem.answer); // Duplicate tap is ignored.
+      app.submitAnswer(response(app.state.problem));
+      app.submitAnswer(response(app.state.problem)); // Duplicate tap is ignored.
       if (i === total - 1) assert.equal(sounds.length, count, 'final answer waits for aggregated finale');
       env.advance(350);
       assert.equal(app.state.index, i + 1);
@@ -285,7 +286,7 @@ test('error recovery comes from two actual first-try repeats; retry is not perfe
   const problem = { ...app.state.problem };
   app.submitAnswer(problem.answer + 1);
   assert.equal(app.getProfile().errorQueue.find(x => x.key === problem.key).correctStreak, 0);
-  app.submitAnswer(problem.answer);
+  app.submitAnswer(response(problem));
   assert.equal(app.state.results[0].firstTry, false);
   assert.equal(app.getProfile().errorQueue.find(x => x.key === problem.key).correctStreak, 0);
   assert.equal(app.registerCorrectAnswer(problem), 'errorRecovered');
@@ -293,17 +294,17 @@ test('error recovery comes from two actual first-try repeats; retry is not perfe
   assert.equal(app.getProfile().errorQueue.some(x => x.key === problem.key), false);
   assert.equal(app.registerCorrectAnswer(problem), '');
   env.advance(350);
-  for (let i = 1; i < 10; i++) { app.submitAnswer(app.state.problem.answer); env.advance(350); }
+  for (let i = 1; i < 10; i++) { app.submitAnswer(response(app.state.problem)); env.advance(350); }
   assert.equal(app.getHistory()[0].perfect, false);
   assert.equal(app.machine.state, 'completion');
 });
 
 test('leaving or restarting cancels delayed advancement', () => {
   const env = environment({ app: true }), app = env.sandbox.__app;
-  app.startTraining(); app.submitAnswer(app.state.problem.answer);
+  app.startTraining(); app.submitAnswer(response(app.state.problem));
   app.showScreen(env.elements.get('startScreen'));
   env.advance(1000); assert.equal(app.state.index, 0);
-  app.startTraining(); app.submitAnswer(app.state.problem.answer);
+  app.startTraining(); app.submitAnswer(response(app.state.problem));
   app.startTraining(); env.advance(1000);
   assert.equal(app.state.index, 0);
   assert.equal(app.state.results.length, 0);

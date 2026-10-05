@@ -34,6 +34,7 @@
         <button class="update-button hidden" id="updateButton" type="button">Доступно обновление</button>
         <button class="text-button" id="statsButton" type="button">История занятий</button>
         <button class="text-button" id="wardrobeButton" type="button">Mein Kapi</button>
+        <button class="text-button" id="mapButton" type="button">Lernweg</button>
       </div>
       <div class="mascot-stage start-mascot">
         <div class="spark spark-one">✦</div>
@@ -59,6 +60,7 @@
         <div class="mini-mascot kapi-host" id="gameMascot" aria-hidden="true"><canvas class="kapi-rive-canvas" id="gameMascotCanvas"></canvas></div>
         <div class="feedback" id="feedback" role="status" aria-live="polite">Считай внимательно</div>
         <div class="problem" id="problemText">12 − 5 = ?</div>
+        <div class="task-visual hidden" id="taskVisual" aria-live="off"></div>
         <div class="hint hidden" id="hint" aria-live="polite"></div>
         <div class="answer-area" id="answerArea"></div>
       </div>
@@ -99,6 +101,11 @@
     <p id="wardrobeIntro"></p><div id="wardrobeItems" class="wardrobe-items"></div>
   </dialog>
 
+  <dialog class="map-dialog" id="mapDialog" aria-labelledby="mapTitle">
+    <div class="dialog-head"><h2 id="mapTitle">Lernweg</h2><button class="icon-button" id="closeMapButton" type="button" aria-label="Schließen">×</button></div>
+    <p id="mapIntro"></p><div id="mapChapters" class="map-chapters"></div>
+  </dialog>
+
   <dialog class="settings-dialog" id="settingsDialog">
     <div class="dialog-head">
       <div><span class="eyebrow">KAPI</span><h2 id="settingsTitle">Настройки</h2></div>
@@ -136,6 +143,8 @@
   <script src="kapi-sound.js" defer></script>
   <script src="kapi-motivation.js" defer></script>
   <script src="kapi-rewards.js" defer></script>
+  <script src="kapi-tasks.js" defer></script>
+  <script src="kapi-map.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>

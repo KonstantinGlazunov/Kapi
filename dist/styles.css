@@ -662,3 +662,47 @@ body.force-ultra .submit-button { min-height: 42px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }
+
+.problem.problem-story { max-width: 450px; font-size: clamp(1.15rem, 4vw, 1.6rem); line-height: 1.25; letter-spacing: normal; }
+.task-visual { width: min(100%, 440px); margin: -7px auto 9px; max-height: 110px; overflow: hidden; }
+.task-dots { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 7px; max-width: 210px; margin: auto; color: #0f766e; font-size: 1.3rem; line-height: 1; }
+.task-dots.empty { min-width: 34px; min-height: 34px; border: 2px dashed #8aafa5; border-radius: 8px; }
+.task-frames { display: flex; justify-content: center; flex-wrap: wrap; gap: 7px; }
+.task-frame { display: grid; grid-template-columns: repeat(5, minmax(22px, 28px)); gap: 2px; padding: 4px; border: 2px solid #689a90; border-radius: 9px; }
+.task-cell { width: 100%; aspect-ratio: 1; display: grid; place-items: center; border: 1px solid #9abbb3; border-radius: 5px; color: #0f766e; font-size: 1.05rem; font-weight: 900; }
+.task-cell.filled { background: #d0f2e9; }
+.task-cell.second { background: #ffe5a2; color: #765612; }
+.task-cell.removed { text-decoration: line-through; background: repeating-linear-gradient(45deg,#e4ece7,#e4ece7 4px,#f5b4a5 4px,#f5b4a5 8px); }
+.task-line { position: relative; width: calc(100% - 26px); height: 78px; margin: 0 auto; }
+.task-line-rail { position: absolute; left: 0; right: 0; bottom: 24px; height: 3px; background: #438c80; }
+.task-tick { position: absolute; bottom: 2px; transform: translateX(-50%); min-width: 20px; border-top: 10px solid #438c80; padding-top: 2px; font-size: .75rem; font-weight: 800; }
+.task-tick.start { color: #006d65; font-size: 1rem; }
+.task-tick.end { color: #855014; font-size: 1rem; }
+.task-jump { position: absolute; top: 6px; border-top: 3px solid #df9b1c; border-radius: 50% 50% 0 0; color: #77500a; font-size: .85rem; font-weight: 900; white-space: nowrap; }
+.task-line.hint-highlight .task-jump { border-top-width: 6px; }
+.task-relation { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.task-relation .task-dots { max-width: 110px; font-size: 1rem; gap: 2px; }
+.task-place { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.task-place .task-dots { max-width: 155px; margin: 0; }
+.task-ten { width: 39px; height: 60px; display: grid; place-items: center; background: repeating-linear-gradient(0deg,#68b5ac,#68b5ac 4px,#d1ece1 4px,#d1ece1 6px); border: 2px solid #286f6c; border-radius: 8px; font-weight: 900; }
+.hint .task-frames, .hint .task-line, .hint .task-place { transform: scale(.82); transform-origin: center top; margin-bottom: -12px; }
+.map-dialog { width: min(94vw, 620px); max-height: 88dvh; border: 0; border-radius: 25px; padding: 20px; background: #fffcf4; color: var(--teal-dark); overflow: auto; box-shadow: var(--shadow); }
+.map-dialog::backdrop { background: rgba(13,45,42,.6); }
+.map-chapters { display: grid; gap: 8px; }
+.map-chapter { display: grid; grid-template-columns: 42px 1fr auto; gap: 9px; align-items: center; padding: 10px; border: 2px solid #b8d7cf; border-radius: 15px; background: #fff; }
+.map-chapter.current { border-color: #0f766e; background: #eaf7ee; }
+.map-chapter.locked { opacity: .68; }
+.map-chapter strong { font-size: .94rem; }
+.map-chapter p { margin: 3px 0; font-size: .75rem; color: var(--muted); }
+.map-chapter small { font-size: .72rem; font-weight: 800; }
+.map-marker { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: #dff1ea; font-size: 1.15rem; overflow: hidden; }
+.map-marker img { width: 44px; height: 39px; object-fit: cover; object-position: top; }
+.map-status { font-size: .7rem; font-weight: 900; }
+.task-choice-labels .answer-button { font-size: clamp(1rem, 4vw, 1.3rem); min-height: 58px; }
+.problem.problem-story { margin: 6px 0 10px; }
+body.force-compact .problem.problem-story, body.force-ultra .problem.problem-story { font-size: 1.1rem; }
+body.force-compact .task-visual, body.force-ultra .task-visual { max-height: 75px; margin: 0 auto 3px; }
+body.force-compact .task-frame, body.force-ultra .task-frame { grid-template-columns: repeat(5, 22px); padding: 2px; }
+body.force-compact .task-line, body.force-ultra .task-line { height: 65px; }
+body.force-ultra .mini-mascot { display: block; width: 32px; height: 32px; margin-top: 0; }
+body.force-ultra .task-visual { max-height: 56px; }
