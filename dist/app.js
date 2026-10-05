@@ -11,6 +11,8 @@
   const APP_URL = "https://schitaem-s-kapi.lsdglider.chatgpt.site";
   const INVITE_URL = `${APP_URL}/?install=1`;
   const UNIVERSAL_FAST_TIME = 4;
+  const PERSONAL_RECORD_MIN_RATIO = .10;
+  const rewards = new window.KapiRewardSystem();
   const OPERATION_ORDER = ["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"];
   const OPERATION_MIN_STAGE = { add: 2, subtract: 6, multiply: 19, divide: 21, power: 30, fraction: 31, decimal: 34, negative: 36, root: 39 };
   const CURRICULUM_VERSION = 2;
@@ -143,6 +145,24 @@
     hintLookAgain: "Schau noch einmal genau hin.", hintRemaining: "Was bleibt übrig?",
     speedImprovedTitle: "Du wirst schneller!", personalRecordTitle: "Neuer Rekord!"
   });
+  Object.assign(translations.de, {
+    meinKapi: "Mein Kapi", wardrobeIntro: "Für deinen Fortschritt bekommt Kapi neue Sachen.",
+    wardrobeSlots: { hat: "Kopfbedeckung", glasses: "Brille", neck: "Hals", back: "Rücken", badge: "Abzeichen" },
+    noItem: "Ohne", selected: "Ausgewählt", unlocked: "Freigeschaltet", locked: (xp) => `🔒 ${xp} XP`,
+    xpGoal: (xp, target) => `${xp} / ${target} XP`, nextGoal: (remaining, name) => `Noch ${remaining} XP bis ${name}`,
+    firstReward: "Erstes Abzeichen wartet!", allRewards: "Alle Kapi-Sachen freigeschaltet!",
+    newThings: (count) => count === 1 ? "Neu für Kapi!" : `${count} neue Sachen für Kapi!`,
+    rewardUnlocked: "freigeschaltet", nextTarget: "Nächstes Ziel"
+  });
+  Object.assign(translations.ru, {
+    meinKapi: "Мой Капи", wardrobeIntro: "За твои успехи Капи получает новые вещи.",
+    wardrobeSlots: { hat: "Головной убор", glasses: "Очки", neck: "Шея", back: "Спина", badge: "Значок" },
+    noItem: "Без предмета", selected: "Выбрано", unlocked: "Открыто", locked: (xp) => `🔒 ${xp} XP`,
+    xpGoal: (xp, target) => `${xp} / ${target} XP`, nextGoal: (remaining, name) => `Ещё ${remaining} XP до ${name}`,
+    firstReward: "Первый значок уже ждёт!", allRewards: "Все предметы Капи открыты!",
+    newThings: (count) => count === 1 ? "Новинка для Капи!" : `${count} новых предмета для Капи!`,
+    rewardUnlocked: "открыт", nextTarget: "Следующая цель"
+  });
   translations.ru.homeReactions = {
     flag: ["Ура!", "Вперёд!"],
     party: ["Вот это да!", "Праздник!"],
@@ -183,6 +203,7 @@
   let motivation = null;
   let soundManager = null;
   let advanceTimer = 0;
+  let rewardRevealTimer = 0;
 
   function applyLanguage() {
     copy = translations[language];
@@ -199,6 +220,10 @@
     $("totalXpLabel").textContent = copy.totalXp;
     $("startButton").innerHTML = `${copy.start} <span aria-hidden="true">→</span>`;
     $("statsButton").textContent = copy.history;
+    $("wardrobeButton").textContent = copy.meinKapi;
+    $("wardrobeTitle").textContent = copy.meinKapi;
+    $("wardrobeIntro").textContent = copy.wardrobeIntro;
+    $("closeWardrobeButton").setAttribute("aria-label", copy.close);
     $("speechBubble").textContent = copy.speech;
     $("homeMascot").setAttribute("aria-label", copy.homeMascotAction);
     $("homeStats").setAttribute("aria-label", copy.gameProgress);
@@ -231,6 +256,7 @@
     $("installHomeButton").textContent = copy.installHome;
     $("installContinue").textContent = copy.continueBrowser;
     renderSettingsContent();
+    if (typeof updateHomeStats === "function") updateHomeStats();
     updateSoundButton();
     scheduleFitCheck();
   }
@@ -414,8 +440,9 @@
         const values = Array.isArray(profile.operationStats[operation]) ? profile.operationStats[operation] : [];
         profile.operationStats[operation] = values.filter((value) => value === 0 || value === 1).slice(-10);
       });
+      if (rewards.migrate(profile)) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       return profile;
-    } catch { return defaults; }
+    } catch { rewards.migrate(defaults); return defaults; }
   }
 
   function saveProfile(profile) {
@@ -439,11 +466,52 @@
 
   function updateHomeStats() {
     const profile = getProfile();
+    updateMascotOutfit(profile);
     $("dayStreakValue").textContent = String(profile.dayStreak);
     $("totalXpValue").textContent = String(profile.totalXp);
+    renderRewardGoal("home", profile.totalXp);
     const displayStage = appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
     const stageName = copy.stageNames[displayStage - 1];
     $("startEyebrow").textContent = copy.levelLabel(displayStage, stageName);
+  }
+
+  function rewardName(reward) { return reward[language]; }
+  function renderRewardGoal(surface, totalXp) {
+    const next = rewards.getNextReward(totalXp);
+    const prefix = surface === "home" ? "homeReward" : "resultReward";
+    $(prefix + "Text").textContent = next.allUnlocked ? copy.allRewards : copy.xpGoal(next.currentXp, next.targetXp);
+    $(prefix + "Fill").style.width = `${next.progress * 100}%`;
+    $(prefix + "Next").textContent = next.allUnlocked ? "" : next.currentXp === 0 && surface === "home"
+      ? copy.firstReward : `${surface === "result" ? `${copy.nextTarget}: ` : ""}${copy.nextGoal(next.remainingXp, rewardName(next.reward))}`;
+  }
+
+  function updateMascotOutfit(profile = getProfile()) {
+    kapi?.animator?.setOutfit(profile.equippedOutfit, motivation?.getOutfit() || {});
+  }
+
+  function renderWardrobe() {
+    const profile = getProfile();
+    const slots = ["hat", "glasses", "neck", "back", "badge"];
+    const visible = new Set(rewards.getRewards().filter((reward) => profile.unlockedRewards.includes(reward.id)).map((reward) => reward.id));
+    rewards.getRewards().filter((reward) => !visible.has(reward.id)).slice(0, 3).forEach((reward) => visible.add(reward.id));
+    $("wardrobeItems").innerHTML = slots.map((slot) => `<section class="wardrobe-slot"><strong>${copy.wardrobeSlots[slot]}</strong><div class="wardrobe-options">
+      <button class="wardrobe-item" type="button" data-unequip="${slot}" aria-pressed="${profile.equippedOutfit[slot] === null}">${copy.noItem}${profile.equippedOutfit[slot] === null ? ` · ${copy.selected}` : ""}</button>
+      ${rewards.getRewards().filter((reward) => reward.slot === slot && visible.has(reward.id)).map((reward) => {
+        const unlocked = profile.unlockedRewards.includes(reward.id);
+        const selected = profile.equippedOutfit[slot] === reward.id;
+        return `<button class="wardrobe-item" type="button" data-equip="${reward.id}" aria-label="${rewardName(reward)} · ${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}" aria-pressed="${selected}" ${unlocked ? "" : "disabled"}><img src="assets/cosmetics/${reward.asset}.svg" alt=""><span>${rewardName(reward)}</span><small>${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}</small></button>`;
+      }).join("")}</div></section>`).join("");
+  }
+
+  function showWardrobe() {
+    renderWardrobe();
+    $("wardrobeDialog").showModal();
+    kapi?.animator?.play("idle", { surface: "wardrobe" });
+  }
+
+  function closeWardrobe() {
+    $("wardrobeDialog").close();
+    kapi?.animator?.pause("wardrobe");
   }
 
   function updateSoundButton() {
@@ -1021,6 +1089,7 @@ function makePowerProblem(max, mastered) {
 
   function startTraining() {
     window.clearTimeout(advanceTimer);
+    window.clearTimeout(rewardRevealTimer);
     soundManager?.unlock();
     motivation?.resetSession();
     dismissMotivation();
@@ -1457,7 +1526,7 @@ function makePowerProblem(max, mastered) {
           profile.bestPersonalFastTime = Math.min(profile.bestPersonalFastTime ?? Infinity, newThreshold);
           // Celebrate a meaningful cumulative gain, not every new hundredth of a second.
           const previousMilestone = profile.recordMilestoneTime ?? currentThreshold;
-          if (newThreshold <= previousMilestone * .9) {
+          if (newThreshold <= previousMilestone * (1 - PERSONAL_RECORD_MIN_RATIO)) {
             profile.recordMilestoneTime = newThreshold;
             record = true;
           }
@@ -1659,7 +1728,7 @@ function makePowerProblem(max, mastered) {
       perfect,
       trouble: state.results.filter((item) => !item.firstTry).map((item) => item.key).slice(0, 5)
     };
-    saveSession(session);
+    const unlocked = saveSession(session);
     $("correctValue").textContent = String(state.correct);
     $("averageValue").textContent = `${formatSeconds(average)} ${copy.seconds}`;
     $("starsValue").textContent = `${state.score} XP`;
@@ -1668,11 +1737,29 @@ function makePowerProblem(max, mastered) {
     $("resultNote").textContent = advanced
       ? copy.levelUpNote(freshProfile.currentStage, copy.stageNames[freshProfile.currentStage - 1])
       : `${state.stage === CURRICULUM_STAGE_COUNT ? copy.maxLevelNote : copy.stayNote}${freshProfile.errorQueue.length ? ` ${copy.reviewsLeft(freshProfile.errorQueue.length)}` : ""}`;
+    renderRewardGoal("result", freshProfile.totalXp);
+    $("rewardReveal").classList.add("hidden");
+    $("rewardReveal").innerHTML = "";
     $("progressFill").style.width = "100%";
     showScreen($("resultScreen"));
     const events = [...(state.finalMotivationEvents || []), { type: "trainingComplete", total: TOTAL }];
     if (perfect) events.push({ type: "perfectTraining", total: TOTAL });
     motivation.handle(events, { batchId: "completion", surface: "result" });
+    if (unlocked.length) {
+      rewardRevealTimer = window.setTimeout(() => {
+        const earned = unlocked.map((event) => rewards.getRewards().find((reward) => reward.id === event.rewardId));
+        const profile = getProfile();
+        for (const reward of earned) {
+          if (profile.equippedOutfit[reward.slot] === null) rewards.equip(profile, reward.id);
+        }
+        saveProfile(profile);
+        updateMascotOutfit(profile);
+        $("rewardReveal").innerHTML = `<strong>${copy.newThings(earned.length)}</strong><div>${earned.map((reward) =>
+          `<img src="assets/cosmetics/${reward.asset}.svg" alt="">${rewardName(reward)} ${copy.rewardUnlocked}`).join(" · ")}</div>`;
+        $("rewardReveal").classList.remove("hidden");
+        sound("rewardUnlock");
+      }, perfect ? 2500 : TOTAL === 30 ? 2400 : 2000);
+    }
     state.finalMotivationEvents = [];
     makeConfetti(perfect ? 36 : TOTAL === 10 ? 16 : 28);
   }
@@ -1688,9 +1775,12 @@ function makePowerProblem(max, mastered) {
       profile.dayStreak = profile.lastDay === yesterday ? profile.dayStreak + 1 : 1;
       profile.lastDay = today;
     }
+    const oldXp = profile.totalXp;
     profile.totalXp += session.score;
+    const unlocked = rewards.unlock(profile, oldXp, profile.totalXp);
     saveProfile(profile);
     updateHomeStats();
+    return unlocked;
   }
 
   function localDay(date) {
@@ -1814,6 +1904,7 @@ function makePowerProblem(max, mastered) {
       homeHost: $("homeMascot"),
       gameHost: $("gameMascot"),
       resultHost: $("resultMascot"),
+      wardrobeHost: $("wardrobeMascot"),
       bannerCard: $("motivationPop").querySelector(".motivation-card"),
       bannerImage: $("motivationMascot"),
       bannerBurst: $("motivationBurst")
@@ -2209,6 +2300,19 @@ function makePowerProblem(max, mastered) {
   $("againButton").addEventListener("click", startTraining);
   $("shareButton").addEventListener("click", shareResult);
   $("statsButton").addEventListener("click", showStats);
+  $("wardrobeButton").addEventListener("click", showWardrobe);
+  $("closeWardrobeButton").addEventListener("click", closeWardrobe);
+  $("wardrobeDialog").addEventListener("close", () => kapi?.animator?.pause("wardrobe"));
+  $("wardrobeItems").addEventListener("click", (event) => {
+    const equip = event.target.closest("[data-equip]");
+    const unequip = event.target.closest("[data-unequip]");
+    if (!equip && !unequip) return;
+    const profile = getProfile();
+    if (equip ? !rewards.equip(profile, equip.dataset.equip) : !rewards.unequip(profile, unequip.dataset.unequip)) return;
+    saveProfile(profile);
+    updateMascotOutfit(profile);
+    renderWardrobe();
+  });
   $("resultStatsButton").addEventListener("click", showStats);
   $("closeStatsButton").addEventListener("click", () => $("statsDialog").close());
   $("clearStatsButton").addEventListener("click", () => {
@@ -2268,7 +2372,8 @@ function makePowerProblem(max, mastered) {
   applyLanguage();
   soundManager = new window.KapiSoundManager({ isEnabled: () => state.sound });
   kapi = createKapiController();
-  motivation = new window.KapiMotivationController(kapi, { onReaction: onMotivationReaction });
+  motivation = new window.KapiMotivationController(kapi, { onReaction: onMotivationReaction,
+    onOutfitChange(sessionOutfit) { kapi?.animator?.setOutfit(getProfile().equippedOutfit, sessionOutfit); } });
   if (new URLSearchParams(window.location.search).get("kapiTest") === "1") {
     window.__kapiTest = kapi;
     installMotivationDemo();

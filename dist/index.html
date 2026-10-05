@@ -28,10 +28,12 @@
           <div><span aria-hidden="true">🔥</span><strong id="dayStreakValue">0</strong><small id="dayStreakLabel">дней подряд</small></div>
           <div><span aria-hidden="true">⚡</span><strong id="totalXpValue">0</strong><small id="totalXpLabel">всего XP</small></div>
         </div>
+        <div class="reward-goal" id="homeRewardGoal" aria-live="polite"><strong id="homeRewardText"></strong><span class="reward-track"><span id="homeRewardFill"></span></span><small id="homeRewardNext"></small></div>
         <button class="primary-button" id="startButton" type="button">Начать тренировку <span aria-hidden="true">→</span></button>
         <button class="install-home-button hidden" id="installHomeButton" type="button">App installieren</button>
         <button class="update-button hidden" id="updateButton" type="button">Доступно обновление</button>
         <button class="text-button" id="statsButton" type="button">История занятий</button>
+        <button class="text-button" id="wardrobeButton" type="button">Mein Kapi</button>
       </div>
       <div class="mascot-stage start-mascot">
         <div class="spark spark-one">✦</div>
@@ -74,6 +76,7 @@
           <div><strong id="starsValue">48 XP</strong><span id="xpLabel">опыта</span></div>
         </div>
         <p class="result-note" id="resultNote"></p>
+        <div class="reward-goal result-reward" id="resultRewardGoal" aria-live="polite"><div id="rewardReveal" class="reward-reveal hidden"></div><strong id="resultRewardText"></strong><span class="reward-track"><span id="resultRewardFill"></span></span><small id="resultRewardNext"></small></div>
         <button class="primary-button" id="againButton" type="button">Ещё раз</button>
         <button class="share-button" id="shareButton" type="button">Поделиться результатом</button>
         <button class="text-button" id="resultStatsButton" type="button">Посмотреть историю</button>
@@ -88,6 +91,12 @@
     </div>
     <div id="statsContent"></div>
     <button class="danger-text-button" id="clearStatsButton" type="button">Удалить историю</button>
+  </dialog>
+
+  <dialog class="wardrobe-dialog" id="wardrobeDialog" aria-labelledby="wardrobeTitle">
+    <div class="dialog-head"><h2 id="wardrobeTitle">Mein Kapi</h2><button class="icon-button" id="closeWardrobeButton" type="button" aria-label="Schließen">×</button></div>
+    <div class="wardrobe-mascot kapi-host" id="wardrobeMascot" aria-hidden="true"><canvas class="kapi-rive-canvas"></canvas></div>
+    <p id="wardrobeIntro"></p><div id="wardrobeItems" class="wardrobe-items"></div>
   </dialog>
 
   <dialog class="settings-dialog" id="settingsDialog">
@@ -126,6 +135,7 @@
   <script src="kapi.js" defer></script>
   <script src="kapi-sound.js" defer></script>
   <script src="kapi-motivation.js" defer></script>
+  <script src="kapi-rewards.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>

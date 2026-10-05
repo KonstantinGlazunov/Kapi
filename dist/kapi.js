@@ -168,10 +168,53 @@
       this.surface = "home";
       this.instances = new Map();
       this.images = new Map();
+      this.permanentOutfit = {};
+      this.sessionOutfit = {};
+      this.rewardSystem = null;
       const motionPreference = window.matchMedia?.("(prefers-reduced-motion: reduce)");
       this.reducedMotion = motionPreference?.matches === true;
       motionPreference?.addEventListener?.("change", (event) => { this.reducedMotion = event.matches; });
       Object.values(RIG_PARTS).forEach((source) => this.loadImage(source));
+      ["star-badge", "red-cap", "glasses", "scarf", "backpack", "blue-cap", "medal", "crown"].forEach((name) => this.loadImage(`assets/cosmetics/${name}.svg`));
+    }
+
+    setOutfit(permanent = {}, session = {}) {
+      this.permanentOutfit = { ...permanent };
+      this.sessionOutfit = { ...session };
+    }
+
+    effectiveOutfit(scene) {
+      this.rewardSystem ||= new window.KapiRewardSystem();
+      return this.rewardSystem.getEffectiveOutfit({ equippedOutfit: this.permanentOutfit }, this.sessionOutfit, scene);
+    }
+
+    getAttachmentTransform(slot, pose, limbs) {
+      const head = slot === "hat" || slot === "glasses";
+      return { x: head ? 350 + limbs.headX : 350, y: head ? 190 + limbs.headY : 389,
+        rotation: pose.rotation + (head ? limbs.head : 0),
+        scaleX: (head ? .70 * limbs.headScaleX : .69) * pose.scaleX,
+        scaleY: (head ? .70 * limbs.headScaleY : .69) * pose.scaleY };
+    }
+
+    drawCosmetic(context, slot, id, pose, limbs) {
+      if (!id || id === "party") return; // The party hat is already part of the horn head.
+      const reward = window.KAPI_REWARDS.find((item) => item.id === id);
+      const asset = id === "session-star" ? "star-badge" : reward?.asset;
+      if (!asset) return;
+      const entry = this.loadImage(`assets/cosmetics/${asset}.svg`);
+      if (!entry.ready) return;
+      const attachment = this.getAttachmentTransform(slot, pose, limbs);
+      const bounds = {
+        hat: [-150, -239, 300, 140], glasses: [-181, -84, 362, 104],
+        neck: [-122, -216, 245, 165], back: [-325, -170, 170, 220], badge: [82, -45, 85, 90]
+      }[slot];
+      context.save();
+      context.translate(attachment.x, attachment.y);
+      context.rotate(slot === "hat" || slot === "glasses" ? limbs.head : 0);
+      context.scale(slot === "hat" || slot === "glasses" ? .70 * limbs.headScaleX : .69,
+        slot === "hat" || slot === "glasses" ? .70 * limbs.headScaleY : .69);
+      context.drawImage(entry.image, ...bounds);
+      context.restore();
     }
 
     setSurface(surface) {
@@ -603,6 +646,7 @@
       const drawHead = options.drawHead !== false;
       const requestedHead = options.headAsset || "head";
       const headAsset = this.loadImage(RIG_PARTS[requestedHead]).ready ? requestedHead : "head";
+      const outfit = this.effectiveOutfit(drawHead && headAsset === "headHorn" ? "horn" : options.state === "horn" ? "idle" : options.state || "idle");
       const context = record.context;
       const canvas = record.canvas;
       const unit = Math.min(canvas.width, canvas.height) / 700;
@@ -614,11 +658,14 @@
       context.translate(-350, -350);
 
       if (drawBody) {
+        this.drawCosmetic(context, "back", outfit.back, pose, limbs);
         const flagArm = options.state === "flag" && this.loadImage(RIG_PARTS.armRightFlag).ready;
         const flagWave = Math.sin((options.elapsed || 0) / 1000 * 5.6);
         this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "leg");
         this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "leg");
         this.drawPart(context, "torso", 350, 389, .69, 0, 280.5, 229);
+        this.drawCosmetic(context, "neck", outfit.neck, pose, limbs);
+        this.drawCosmetic(context, "badge", outfit.badge, pose, limbs);
         this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "upper");
         if (flagArm) this.drawPart(context, "armRightFlag", 440, 345, .58, flagWave * .035, 150, 570);
         else this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
@@ -627,7 +674,11 @@
         this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
         if (!flagArm) this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
       }
-      if (drawHead) this.drawPart(context, headAsset, 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215, limbs.headScaleX, limbs.headScaleY);
+      if (drawHead) {
+        this.drawPart(context, headAsset, 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215, limbs.headScaleX, limbs.headScaleY);
+        this.drawCosmetic(context, "hat", outfit.hat, pose, limbs);
+        this.drawCosmetic(context, "glasses", outfit.glasses, pose, limbs);
+      }
       context.restore();
     }
 
@@ -752,10 +803,10 @@
       const current = this.snapshot(record, now);
       this.drawRigPose(record, current.pose, current.limbs, 1, { drawHead: false, state: record.state, elapsed: now - record.stateStartedAt });
       if (record.previousHead !== targetHead && transitionProgress < 1) {
-        this.drawRigPose(record, current.pose, current.limbs, 1 - eased, { drawBody: false, headAsset: record.previousHead });
-        this.drawRigPose(record, current.pose, current.limbs, eased, { drawBody: false, headAsset: targetHead });
+        this.drawRigPose(record, current.pose, current.limbs, 1 - eased, { drawBody: false, headAsset: record.previousHead, state: record.state });
+        this.drawRigPose(record, current.pose, current.limbs, eased, { drawBody: false, headAsset: targetHead, state: record.state });
       } else {
-        this.drawRigPose(record, current.pose, current.limbs, 1, { drawBody: false, headAsset: targetHead });
+        this.drawRigPose(record, current.pose, current.limbs, 1, { drawBody: false, headAsset: targetHead, state: record.state });
         record.previousHead = targetHead;
       }
       this.drawEffects(record, record.state, now - record.stateStartedAt, record.variant);
