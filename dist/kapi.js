@@ -20,8 +20,10 @@
     errorRecovered: { priority: 30, duration: 1050, sound: "recovered" },
     errorMastered: { priority: 35, duration: 1300, sound: "mastered" },
     flag: { priority: 40, duration: 1600, sound: "flag" },
+    speedImproved: { priority: 45, duration: 1250, sound: "speedImproved" },
     horn: { priority: 50, duration: 2100, sound: "party" },
     dance: { priority: 60, duration: 2400, sound: "dance" },
+    personalRecord: { priority: 70, duration: 1550, sound: "personalRecord" },
     levelUp: { priority: 80, duration: 1500, sound: "levelUp", next: "dance", continuationHead: "headLevel" },
     completion: { priority: 90, duration: 1900, sound: "complete20", next: "trainingFinished", continuationHead: "headComplete" },
     perfectTraining: { priority: 95, duration: 2400, sound: "perfect", next: "trainingFinished", continuationHead: "headPerfect" },
@@ -35,6 +37,8 @@
     correct: "assets/capybara.webp",
     wrong: "assets/capybara.webp",
     flag: "assets/kapi-flag.webp",
+    speedImproved: "assets/capybara.webp",
+    personalRecord: "assets/capybara.webp",
     horn: "assets/kapi-party.webp",
     dance: "assets/kapi-dance.webp",
     levelUp: "assets/kapi-handshake.webp",
@@ -307,6 +311,12 @@
           pose.scaleX = 1 + gesture * .012 * strength;
           pose.scaleY = 1 + gesture * .018 * strength;
         }
+      } else if (state === "speedImproved" || state === "personalRecord") {
+        const p = Math.min(1, elapsed / (state === "personalRecord" ? 1550 : 1250));
+        const gesture = Math.sin(p * Math.PI);
+        pose.rotation = p < .42 ? -.025 * gesture : .018 * Math.sin((p - .42) * Math.PI * 3);
+        pose.y = state === "personalRecord" ? -gesture * 9 : -gesture * 3;
+        pose.scaleY = 1 + gesture * (state === "personalRecord" ? .025 : .008);
       } else if (state === "wrong") {
         const p = Math.min(1, elapsed / 1500);
         const reachRaw = p < .24 ? p / .24 : p > .80 ? (1 - p) / .20 : 1;
@@ -445,6 +455,17 @@
           result.leftHip = .02 + gesture * .05 * strength;
           result.rightHip = -.02 - gesture * .05 * strength;
         }
+      } else if (state === "speedImproved" || state === "personalRecord") {
+        const p = Math.min(1, elapsed / (state === "personalRecord" ? 1550 : 1250));
+        const gesture = Math.sin(p * Math.PI);
+        result.head = p < .4 ? -.055 * gesture : .045 * Math.sin((p - .4) * Math.PI * 3);
+        result.headY = gesture * 3;
+        result.leftShoulder = .04 - gesture * .42;
+        result.leftElbow = -1.22 - gesture * .44;
+        if (state === "personalRecord") {
+          result.rightShoulder = -.04 - gesture * .68;
+          result.rightElbow = 1.22 - gesture * 2.1;
+        }
       } else if (state === "wrong") {
         const p = Math.min(1, elapsed / 1500);
         const reachRaw = p < .24 ? p / .24 : p > .80 ? (1 - p) / .20 : 1;
@@ -562,6 +583,8 @@
 
     headAsset(state, variant) {
       if (state === "wrong") return "headWrong";
+      if (state === "speedImproved") return "headNod";
+      if (state === "personalRecord") return "headCheer";
       if (state === "correct") return variant === "nod" ? "headNod" : variant === "hop" ? "headHop" : "headCheer";
       if (state === "errorRecovered") return "headRecovered";
       if (state === "errorMastered") return "headMastered";
@@ -615,7 +638,19 @@
     drawEffects(record, state, elapsed, variant) {
       const context = record.context;
       const unit = Math.min(record.canvas.width, record.canvas.height) / 700;
-      if (state === "wrong") {
+      if (state === "speedImproved" || state === "personalRecord") {
+        const phase = this.reducedMotion ? 0 : Math.min(1, elapsed / 1250);
+        context.save();
+        context.translate(record.canvas.width / 2 - 185 * unit, record.canvas.height / 2 - 160 * unit);
+        context.fillStyle = "#ffffff";
+        context.strokeStyle = "#0f766e";
+        context.lineWidth = 7 * unit;
+        context.beginPath(); context.arc(0, 0, 36 * unit, 0, Math.PI * 2); context.fill(); context.stroke();
+        context.beginPath(); context.moveTo(0, 0);
+        context.lineTo(Math.sin(phase * Math.PI * 1.5) * 22 * unit, -Math.cos(phase * Math.PI * 1.5) * 22 * unit);
+        context.stroke();
+        context.restore();
+      } else if (state === "wrong") {
         const p = Math.min(1, elapsed / 1500);
         const scratchProgress = Math.max(0, Math.min(1, (p - .24) / .56));
         const scratchEnvelope = p >= .24 && p <= .80 ? Math.sin(scratchProgress * Math.PI) : 0;

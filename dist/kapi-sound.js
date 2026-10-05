@@ -8,6 +8,8 @@
     recovered: [[587, 0, .12], [784, .14, .17]],
     mastered: [[523, 0, .10], [659, .12, .10], [784, .24, .22]],
     flag: [[523, 0, .08], [659, .09, .08], [784, .18, .20]],
+    speedImproved: [[880, 0, .035], [880, .12, .035], [1175, .26, .17]],
+    personalRecord: [[880, 0, .035], [880, .12, .035], [1175, .26, .10], [1568, .38, .22]],
     party: [[392, 0, .12], [523, .12, .12], [659, .24, .12], [784, .36, .22]],
     dance: [[659, 0, .08], [784, .1, .08], [880, .2, .08], [784, .3, .08], [988, .4, .18]],
     levelUp: [[392, 0, .12], [523, .14, .12], [659, .28, .12], [784, .44, .28], [523, .44, .28]],
@@ -18,7 +20,7 @@
     tap: [[360, 0, .035]],
     highFive: [[290, 0, .045], [420, .025, .045]]
   };
-  const PRIORITY = { start: 1, correct: 10, wrong: 20, recovered: 30, mastered: 35, flag: 40, party: 50, dance: 60, levelUp: 80, complete10: 90, complete20: 90, complete30: 90, perfect: 95 };
+  const PRIORITY = { start: 1, correct: 10, wrong: 20, recovered: 30, mastered: 35, flag: 40, speedImproved: 45, party: 50, dance: 60, personalRecord: 70, levelUp: 80, complete10: 90, complete20: 90, complete30: 90, perfect: 95 };
   const ALIASES = { streak: "flag", handshake: "levelUp", complete: "complete20" };
   const SAMPLE_SOURCES = {
     start: "assets/sounds/start.wav",

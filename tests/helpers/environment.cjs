@@ -55,7 +55,7 @@ function environment({ app = false, query = '', seed = 0x4b415049 } = {}) {
   vm.createContext(sandbox);
   for (const file of ['kapi.js', 'kapi-sound.js', 'kapi-motivation.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), sandbox, { filename: file });
   if (app) {
-    const expose = 'window.__app = {state, appSettings, startTraining, submitAnswer, getProfile, saveProfile, getHistory, registerProblemError, registerCorrectAnswer, showScreen, makeGeneratedProblem, makeCurriculumProblem, makeChoices, hasCarry, hasBorrow, selectProblem, reconcileOperationsForStage, maximumAllowedStage, get machine(){return kapi}, get motivation(){return motivation}, get sound(){return soundManager}};';
+    const expose = 'window.__app = {state, appSettings, startTraining, submitAnswer, getProfile, saveProfile, getHistory, registerProblemError, registerCorrectAnswer, showScreen, makeGeneratedProblem, makeCurriculumProblem, makeChoices, hasCarry, hasBorrow, selectProblem, reconcileOperationsForStage, maximumAllowedStage, canAppendKey, renderAnswer, updatePersonalPace, get machine(){return kapi}, get motivation(){return motivation}, get sound(){return soundManager}};';
     vm.runInContext(fs.readFileSync(path.join(root, 'app.js'), 'utf8').replace(/\}\)\(\);\s*$/, expose + '\n})();'), sandbox, { filename: 'app.js' });
   }
   return { sandbox, storage, elements, now: () => now, advance(ms) {

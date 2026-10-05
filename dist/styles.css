@@ -446,6 +446,10 @@ body.kapi-demo-active { height: auto; min-height: 100dvh; overflow: auto; }
 .motivation-card[data-kapi-state="horn"] .motivation-art img { animation: party-bounce .55s ease-in-out infinite alternate; }
 .motivation-card[data-kapi-state="dance"] .motivation-art img, .motivation-card[data-kapi-state="trainingFinished"] .motivation-art img { animation: kapi-dance .5s ease-in-out infinite alternate; }
 .motivation-card[data-kapi-state="levelUp"] .motivation-art img { animation: handshake .75s ease-in-out infinite alternate; transform-origin: 45% 65%; }
+.motivation-card[data-kapi-state="speedImproved"] .motivation-art img { animation: happy-hop .9s ease both; }
+.motivation-card[data-kapi-state="personalRecord"] .motivation-art img { animation: party-bounce .8s ease both; }
+.motivation-card[data-kapi-state="speedImproved"] .motivation-art::after,
+.motivation-card[data-kapi-state="personalRecord"] .motivation-art::after { content: "⏱"; position: absolute; z-index: 2; left: 5px; top: 2px; font-size: 2.3rem; line-height: 1; }
 .motivation-copy { position: relative; z-index: 2; text-align: left; }
 .motivation-card strong { display: block; font-size: clamp(1.25rem, 5.5vw, 1.8rem); line-height: 1.02; text-transform: uppercase; letter-spacing: -.03em; }
 .motivation-card span { display: block; margin-top: 7px; font-weight: 900; }

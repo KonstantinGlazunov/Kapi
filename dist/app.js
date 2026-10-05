@@ -135,6 +135,14 @@
     perfectTitle: "Kein einziger Fehler!", perfectNote: "Alles beim ersten Versuch!",
     completedCount: (count) => `${count} Aufgaben geschafft!`, demoTitle: "Kapis Reaktionen testen"
   });
+  Object.assign(translations.ru, {
+    hintLookAgain: "Посмотри ещё раз внимательно.", hintRemaining: "Что останется?",
+    speedImprovedTitle: "Ты считаешь быстрее!", personalRecordTitle: "Новый рекорд!"
+  });
+  Object.assign(translations.de, {
+    hintLookAgain: "Schau noch einmal genau hin.", hintRemaining: "Was bleibt übrig?",
+    speedImprovedTitle: "Du wirst schneller!", personalRecordTitle: "Neuer Rekord!"
+  });
   translations.ru.homeReactions = {
     flag: ["Ура!", "Вперёд!"],
     party: ["Вот это да!", "Праздник!"],
@@ -341,7 +349,7 @@
     const defaults = {
       totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [],
       adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveCorrectStreak: 0, adaptiveRecentResults: [],
-      personalFastTime: null, paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {},
+      personalFastTime: null, bestPersonalFastTime: null, paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {},
       curriculumVersion: CURRICULUM_VERSION, curriculumStats: {},
       multiplicationSequence: { phase: 0, item: 1, mixed: false },
       divisionCoreSequence: { phase: 0, item: 0, mixed: false },
@@ -374,6 +382,12 @@
       profile.personalFastTime = Number.isFinite(Number(profile.personalFastTime)) && Number(profile.personalFastTime) > 0
         ? Math.min(60, Math.max(UNIVERSAL_FAST_TIME, Number(profile.personalFastTime)))
         : null;
+      profile.bestPersonalFastTime = Number.isFinite(Number(profile.bestPersonalFastTime)) && Number(profile.bestPersonalFastTime) > 0
+        ? Math.min(60, Math.max(UNIVERSAL_FAST_TIME, Number(profile.bestPersonalFastTime)))
+        : profile.personalFastTime;
+      if (profile.personalFastTime !== null && profile.bestPersonalFastTime !== null) {
+        profile.bestPersonalFastTime = Math.min(profile.bestPersonalFastTime, profile.personalFastTime);
+      }
       profile.paceCalibration = validPaceSamples(profile.paceCalibration);
       profile.fasterPaceSamples = validPaceSamples(profile.fasterPaceSamples);
       profile.accelerationWindow = Array.isArray(profile.accelerationWindow)
@@ -1022,6 +1036,7 @@ function makePowerProblem(max, mastered) {
   function nextProblem() {
     if (state.index >= TOTAL) return finishTraining();
     state.attempt = 1;
+    state.hintLevel = 0;
     state.locked = false;
     state.enteredAnswer = "";
     state.problem = selectProblem(state.stage, state.index);
@@ -1038,7 +1053,7 @@ function makePowerProblem(max, mastered) {
     $("hint").innerHTML = "";
     $("feedback").textContent = state.index === 0 ? copy.careful : copy.next;
     renderAnswer();
-    if (state.problem.operation === "count" || state.problem.conceptVisual) showHint();
+    if (state.problem.operation === "count" || state.problem.conceptVisual) showHint(2);
   }
 
   function renderAnswer() {
@@ -1067,11 +1082,9 @@ function makePowerProblem(max, mastered) {
           <button class="number-key" type="button" data-key="0">0</button>
           <button class="number-key number-key-action" type="button" data-action="backspace" aria-label="${copy.backspace}">⌫</button>
         </div>
-        <div class="keypad-specials">
-          <button class="number-key number-key-special" type="button" data-key="-">−</button>
-          <button class="number-key number-key-special" type="button" data-key=",">,</button>
-          <button class="number-key number-key-special" type="button" data-key="/">⁄</button>
-        </div>
+        ${keypadSpecialKeys(state.problem).length ? `<div class="keypad-specials">
+          ${keypadSpecialKeys(state.problem).map(([key, label]) => `<button class="number-key number-key-special" type="button" data-key="${key}">${label}</button>`).join("")}
+        </div>` : ""}
         <button class="submit-button" type="button" data-action="submit">${copy.check}</button>`;
       keypad.addEventListener("click", handleKeypadClick);
       area.appendChild(keypad);
@@ -1085,7 +1098,7 @@ function makePowerProblem(max, mastered) {
     if (!button || state.locked) return;
     if (button.dataset.key !== undefined) {
       const key = button.dataset.key;
-      if (canAppendKey(state.enteredAnswer, key, state.problem.answerType) && state.enteredAnswer.length < 12) state.enteredAnswer += key;
+      if (canAppendKey(state.enteredAnswer, key, state.problem.answerType, state.problem) && state.enteredAnswer.length < 12) state.enteredAnswer += key;
       updateKeypadDisplay();
       sound("tap");
       if (state.enteredAnswer !== "" && answersEqual(state.enteredAnswer, state.problem.answer, state.problem.answerType)) {
@@ -1114,11 +1127,20 @@ function makePowerProblem(max, mastered) {
     return String(value);
   }
 
-  function canAppendKey(current, key, answerType) {
-    if (key === "-") return current === "";
-    if (key === ",") return answerType === "decimal" && !current.includes(",") && !current.includes(".");
-    if (key === "/") return answerType === "fraction" && current !== "" && current !== "-" && !current.includes("/");
-    return true;
+  function keypadSpecialKeys(problem) {
+    const keys = [];
+    if (problem?.operation === "negative" || Number(problem?.answer) < 0) keys.push(["-", "−"]);
+    if (problem?.answerType === "decimal") keys.push([",", ","]);
+    if (problem?.answerType === "fraction") keys.push(["/", "⁄"]);
+    return keys;
+  }
+
+  function canAppendKey(current, key, answerType, problem = state.problem) {
+    const allowed = keypadSpecialKeys(problem).map(([value]) => value);
+    if (key === "-") return allowed.includes(key) && current === "";
+    if (key === ",") return allowed.includes(key) && answerType === "decimal" && !current.includes(",") && !current.includes(".");
+    if (key === "/") return allowed.includes(key) && answerType === "fraction" && current !== "" && current !== "-" && !current.includes("/");
+    return /^[0-9]$/.test(key);
   }
 
   function answersEqual(value, answer, answerType) {
@@ -1182,6 +1204,7 @@ function makePowerProblem(max, mastered) {
 
   function submitAnswer(value) {
     if (state.locked) return;
+    state.paceUpdate = null;
     const elapsed = Math.max(.2, (performance.now() - state.startedAt) / 1000);
     const isCorrect = answersEqual(value, state.problem.answer, state.problem.answerType);
     const operationMessage = state.attempt === 1 && !state.problem.isReview
@@ -1206,6 +1229,11 @@ function makePowerProblem(max, mastered) {
       const events = [{ type: "correct" }];
       if (recovery) events.push({ type: recovery });
       if ([3, 6, 10].includes(state.streak)) events.push({ type: "streakMilestone", count: state.streak });
+      if (state.paceUpdate?.improved) {
+        const subtitle = `${formatNumber(state.paceUpdate.previousThreshold)} s → ${formatNumber(state.paceUpdate.newThreshold)} s`;
+        events.push({ type: "speedImproved", subtitle });
+        if (state.paceUpdate.record) events.push({ type: "personalRecord", subtitle });
+      }
       if (reachedNewStage) events.push({ type: "levelUp" });
       if (state.index === TOTAL - 1) {
         // Final-answer rewards and completion are selected in one batch.
@@ -1224,18 +1252,21 @@ function makePowerProblem(max, mastered) {
     if (state.attempt === 1) {
       registerProblemError(state.problem);
       state.attempt = 2;
+      state.hintLevel = 1;
       state.enteredAnswer = "";
       $("feedback").textContent = pick(messages.tryAgain);
       if (adaptiveMessage) showMotivation(adaptiveMessage, copy.adaptiveAdjusted, null, "wrong");
-      showHint();
+      showHint(1);
       renderAnswer();
       return;
     }
 
     state.locked = true;
+    state.hintLevel = 2;
     recordResult(false, elapsed, 2);
+    showHint(2);
     $("feedback").textContent = copy.finalAnswer(displayAnswer(state.problem.answer, state.problem.answerType));
-    scheduleAdvance(1300);
+    scheduleAdvance(2300);
   }
 
   function recordResult(success, elapsed, attempt) {
@@ -1284,13 +1315,13 @@ function makePowerProblem(max, mastered) {
     const profile = getProfile();
     const structured = updateStructuredOperationProgress(profile, problem, isFirstAttempt, isCorrect);
     if (structured.handled) {
-      if (isCorrect && isFirstAttempt) updatePersonalPace(profile, elapsed);
+      if (isCorrect && isFirstAttempt && !problem.isReview) state.paceUpdate = updatePersonalPace(profile, elapsed);
       saveProfile(profile);
       return structured.message;
     }
     if (problem.isReview || !isFirstAttempt) return "";
     if (!appSettings.automatic) {
-      if (isCorrect) updatePersonalPace(profile, elapsed);
+      if (isCorrect) state.paceUpdate = updatePersonalPace(profile, elapsed);
       saveProfile(profile);
       return "";
     }
@@ -1300,7 +1331,7 @@ function makePowerProblem(max, mastered) {
     profile.curriculumStats[stageKey] = profile.curriculumStats[stageKey].slice(-20);
     profile.adaptiveRecentResults.push(isCorrect ? 1 : 0);
     profile.adaptiveRecentResults = profile.adaptiveRecentResults.slice(-5);
-    if (isCorrect) updatePersonalPace(profile, elapsed);
+    if (isCorrect) state.paceUpdate = updatePersonalPace(profile, elapsed);
 
     const recentFive = profile.adaptiveRecentResults;
     const errorCount = recentFive.filter((value) => value === 0).length;
@@ -1397,24 +1428,35 @@ function makePowerProblem(max, mastered) {
     if (profile.personalFastTime === null) {
       profile.paceCalibration.push(elapsed);
       profile.paceCalibration = profile.paceCalibration.slice(-3);
-      if (profile.paceCalibration.length < 3) return false;
+      if (profile.paceCalibration.length < 3) return { fast: false, improved: false, record: false };
       profile.personalFastTime = Math.max(UNIVERSAL_FAST_TIME, median(profile.paceCalibration));
+      profile.bestPersonalFastTime = Math.min(profile.bestPersonalFastTime ?? Infinity, profile.personalFastTime);
       profile.paceCalibration = [];
       profile.fasterPaceSamples = [];
-      return isPersonallyFast(elapsed, profile.personalFastTime);
+      return { fast: isPersonallyFast(elapsed, profile.personalFastTime), improved: false, record: false };
     }
 
     const currentThreshold = profile.personalFastTime;
+    let improved = false;
+    let record = false;
     if (elapsed < currentThreshold) {
       profile.fasterPaceSamples.push(elapsed);
       profile.fasterPaceSamples = profile.fasterPaceSamples.slice(-3);
       if (profile.fasterPaceSamples.length === 3) {
         const newThreshold = Math.max(UNIVERSAL_FAST_TIME, median(profile.fasterPaceSamples));
-        if (newThreshold < currentThreshold) profile.personalFastTime = newThreshold;
+        if (newThreshold < currentThreshold) {
+          profile.personalFastTime = newThreshold;
+          improved = true;
+          if (profile.bestPersonalFastTime === null || newThreshold < profile.bestPersonalFastTime) {
+            profile.bestPersonalFastTime = newThreshold;
+            record = true;
+          }
+        }
         profile.fasterPaceSamples = [];
       }
     }
-    return isPersonallyFast(elapsed, currentThreshold);
+    return { fast: isPersonallyFast(elapsed, currentThreshold), improved, record,
+      previousThreshold: currentThreshold, newThreshold: profile.personalFastTime };
   }
 
   function isPersonallyFast(elapsed, personalThreshold) {
@@ -1479,13 +1521,20 @@ function makePowerProblem(max, mastered) {
     nextProblem();
   }
 
-  function showHint() {
+  function showHint(level = state.hintLevel) {
     const { a, b, operator, operation } = state.problem;
     const hint = $("hint");
+    if (level === 0) { hint.classList.add("hidden"); hint.innerHTML = ""; return; }
+    if (level === 1) {
+      hint.textContent = operation === "subtract" ? copy.hintRemaining : copy.hintLookAgain;
+      hint.classList.remove("hidden");
+      scheduleFitCheck();
+      return;
+    }
     let dots = "";
     if (operation === "count") {
       for (let i = 0; i < state.problem.visualCount; i += 1) dots += `<span class="counter"></span>`;
-      hint.innerHTML = `<span>${copy.countHint}</span><div class="counter-line" aria-hidden="true">${dots || "0"}</div>`;
+      hint.innerHTML = `<span>${copy.countHint}</span><div class="counter-line" aria-hidden="true">${dots}</div>`;
     } else if (state.problem.conceptVisual && state.problem.groupCount && state.problem.groupSize) {
       const groups = Array.from({ length: state.problem.groupCount }, () => `<div class="addend-card"><div class="addend-dots">${Array.from({ length: state.problem.groupSize }, () => `<span class="counter"></span>`).join("")}</div></div>`).join("");
       hint.innerHTML = `<span>${operation === "divide" ? copy.sharingQuestion(a, b) : copy.genericHint}</span><div class="addition-groups concept-groups" aria-hidden="true">${groups}</div>`;
@@ -1709,11 +1758,13 @@ function makePowerProblem(max, mastered) {
     const titles = {
       errorRecovered: copy.recoveredTitle, errorMastered: copy.masteredTitle,
       streak3: copy.rewardFlag, streak6: copy.rewardParty, streak10: copy.rewardDance,
+      speedImproved: copy.speedImprovedTitle, personalRecord: copy.personalRecordTitle,
       levelUp: copy.levelUpTitle, trainingComplete: copy.completeTitle, perfectTraining: copy.perfectTitle
     };
     const subtitles = {
       errorRecovered: copy.recoveredNote, errorMastered: copy.masteredNote,
       streak3: copy.rightInRow(3), streak6: copy.rightInRow(6), streak10: copy.rightInRow(10),
+      speedImproved: reaction.subtitle, personalRecord: reaction.subtitle,
       levelUp: context.notice || copy.rewardHandshake,
       trainingComplete: copy.completedCount(reaction.total), perfectTraining: copy.perfectNote
     };

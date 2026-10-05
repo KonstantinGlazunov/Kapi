@@ -43,6 +43,48 @@ test('perfect completion outranks final-answer milestones, looping silently', ()
   assert.equal(r.motivation.getOutfit().special, 'perfect');
 });
 
+test('speed and record events obey priority and select one scene per answer', () => {
+  for (const [events, expected, sound] of [
+    [['correct', 'speedImproved'], 'speedImproved', 'speedImproved'],
+    [['correct', 'speedImproved', 'personalRecord'], 'personalRecord', 'personalRecord'],
+    [['personalRecord', 'levelUp'], 'levelUp', 'levelUp'],
+    [['personalRecord', { type: 'trainingComplete', total: 20 }, 'perfectTraining'], 'perfectTraining', 'perfect']
+  ]) {
+    const r = rig();
+    const chosen = r.motivation.handle(events, { batchId: 'answer' });
+    assert.equal(chosen.type, expected);
+    assert.deepEqual(r.sounds, [sound]);
+    assert.equal(r.reactions.length, 1);
+    assert.equal(r.motivation.handle(events, { batchId: 'answer' }), null);
+  }
+});
+
+test('speed sound obeys mute and reduced motion keeps readable static poses', () => {
+  const { sandbox } = environment();
+  const ctx = audioContext();
+  let enabled = false;
+  const sound = new sandbox.KapiSoundManager({ isEnabled: () => enabled, contextFactory: () => ctx });
+  sound.unlock();
+  assert.equal(sound.play('speedImproved'), false);
+  assert.equal(sound.play('personalRecord'), false);
+  assert.equal(ctx.nodes.length, 0);
+  enabled = true;
+  sound.unlock();
+  assert.equal(sound.play('speedImproved'), true);
+  assert.ok(ctx.nodes.length > 0);
+  sound.setEnabled(false);
+  enabled = false;
+  assert.equal(sound.play('personalRecord'), false);
+
+  const animator = Object.create(sandbox.CanvasKapiAnimator.prototype);
+  animator.reducedMotion = true;
+  for (const scene of ['speedImproved', 'personalRecord']) {
+    assert.deepEqual(animator.pose(scene, 0), animator.pose(scene, 1000));
+    assert.deepEqual(animator.limbPose(scene, 0), animator.limbPose(scene, 1000));
+    assert.notEqual(animator.headAsset(scene), 'head');
+  }
+});
+
 test('10, 20 and 30 task completions have separate duration and sound', () => {
   for (const [total, duration] of [[10, 1400], [20, 1900], [30, 2300]]) {
     const r = rig();

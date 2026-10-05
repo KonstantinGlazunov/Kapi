@@ -8,8 +8,10 @@
     errorRecovered: { priority: 30, scene: "errorRecovered", sound: "recovered", banner: true },
     errorMastered: { priority: 35, scene: "errorMastered", sound: "mastered", banner: true },
     streak3: { priority: 40, scene: "flag", sound: "flag", banner: true },
+    speedImproved: { priority: 45, scene: "speedImproved", sound: "speedImproved", banner: true },
     streak6: { priority: 50, scene: "horn", sound: "party", banner: true },
     streak10: { priority: 60, scene: "dance", sound: "dance", banner: true },
+    personalRecord: { priority: 70, scene: "personalRecord", sound: "personalRecord", banner: true },
     levelUp: { priority: 80, scene: "levelUp", sound: "levelUp", banner: true },
     trainingComplete: { priority: 90, scene: "completion", sound: "complete20", banner: true },
     perfectTraining: { priority: 95, scene: "perfectTraining", sound: "perfect", banner: true }
