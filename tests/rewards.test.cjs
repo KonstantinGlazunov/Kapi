@@ -130,14 +130,71 @@ test('completion groups all unlocks after final scene and emits one sound', () =
   app.finishTraining();
   assert.equal(app.getProfile().totalXp, 100);
   assert.equal(env.elements.get('rewardReveal').classList.contains('hidden'), true);
+  assert.equal(env.elements.get('resultRewardProgress').classList.contains('hidden'), true, 'next goal waits for the reveal');
   assert.equal(env.elements.get('resultRewardText').textContent, '100 / 140 XP');
   env.advance(2100);
   assert.equal(env.elements.get('rewardReveal').classList.contains('hidden'), false);
+  assert.equal(env.elements.get('resultRewardProgress').classList.contains('hidden'), true);
+  assert.equal(app.machine.state, 'rewardReveal');
   assert.ok(env.elements.get('rewardReveal').innerHTML.includes('3 neue Sachen'));
   assert.equal(sounds.filter((type) => type === 'rewardUnlock').length, 1);
   assert.equal(app.getProfile().unlockedRewards.length, 3);
   assert.equal(app.getProfile().equippedOutfit.hat, 'hat-red');
   assert.equal(app.getProfile().equippedOutfit.glasses, 'glasses');
+  env.advance(1500);
+  assert.equal(env.elements.get('resultRewardProgress').classList.contains('hidden'), false);
+  assert.equal(app.machine.state, 'trainingFinished');
+  assert.ok(env.elements.get('resultRewardNext').textContent.includes('Noch 40 XP'));
+});
+
+test('no new item shows the next goal immediately and does not play reward scene', () => {
+  const { env, app } = setup(true);
+  app.state.score = 1;
+  app.state.results = [];
+  app.finishTraining();
+  assert.equal(env.elements.get('resultRewardProgress').classList.contains('hidden'), false);
+  env.advance(4000);
+  assert.equal(env.elements.get('rewardReveal').classList.contains('hidden'), true);
+  assert.equal(app.machine.state, 'trainingFinished');
+});
+
+test('reward reaction shows item with finite motion and reduced-motion static pose', () => {
+  const { app } = setup(true);
+  const animator = app.machine.animator;
+  const normal = animator.pose('rewardReveal', 800, 'hop');
+  assert.ok(Object.values(normal).every(Number.isFinite));
+  assert.notEqual(normal.y, 0);
+  assert.equal(animator.headAsset('rewardReveal', 'hop'), 'headCheer');
+  animator.reducedMotion = true;
+  const staticPose = animator.pose('rewardReveal', 800, 'hop');
+  assert.equal(staticPose.y, 0);
+  assert.ok(Object.values(animator.limbPose('rewardReveal', 800, 'hop')).every(Number.isFinite));
+  const entry = animator.loadImage('assets/cosmetics/star-badge.svg');
+  entry.ready = true;
+  let drawn = 0;
+  const context = { save() {}, restore() {}, translate() {}, beginPath() {}, arc() {}, fill() {}, drawImage() { drawn++; } };
+  animator.drawEffects({ context, canvas: { width: 150, height: 150 }, rewardAsset: 'star-badge' }, 'rewardReveal', 800, 'hop');
+  assert.equal(drawn, 1);
+});
+
+test('perfect final scene finishes before reward reveal; leaving result cancels the later goal', () => {
+  const { env, app } = setup(true);
+  const profile = app.getProfile();
+  profile.totalXp = 19;
+  app.saveProfile(profile);
+  app.state.score = 20;
+  app.state.correct = 20;
+  app.state.results = Array.from({ length: 20 }, () => ({ firstTry: true, seconds: 3 }));
+  app.finishTraining();
+  assert.equal(app.machine.state, 'perfectTraining');
+  env.advance(2400);
+  assert.equal(app.machine.state, 'trainingFinished');
+  assert.equal(env.elements.get('rewardReveal').classList.contains('hidden'), true);
+  env.advance(100);
+  assert.equal(app.machine.state, 'rewardReveal');
+  app.showScreen(env.elements.get('startScreen'));
+  env.advance(1700);
+  assert.equal(env.elements.get('resultRewardProgress').classList.contains('hidden'), true);
 });
 
 test('muted unlock tone is suppressed by the existing sound manager', () => {

@@ -204,6 +204,7 @@
   let soundManager = null;
   let advanceTimer = 0;
   let rewardRevealTimer = 0;
+  let rewardGoalTimer = 0;
 
   function applyLanguage() {
     copy = translations[language];
@@ -524,6 +525,10 @@
 
   function showScreen(target) {
     if (target !== $("gameScreen")) window.clearTimeout(advanceTimer);
+    if (target !== $("resultScreen")) {
+      window.clearTimeout(rewardRevealTimer);
+      window.clearTimeout(rewardGoalTimer);
+    }
     dismissMotivation();
     soundManager?.stopAll();
     screens.forEach((screen) => screen.classList.toggle("active", screen === target));
@@ -1090,6 +1095,7 @@ function makePowerProblem(max, mastered) {
   function startTraining() {
     window.clearTimeout(advanceTimer);
     window.clearTimeout(rewardRevealTimer);
+    window.clearTimeout(rewardGoalTimer);
     soundManager?.unlock();
     motivation?.resetSession();
     dismissMotivation();
@@ -1738,6 +1744,7 @@ function makePowerProblem(max, mastered) {
       ? copy.levelUpNote(freshProfile.currentStage, copy.stageNames[freshProfile.currentStage - 1])
       : `${state.stage === CURRICULUM_STAGE_COUNT ? copy.maxLevelNote : copy.stayNote}${freshProfile.errorQueue.length ? ` ${copy.reviewsLeft(freshProfile.errorQueue.length)}` : ""}`;
     renderRewardGoal("result", freshProfile.totalXp);
+    $("resultRewardProgress").classList.toggle("hidden", unlocked.length > 0);
     $("rewardReveal").classList.add("hidden");
     $("rewardReveal").innerHTML = "";
     $("progressFill").style.width = "100%";
@@ -1747,6 +1754,8 @@ function makePowerProblem(max, mastered) {
     motivation.handle(events, { batchId: "completion", surface: "result" });
     if (unlocked.length) {
       rewardRevealTimer = window.setTimeout(() => {
+        if (!$("resultScreen").classList.contains("active")) return;
+        dismissMotivation();
         const earned = unlocked.map((event) => rewards.getRewards().find((reward) => reward.id === event.rewardId));
         const profile = getProfile();
         for (const reward of earned) {
@@ -1757,7 +1766,10 @@ function makePowerProblem(max, mastered) {
         $("rewardReveal").innerHTML = `<strong>${copy.newThings(earned.length)}</strong><div>${earned.map((reward) =>
           `<img src="assets/cosmetics/${reward.asset}.svg" alt="">${rewardName(reward)} ${copy.rewardUnlocked}`).join(" · ")}</div>`;
         $("rewardReveal").classList.remove("hidden");
-        sound("rewardUnlock");
+        kapi.trigger("rewardReveal", { surface: "result", rewardAsset: earned[0].asset });
+        rewardGoalTimer = window.setTimeout(() => {
+          $("resultRewardProgress").classList.remove("hidden");
+        }, 1600);
       }, perfect ? 2500 : TOTAL === 30 ? 2400 : 2000);
     }
     state.finalMotivationEvents = [];

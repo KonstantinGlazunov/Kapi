@@ -27,6 +27,7 @@
     levelUp: { priority: 80, duration: 1500, sound: "levelUp", next: "dance", continuationHead: "headLevel" },
     completion: { priority: 90, duration: 1900, sound: "complete20", next: "trainingFinished", continuationHead: "headComplete" },
     perfectTraining: { priority: 95, duration: 2400, sound: "perfect", next: "trainingFinished", continuationHead: "headPerfect" },
+    rewardReveal: { priority: 96, duration: 1600, sound: "rewardUnlock", next: "trainingFinished", continuationHead: "headCheer" },
     trainingFinished: { priority: 90, loop: true }
   };
 
@@ -360,6 +361,11 @@
         pose.rotation = p < .42 ? -.025 * gesture : .018 * Math.sin((p - .42) * Math.PI * 3);
         pose.y = state === "personalRecord" ? -gesture * 9 : -gesture * 3;
         pose.scaleY = 1 + gesture * (state === "personalRecord" ? .025 : .008);
+      } else if (state === "rewardReveal") {
+        const p = Math.min(1, elapsed / 1600);
+        pose.rotation = p < .42 ? -.04 * Math.sin(p / .42 * Math.PI) : .018 * Math.sin((p - .42) / .58 * Math.PI * 2);
+        pose.y = p < .42 ? 2 : -7 * Math.sin((p - .42) / .58 * Math.PI);
+        pose.scaleY = 1 + (p < .42 ? 0 : .02 * Math.sin((p - .42) / .58 * Math.PI));
       } else if (state === "wrong") {
         const p = Math.min(1, elapsed / 1500);
         const reachRaw = p < .24 ? p / .24 : p > .80 ? (1 - p) / .20 : 1;
@@ -509,6 +515,14 @@
           result.rightShoulder = -.04 - gesture * .68;
           result.rightElbow = 1.22 - gesture * 2.1;
         }
+      } else if (state === "rewardReveal") {
+        const p = Math.min(1, elapsed / 1600);
+        const nod = p < .46 ? Math.sin(p / .46 * Math.PI) : 0;
+        const cheer = p < .46 ? 0 : Math.sin((p - .46) / .54 * Math.PI);
+        result.head = -.055 * nod + .035 * Math.sin(Math.max(0, p - .46) * Math.PI * 2);
+        result.headX = -5 * nod;
+        result.rightShoulder = -.04 - cheer * .75;
+        result.rightElbow = 1.22 - cheer * 2.2;
       } else if (state === "wrong") {
         const p = Math.min(1, elapsed / 1500);
         const reachRaw = p < .24 ? p / .24 : p > .80 ? (1 - p) / .20 : 1;
@@ -626,6 +640,7 @@
 
     headAsset(state, variant) {
       if (state === "wrong") return "headWrong";
+      if (state === "rewardReveal") return "headCheer";
       if (state === "speedImproved") return "headNod";
       if (state === "personalRecord") return "headCheer";
       if (state === "correct") return variant === "nod" ? "headNod" : variant === "hop" ? "headHop" : "headCheer";
@@ -689,7 +704,20 @@
     drawEffects(record, state, elapsed, variant) {
       const context = record.context;
       const unit = Math.min(record.canvas.width, record.canvas.height) / 700;
-      if (state === "speedImproved" || state === "personalRecord") {
+      if (state === "rewardReveal" && record.rewardAsset) {
+        const entry = this.loadImage(`assets/cosmetics/${record.rewardAsset}.svg`);
+        if (!entry.ready) return;
+        const progress = this.reducedMotion ? 1 : Math.min(1, elapsed / 900);
+        const rise = this.reducedMotion ? 0 : Math.sin(progress * Math.PI) * 11;
+        context.save();
+        context.translate(record.canvas.width / 2 - 205 * unit, record.canvas.height / 2 - (120 + rise) * unit);
+        context.fillStyle = "#fff1bc";
+        context.beginPath();
+        context.arc(0, 0, 67 * unit, 0, Math.PI * 2);
+        context.fill();
+        context.drawImage(entry.image, -49 * unit, -49 * unit, 98 * unit, 98 * unit);
+        context.restore();
+      } else if (state === "speedImproved" || state === "personalRecord") {
         const phase = this.reducedMotion ? 0 : Math.min(1, elapsed / 1250);
         context.save();
         context.translate(record.canvas.width / 2 - 185 * unit, record.canvas.height / 2 - 160 * unit);
@@ -829,6 +857,7 @@
       record.transitionFrom = this.snapshot(record, now);
       record.state = state;
       record.variant = variant;
+      record.rewardAsset = options.rewardAsset || null;
       record.headOverride = options.headAsset || null;
       record.stateStartedAt = now;
       record.transitionStartedAt = now;
@@ -905,7 +934,7 @@
       if (!next) return false;
       const current = STATE_CONFIG[this.state] || STATE_CONFIG.idle;
 
-      if (this.state === "trainingFinished" && state !== "trainingFinished") return false;
+      if (this.state === "trainingFinished" && state !== "trainingFinished" && state !== "rewardReveal") return false;
       if (state === "idle") {
         this.enter("idle", { surface: options.surface || this.surface }, true);
         return true;
