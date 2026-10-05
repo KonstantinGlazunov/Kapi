@@ -5,8 +5,14 @@ const path = require('node:path');
 const vm = require('node:vm');
 const root = path.join(__dirname, '..', 'dist');
 
-function environment({ app = false, query = '' } = {}) {
+function environment({ app = false, query = '', seed = 0x4b415049 } = {}) {
   let now = 0, sequence = 0;
+  let randomState = seed >>> 0;
+  const seededMath = Object.create(Math);
+  seededMath.random = () => {
+    randomState = (Math.imul(randomState, 1664525) + 1013904223) >>> 0;
+    return randomState / 0x100000000;
+  };
   const timers = new Map(), elements = new Map(), storage = new Map();
   class Element {
     constructor() {
@@ -33,7 +39,7 @@ function environment({ app = false, query = '' } = {}) {
   document.getElementById('startScreen').classList.add('active');
   document.getElementById('motivationPop').classList.add('hidden');
   const sandbox = {
-    console, document, URL, URLSearchParams, Intl,
+    console, document, URL, URLSearchParams, Intl, Math: seededMath,
     performance: { now: () => now },
     navigator: { userAgent: 'test', language: 'ru-RU' },
     location: { search: query, origin: 'https://example.test', href: 'https://example.test/' },
@@ -49,7 +55,7 @@ function environment({ app = false, query = '' } = {}) {
   vm.createContext(sandbox);
   for (const file of ['kapi.js', 'kapi-sound.js', 'kapi-motivation.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), sandbox, { filename: file });
   if (app) {
-    const expose = 'window.__app = {state, appSettings, startTraining, submitAnswer, getProfile, saveProfile, getHistory, registerProblemError, registerCorrectAnswer, showScreen, get machine(){return kapi}, get motivation(){return motivation}, get sound(){return soundManager}};';
+    const expose = 'window.__app = {state, appSettings, startTraining, submitAnswer, getProfile, saveProfile, getHistory, registerProblemError, registerCorrectAnswer, showScreen, makeCurriculumProblem, makeChoices, hasCarry, hasBorrow, get machine(){return kapi}, get motivation(){return motivation}, get sound(){return soundManager}};';
     vm.runInContext(fs.readFileSync(path.join(root, 'app.js'), 'utf8').replace(/\}\)\(\);\s*$/, expose + '\n})();'), sandbox, { filename: 'app.js' });
   }
   return { sandbox, storage, elements, now: () => now, advance(ms) {
@@ -267,6 +273,117 @@ test('loaded scene samples replace oscillator patterns and remain interruptible'
   assert.equal(ctx.sources[0].started, true);
   sound.setEnabled(false);
   assert.equal(ctx.sources[0].cancelled, true);
+});
+
+test('curriculum stages 1-14 keep their mathematical contracts across 28,000 generated problems', async t => {
+  const env = environment({ app: true, seed: 0x14002026 });
+  const app = env.sandbox.__app;
+  const allowedOperations = {
+    1: ['count'],
+    2: ['add'], 3: ['add'], 4: ['add'], 5: ['add'],
+    6: ['subtract'], 7: ['subtract'], 8: ['add', 'subtract'],
+    9: ['add'], 10: ['add'], 11: ['subtract'], 12: ['add'], 13: ['subtract'],
+    14: ['add', 'subtract']
+  };
+  const expectedOperator = { count: '', add: '+', subtract: '−' };
+
+  for (let stage = 1; stage <= 14; stage += 1) {
+    await t.test(`stage ${stage}: 2,000 valid problems and answer sets`, () => {
+      const profile = app.getProfile();
+      profile.currentStage = stage;
+      app.state.stage = stage;
+      const seen = new Set();
+
+      for (let index = 0; index < 2000; index += 1) {
+        const problem = app.makeCurriculumProblem(stage, index, profile);
+        const label = `stage ${stage}, sample ${index}: ${problem.text}`;
+
+        assert.ok(allowedOperations[stage].includes(problem.operation), `${label} has allowed operation`);
+        assert.equal(problem.operator, expectedOperator[problem.operation], `${label} has matching operator`);
+        assert.equal(problem.curriculumStage, stage, `${label} keeps its curriculum stage`);
+        assert.equal(problem.mode, index % 2 === 0 ? 'choice' : 'input', `${label} alternates answer mode`);
+        assert.ok(Number.isInteger(problem.a), `${label} has integer first operand`);
+        assert.ok(Number.isInteger(problem.b), `${label} has integer second operand`);
+        assert.ok(Number.isInteger(problem.answer), `${label} has integer answer`);
+        assert.ok(problem.a >= 0 && problem.b >= 0 && problem.answer >= 0, `${label} never uses a negative value`);
+        assert.ok(problem.answer <= (stage <= 8 ? 10 : 20), `${label} stays inside its answer range`);
+
+        const choices = app.makeChoices(problem);
+        assert.equal(choices.length, 4, `${label} has four choices`);
+        assert.equal(new Set(choices.map(String)).size, 4, `${label} has four unique choices`);
+        assert.ok(choices.some(value => value === problem.answer), `${label} includes the correct choice`);
+        assert.ok(choices.every(value => Number.isInteger(value) && value >= 0), `${label} choices are non-negative integers`);
+
+        if (problem.operation === 'add') {
+          assert.equal(problem.answer, problem.a + problem.b, `${label} addition is correct`);
+          seen.add(`add:${app.hasCarry(problem.a, problem.b) ? 'carry' : 'plain'}`);
+        } else if (problem.operation === 'subtract') {
+          assert.equal(problem.answer, problem.a - problem.b, `${label} subtraction is correct`);
+          assert.ok(problem.a >= problem.b, `${label} subtraction cannot become negative`);
+          seen.add(`subtract:${app.hasBorrow(problem.a, problem.b) ? 'borrow' : 'plain'}`);
+        } else {
+          assert.equal(problem.answer, problem.a, `${label} count answer matches the shown amount`);
+          assert.equal(problem.visualCount, problem.answer, `${label} visual count matches the answer`);
+        }
+
+        switch (stage) {
+          case 1:
+            assert.ok(problem.answer >= 0 && problem.answer <= 5, label);
+            break;
+          case 2:
+            assert.ok(problem.a >= 0 && problem.b >= 0 && problem.b <= 1 && problem.answer <= 5, label);
+            break;
+          case 3:
+            assert.ok(problem.a >= 1 && problem.a <= 4 && problem.b >= 1 && problem.b <= 4 && problem.answer <= 5, label);
+            break;
+          case 4:
+            assert.ok(problem.a >= 1 && problem.b >= 1 && problem.answer <= 10, label);
+            break;
+          case 5:
+            assert.ok(problem.a >= 2 && problem.b >= 2 && problem.answer <= 10, label);
+            break;
+          case 6:
+            assert.ok(problem.a >= problem.b && problem.a <= 5 && problem.b >= 1 && problem.b <= 2, label);
+            break;
+          case 7:
+            assert.ok(problem.a >= 4 && problem.a <= 10 && problem.b >= 2 && problem.b <= problem.a, label);
+            break;
+          case 8:
+            if (problem.operation === 'add') assert.ok(problem.a >= 2 && problem.b >= 2 && problem.answer <= 10, label);
+            else assert.ok(problem.a >= 4 && problem.a <= 10 && problem.b >= 2 && problem.b <= problem.a, label);
+            break;
+          case 9:
+            assert.ok(problem.a === 10 && problem.b >= 1 && problem.b <= 9 && problem.answer >= 11 && problem.answer <= 19, label);
+            break;
+          case 10:
+            assert.ok(problem.a >= 11 && problem.a <= 18 && problem.b >= 1 && problem.b <= 9 && problem.answer <= 20, label);
+            assert.equal(app.hasCarry(problem.a, problem.b), false, `${label} must not carry`);
+            break;
+          case 11:
+            assert.ok(problem.a >= 11 && problem.a <= 20 && problem.b >= 1 && problem.b <= 9 && problem.b < problem.a, label);
+            assert.equal(app.hasBorrow(problem.a, problem.b), false, `${label} must not borrow`);
+            break;
+          case 12:
+            assert.ok(problem.a >= 3 && problem.a <= 9 && problem.b >= 2 && problem.b <= 9 && problem.answer > 10 && problem.answer <= 20, label);
+            assert.equal(app.hasCarry(problem.a, problem.b), true, `${label} must carry across ten`);
+            break;
+          case 13:
+            assert.ok(problem.a >= 11 && problem.a <= 19 && problem.b >= 2 && problem.b <= 9, label);
+            assert.equal(app.hasBorrow(problem.a, problem.b), true, `${label} must borrow across ten`);
+            break;
+          case 14:
+            assert.ok(problem.a <= 20 && problem.b <= 9 && problem.answer <= 20, label);
+            break;
+        }
+      }
+
+      if (stage === 8) {
+        assert.ok([...seen].some(value => value.startsWith('add:')), 'stage 8 generates addition');
+        assert.ok([...seen].some(value => value.startsWith('subtract:')), 'stage 8 generates subtraction');
+      }
+      if (stage === 14) assert.deepEqual([...seen].sort(), ['add:carry', 'add:plain', 'subtract:borrow', 'subtract:plain']);
+    });
+  }
 });
 
 test('application completes 10/20/30 answers once, with only one final cue', () => {
