@@ -349,7 +349,8 @@
     const defaults = {
       totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [],
       adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveCorrectStreak: 0, adaptiveRecentResults: [],
-      personalFastTime: null, bestPersonalFastTime: null, paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {},
+      personalFastTime: null, bestPersonalFastTime: null, recordMilestoneTime: null,
+      paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {},
       curriculumVersion: CURRICULUM_VERSION, curriculumStats: {},
       multiplicationSequence: { phase: 0, item: 1, mixed: false },
       divisionCoreSequence: { phase: 0, item: 0, mixed: false },
@@ -387,6 +388,12 @@
         : profile.personalFastTime;
       if (profile.personalFastTime !== null && profile.bestPersonalFastTime !== null) {
         profile.bestPersonalFastTime = Math.min(profile.bestPersonalFastTime, profile.personalFastTime);
+      }
+      profile.recordMilestoneTime = Number.isFinite(Number(profile.recordMilestoneTime)) && Number(profile.recordMilestoneTime) > 0
+        ? Math.min(60, Math.max(UNIVERSAL_FAST_TIME, Number(profile.recordMilestoneTime)))
+        : profile.bestPersonalFastTime;
+      if (profile.bestPersonalFastTime !== null && profile.recordMilestoneTime !== null) {
+        profile.recordMilestoneTime = Math.max(profile.recordMilestoneTime, profile.bestPersonalFastTime);
       }
       profile.paceCalibration = validPaceSamples(profile.paceCalibration);
       profile.fasterPaceSamples = validPaceSamples(profile.fasterPaceSamples);
@@ -1231,8 +1238,7 @@ function makePowerProblem(max, mastered) {
       if ([3, 6, 10].includes(state.streak)) events.push({ type: "streakMilestone", count: state.streak });
       if (state.paceUpdate?.improved) {
         const subtitle = `${formatNumber(state.paceUpdate.previousThreshold)} s → ${formatNumber(state.paceUpdate.newThreshold)} s`;
-        events.push({ type: "speedImproved", subtitle });
-        if (state.paceUpdate.record) events.push({ type: "personalRecord", subtitle });
+        events.push({ type: state.paceUpdate.record ? "personalRecord" : "speedImproved", subtitle });
       }
       if (reachedNewStage) events.push({ type: "levelUp" });
       if (state.index === TOTAL - 1) {
@@ -1431,6 +1437,7 @@ function makePowerProblem(max, mastered) {
       if (profile.paceCalibration.length < 3) return { fast: false, improved: false, record: false };
       profile.personalFastTime = Math.max(UNIVERSAL_FAST_TIME, median(profile.paceCalibration));
       profile.bestPersonalFastTime = Math.min(profile.bestPersonalFastTime ?? Infinity, profile.personalFastTime);
+      profile.recordMilestoneTime ??= profile.bestPersonalFastTime;
       profile.paceCalibration = [];
       profile.fasterPaceSamples = [];
       return { fast: isPersonallyFast(elapsed, profile.personalFastTime), improved: false, record: false };
@@ -1447,8 +1454,11 @@ function makePowerProblem(max, mastered) {
         if (newThreshold < currentThreshold) {
           profile.personalFastTime = newThreshold;
           improved = true;
-          if (profile.bestPersonalFastTime === null || newThreshold < profile.bestPersonalFastTime) {
-            profile.bestPersonalFastTime = newThreshold;
+          profile.bestPersonalFastTime = Math.min(profile.bestPersonalFastTime ?? Infinity, newThreshold);
+          // Celebrate a meaningful cumulative gain, not every new hundredth of a second.
+          const previousMilestone = profile.recordMilestoneTime ?? currentThreshold;
+          if (newThreshold <= previousMilestone * .9) {
+            profile.recordMilestoneTime = newThreshold;
             record = true;
           }
         }

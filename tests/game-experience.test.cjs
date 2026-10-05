@@ -118,6 +118,7 @@ test('calibration, sustained improvement and historical record use the existing 
   assert.equal(calibration.improved, false);
   assert.equal(profile.personalFastTime, 6);
   assert.equal(profile.bestPersonalFastTime, 6);
+  assert.equal(profile.recordMilestoneTime, 6);
   assert.equal(app.updatePersonalPace(profile, 4.9).improved, false);
   assert.equal(app.updatePersonalPace(profile, 5).improved, false);
   const improvement = app.updatePersonalPace(profile, 5.1);
@@ -126,8 +127,37 @@ test('calibration, sustained improvement and historical record use the existing 
   assert.equal(improvement.previousThreshold, 6);
   assert.equal(improvement.newThreshold, 5);
   assert.equal(profile.bestPersonalFastTime, 5);
+  assert.equal(profile.recordMilestoneTime, 5);
   assert.equal(app.updatePersonalPace(profile, 5).record, false);
   assert.equal(profile.personalFastTime, 5);
+});
+
+test('small stable gain is speedImproved; cumulative 10% gain is a separate record', () => {
+  const app = environment({ app: true }).sandbox.__app;
+  const profile = app.getProfile();
+  profile.personalFastTime = 6;
+  profile.bestPersonalFastTime = 6;
+  profile.recordMilestoneTime = 6;
+  for (const time of [5.7, 5.8, 5.9]) {
+    const event = app.updatePersonalPace(profile, time);
+    if (time === 5.9) assert.deepEqual([event.improved, event.record], [true, false]);
+  }
+  assert.equal(profile.personalFastTime, 5.8);
+  assert.equal(profile.bestPersonalFastTime, 5.8);
+  assert.equal(profile.recordMilestoneTime, 6, 'small gains do not reset record milestone');
+  for (const time of [5.3, 5.4, 5.5]) {
+    const event = app.updatePersonalPace(profile, time);
+    if (time === 5.5) assert.deepEqual([event.improved, event.record], [true, true]);
+  }
+  assert.equal(profile.personalFastTime, 5.4);
+  assert.equal(profile.bestPersonalFastTime, 5.4);
+  assert.equal(profile.recordMilestoneTime, 5.4);
+  for (const time of [5.2, 5.3, 5.39]) {
+    const event = app.updatePersonalPace(profile, time);
+    if (time === 5.39) assert.deepEqual([event.improved, event.record], [true, false]);
+  }
+  assert.equal(profile.bestPersonalFastTime, 5.3);
+  assert.equal(profile.recordMilestoneTime, 5.4);
 });
 
 test('legacy profile gains historical best without losing progress or its error queue', () => {
@@ -139,35 +169,46 @@ test('legacy profile gains historical best without losing progress or its error 
   profile.currentStage = 5;
   profile.errorQueue.push({ key: 'old', curriculumStage: 5, operation: 'add' });
   delete profile.bestPersonalFastTime;
+  delete profile.recordMilestoneTime;
   app.saveProfile(profile);
   const loaded = app.getProfile();
   assert.equal(loaded.bestPersonalFastTime, 5.4);
+  assert.equal(loaded.recordMilestoneTime, 5.4);
   assert.equal(loaded.totalXp, 47);
   assert.equal(loaded.dayStreak, 4);
   assert.equal(loaded.currentStage, 5);
   assert.equal(loaded.errorQueue[0].key, 'old');
 });
 
-test('only the third faster first attempt emits one record event; stage and XP rules stay intact', () => {
+test('minor pace improvement and later record emit mutually exclusive events without changing XP or stage', () => {
   const { env, app } = training(5, 20);
   const profile = app.getProfile();
   profile.personalFastTime = 6;
   profile.bestPersonalFastTime = 6;
+  profile.recordMilestoneTime = 6;
   app.saveProfile(profile);
   const batches = [];
   const originalHandle = app.motivation.handle.bind(app.motivation);
   app.motivation.handle = (events, context) => { batches.push(events.map(event => event.type)); return originalHandle(events, context); };
-  for (let index = 0; index < 3; index += 1) {
-    env.advance(4500);
+  for (let index = 0; index < 6; index += 1) {
+    env.advance(index < 3 ? 5700 : 5300);
     app.submitAnswer(app.state.problem.answer);
     assert.equal(app.state.results[index].firstTry, true);
+    if (index === 2) assert.equal(app.machine.state, 'speedImproved');
+    if (index === 5) assert.equal(app.machine.state, 'personalRecord');
     env.advance(350);
   }
   assert.equal(app.state.stage, 5);
-  assert.deepEqual(batches.slice(0, 2).map(events => events.includes('personalRecord')), [false, false]);
+  assert.deepEqual(batches.slice(0, 2).map(events => events.includes('speedImproved') || events.includes('personalRecord')), [false, false]);
   assert.equal(batches[2].includes('speedImproved'), true);
-  assert.equal(batches[2].includes('personalRecord'), true);
-  assert.equal(app.getProfile().personalFastTime, 4.5);
-  assert.equal(app.state.score, 9);
+  assert.equal(batches[2].includes('personalRecord'), false);
+  assert.equal(batches[5].includes('speedImproved'), false);
+  assert.equal(batches[5].includes('personalRecord'), true);
+  assert.equal(app.getProfile().personalFastTime, 5.3);
+  assert.equal(app.getProfile().bestPersonalFastTime, 5.3);
+  assert.equal(app.getProfile().recordMilestoneTime, 5.3);
+  assert.equal(app.state.score, 18);
+  assert.equal(batches.filter(events => events.includes('speedImproved')).length, 1);
   assert.equal(batches.filter(events => events.includes('personalRecord')).length, 1);
+  assert.ok(batches.every(events => !(events.includes('speedImproved') && events.includes('personalRecord'))));
 });
