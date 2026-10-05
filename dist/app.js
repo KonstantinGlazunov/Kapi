@@ -522,13 +522,7 @@
     return values.length >= 10 && operationAccuracy(profile, operation) >= .8;
   }
 
-  function activeOperations(profile) {
-    if (!appSettings.automatic) {
-      if (appSettings.manualStage === 1) return ["count"];
-      const selected = OPERATION_ORDER.filter((operation) => appSettings.operations.includes(operation));
-      return selected.length ? selected : [nativeOperationForStage(appSettings.manualStage)];
-    }
-    const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, profile.currentStage));
+  function curriculumOperationsForStage(stage) {
     if (stage === 1) return ["count"];
     if (stage <= 5 || stage === 9 || stage === 10 || stage === 12) return ["add"];
     if (stage === 6 || stage === 7 || stage === 11 || stage === 13) return ["subtract"];
@@ -546,21 +540,14 @@
     return ["root"];
   }
 
-  function chooseOperation(profile) {
-    const operations = activeOperations(profile);
-    if (appSettings.automatic) return pick(operations);
-    const weighted = operations.map((operation) => {
-      const values = profile.operationStats[operation] || [];
-      const errorRate = values.length ? 1 - operationAccuracy(profile, operation) : .65;
-      return { operation, weight: 1 + errorRate * 5 };
-    });
-    const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
-    let cursor = Math.random() * totalWeight;
-    for (const item of weighted) {
-      cursor -= item.weight;
-      if (cursor <= 0) return item.operation;
-    }
-    return weighted[weighted.length - 1].operation;
+  function activeOperations(profile, requestedStage) {
+    const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1,
+      Number(requestedStage ?? (appSettings.automatic ? profile.currentStage : appSettings.manualStage)) || 1
+    ));
+    const stageOperations = curriculumOperationsForStage(stage);
+    if (appSettings.automatic || stage === 1) return stageOperations;
+    const selected = stageOperations.filter((operation) => appSettings.operations.includes(operation));
+    return selected.length ? selected : stageOperations.slice(0, 1);
   }
 
   function effectiveMax(stage) {
@@ -579,19 +566,7 @@
   }
 
   function nativeOperationForStage(stage) {
-    if (stage <= 1) return "count";
-    if (stage <= 5) return "add";
-    if (stage <= 7) return "subtract";
-    if (stage <= 18) return "add";
-    if (stage <= 20 || stage === 23) return "multiply";
-    if (stage <= 22) return "divide";
-    if (stage === 24) return "multiply";
-    if (stage <= 29) return "add";
-    if (stage === 30 || stage === 38) return "power";
-    if (stage <= 33) return "fraction";
-    if (stage <= 35) return "decimal";
-    if (stage <= 37) return "negative";
-    return "root";
+    return curriculumOperationsForStage(stage)[0];
   }
 
   function ensureRangeSupportsStage(stage) {
@@ -605,8 +580,11 @@
   }
 
   function reconcileOperationsForStage(stage) {
+    const stageOperations = new Set(curriculumOperationsForStage(stage));
     appSettings.operations = OPERATION_ORDER.filter((operation) =>
-      appSettings.operations.includes(operation) && operationAvailableAtStage(operation, stage)
+      appSettings.operations.includes(operation) &&
+      operationAvailableAtStage(operation, stage) &&
+      stageOperations.has(operation)
     );
     if (stage > 1 && !appSettings.operations.length) appSettings.operations = [nativeOperationForStage(stage)];
   }
@@ -649,38 +627,14 @@
   }
 
   function makeGeneratedProblem(stage, index, profile) {
-    if (appSettings.automatic) return makeCurriculumProblem(stage, index, profile);
-    const operation = chooseOperation(profile);
-    if (operation === "count") return makeCurriculumProblem(stage, index, profile);
-    if ((operation === "multiply" && [19, 20, 23].includes(stage)) || (operation === "divide" && [21, 22, 24].includes(stage))) {
-      return makeCurriculumProblemForStage(stage, index, profile);
-    }
-    const max = Math.max(10, effectiveMax(stage));
-    const mode = index % 2 === 0 ? "choice" : "input";
-    let problem;
-
-    if (operation === "add" || operation === "subtract") problem = makeAddSubtractProblem(operation, stage, max, profile);
-    else if (operation === "multiply") problem = makeMultiplicationProblem(max);
-    else if (operation === "divide") problem = makeDivisionProblem(max);
-    else if (operation === "negative") problem = makeNegativeProblem(max, stage >= 37);
-    else if (operation === "decimal") problem = makeDecimalProblem(max, operationMastered(profile, "decimal"), stage >= 35);
-   else if (operation === "fraction") problem = makeFractionProblem(operationMastered(profile, "fraction"), stage);
-    else if (operation === "fraction") problem = makeFractionProblem(operationMastered(profile, "fraction"), stage);
-    else if (operation === "power") problem = makePowerProblem(max, operationMastered(profile, "power") || stage >= 38);
-    else problem = makeRootProblem(max, operationMastered(profile, "root") || stage >= 40, stage >= 40 ? 3 : 2);
-
-    problem.operation = operation;
-    problem.mode = mode;
-    problem.isReview = false;
-    problem.key = `${operation}:${problem.a}:${problem.b}:${problem.answer}:${problem.text}`.replace(/\s+/g, "");
-    return problem;
+    return makeCurriculumProblem(stage, index, profile);
   }
 
-  function finishProblem(problem, operation, index) {
+  function finishProblem(problem, operation, index, curriculumStage = state.stage) {
     problem.operation = operation;
     problem.mode = index % 2 === 0 ? "choice" : "input";
     problem.isReview = false;
-    problem.curriculumStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, state.stage || 1));
+    problem.curriculumStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, curriculumStage || 1));
     problem.key = `${operation}:${problem.a}:${problem.b}:${problem.answer}:${problem.text}`.replace(/\s+/g, "");
     return problem;
   }
@@ -690,10 +644,10 @@
     let a;
     let b;
     let problem;
-    let operation = pick(activeOperations(profile));
+    let operation = pick(activeOperations(profile, current));
     if (current === 1) {
       const answer = randomInt(0, 5);
-      return finishProblem({ a: answer, b: 0, answer, operator: "", text: copy.countQuestion, visualCount: answer }, "count", index);
+      return finishProblem({ a: answer, b: 0, answer, operator: "", text: copy.countQuestion, visualCount: answer }, "count", index, current);
     }
     if (current === 2) {
       operation = "add";
@@ -751,7 +705,7 @@
       problem = { a, b, answer: a - b, operator: "−", text: `${a} − ${b} = ?` };
     } else if (current === 14) {
       const sourceStage = operation === "add" ? pick([10, 12]) : pick([11, 13]);
-      return makeCurriculumProblemForStage(sourceStage, index, profile);
+      return makeCurriculumProblemForStage(sourceStage, index, profile, current);
     } else if (current === 15) {
       const step = pick([1, 2, 10]);
       if (operation === "add") { a = randomInt(20, 100 - step); b = step; }
@@ -810,7 +764,7 @@
         operation = "divide";
       }
     } else if (current === 29) {
-      if (operation === "add" || operation === "subtract") problem = makeAddSubtractProblem(operation, current, 1000000, profile);
+      if (operation === "add" || operation === "subtract") problem = makeAddSubtractProblem(operation, 1000000);
       else if (operation === "multiply") problem = makeMultiplicationProblem(1000000);
       else problem = makeDivisionProblem(1000000);
     } else if (current === 30 || current === 38) {
@@ -839,15 +793,12 @@
       const transition = current === 26 || current === 28;
       problem = makePlaceValueProblem(operation, max, transition);
     }
-    return finishProblem(problem, operation, index);
+    return finishProblem(problem, operation, index, current);
   }
 
-  function makeCurriculumProblemForStage(stage, index, profile) {
-    const previousStage = state.stage;
-    state.stage = stage;
+  function makeCurriculumProblemForStage(stage, index, profile, curriculumStage = stage) {
     const result = makeCurriculumProblem(stage, index, profile);
-    state.stage = previousStage;
-    result.curriculumStage = previousStage;
+    result.curriculumStage = curriculumStage;
     return result;
   }
 
@@ -871,37 +822,16 @@
       : { a: 30, b: 10, answer: 20, operator: "−", text: "30 − 10 = ?" };
   }
 
-  function makeAddSubtractProblem(operation, stage, max, profile) {
+  function makeAddSubtractProblem(operation, max) {
     let a;
     let b;
     const addition = operation === "add";
-    if (stage <= 2) {
-      b = Math.min(profile.adaptiveOperand, 9);
-      a = addition ? randomInt(1, Math.max(1, 10 - b)) : randomInt(b + 1, 10);
-    } else if (stage === 3) {
-      if (addition) {
-        do { a = randomInt(10, 19); b = randomInt(1, 20 - a); } while (hasCarry(a, b));
-      } else {
-        if (Math.random() < .35) { a = 10; b = randomInt(1, 9); }
-        else do { a = randomInt(11, 20); b = randomInt(1, a - 1); } while (hasBorrow(a, b));
-      }
-    } else if (stage === 4 || stage === 5) {
-      if (addition) do { a = randomInt(3, 9); b = randomInt(2, 9); } while (a + b <= 10 || a + b > 20);
-      else do { a = randomInt(11, 20); b = randomInt(2, Math.min(9, a - 1)); } while (stage === 4 ? hasBorrow(a, b) : !hasBorrow(a, b));
+    if (addition) {
+      a = randomInt(Math.max(2, Math.floor(max * .18)), Math.max(3, Math.floor(max * .78)));
+      b = randomInt(1, Math.max(1, max - a));
     } else {
-      const requireTransition = stage === 7 || stage === 9 || stage >= 13;
-      const avoidTransition = stage === 6 || stage === 8;
-      for (let tries = 0; tries < 200; tries += 1) {
-        if (addition) {
-          a = randomInt(Math.max(2, Math.floor(max * .18)), Math.max(3, Math.floor(max * .78)));
-          b = randomInt(1, Math.max(1, max - a));
-          if ((!requireTransition || hasCarry(a, b)) && (!avoidTransition || !hasCarry(a, b))) break;
-        } else {
-          a = randomInt(Math.max(3, Math.floor(max * .35)), max);
-          b = randomInt(1, a - 1);
-          if ((!requireTransition || hasBorrow(a, b)) && (!avoidTransition || !hasBorrow(a, b))) break;
-        }
-      }
+      a = randomInt(Math.max(3, Math.floor(max * .35)), max);
+      b = randomInt(1, a - 1);
     }
     const operator = addition ? "+" : "−";
     const answer = addition ? a + b : a - b;
@@ -1044,7 +974,7 @@ function makePowerProblem(max, mastered) {
   function selectProblem(stage, index) {
     const profile = getProfile();
     const queue = profile.errorQueue;
-    const allowedOperations = new Set(activeOperations(profile));
+    const allowedOperations = new Set(activeOperations(profile, stage));
     const eligibleReviews = queue.filter((item) => {
       const sameStage = item.curriculumStage == null || item.curriculumStage === stage;
       return allowedOperations.has(reviewOperation(item)) && sameStage;
