@@ -47,7 +47,7 @@
     const cells = Array.from({ length: count > 10 ? 20 : 10 }, (_, i) => ({
       filled: i < count, removed: i >= count - removed && i < count, second: i >= first && i < count
     }));
-    return { quantity: count, cells, frames: cells.length / 10 };
+    return { quantity: count, removed, first, cells, frames: cells.length / 10 };
   }
 
   function expressionChoices(problem, random = Math.random) {
@@ -105,7 +105,7 @@
         problem.responseAnswer = problem.correctExpressionIndex;
         problem.mode = "choice";
       } else if (type === "visualCount") {
-        problem.visualData = { quantity: base.operation === "count" ? base.answer : base.answer };
+        problem.visualData = { quantity: base.answer, operands: base.operation === "add" ? [base.a, base.b] : null };
       } else if (type === "tenFrame") {
         problem.visualData = base.operation === "subtract"
           ? this.makeTenFrame(base.a, base.b) : this.makeTenFrame(base.answer, 0, base.a);
@@ -151,11 +151,18 @@
           : { text: variant === "compose" ? t.place(tens, ones) : t.placeBlocks, html: this.renderPlaceValue(problem.placeValue) };
       }
       if (type === "tenFrame") return { text: problem.text, html: this.renderFrame(problem.visualData) };
-      if (type === "visualCount") return { text: problem.operation === "count" ? t.count : problem.text, html: this.renderDots(problem.visualData.quantity) };
+      if (type === "visualCount") return { text: problem.operation === "count" ? t.count : problem.text, html: problem.visualData.operands
+        ? this.renderOperandGroups(problem.visualData.operands, (n) => this.renderDots(n)) : this.renderDots(problem.visualData.quantity) };
       return { text: problem.text, html: "" };
     }
     renderDots(n) { return `<div class="task-dots${n === 0 ? " empty" : ""}" role="group">${Array.from({ length: n }, () => '<span aria-label="●">●</span>').join("")}</div>`; }
+    renderOperandGroups(operands, render) {
+      return `<div class="task-operands">${operands.map((n, index) => `${index ? '<span class="task-operator" aria-hidden="true">+</span>' : ""}<div class="task-operand task-operand-${index + 1}" role="group" aria-label="${n}">${render(n)}</div>`).join("")}</div>`;
+    }
     renderFrame(data) {
+      if (data.first < data.quantity && !data.removed) {
+        return this.renderOperandGroups([data.first, data.quantity - data.first], (n) => this.renderFrame(frame(n)));
+      }
       return `<div class="task-frames" role="group">${Array.from({ length: data.frames }, (_, frameIndex) =>
         `<div class="task-frame">${data.cells.slice(frameIndex * 10, frameIndex * 10 + 10).map((cell) =>
           `<span class="task-cell${cell.filled ? " filled" : ""}${cell.removed ? " removed" : ""}${cell.second ? " second" : ""}" aria-label="${cell.removed ? "−" : cell.filled ? "●" : "○"}">${cell.filled ? "●" : ""}</span>`).join("")}</div>`).join("")}</div>`;

@@ -128,6 +128,23 @@ test('ten frames, number lines, place values and stories reflect their original 
   assert.equal(tasks.isPaceComparableTask(tasks.decorate(storyBase, null, 'missingOperand')), true);
 });
 
+test('visual counting and ten frames separate addition operands in distinct groups', () => {
+  const { tasks } = context();
+  for (const [a, b, stage] of [[0, 5, 2], [3, 2, 3], [5, 5, 5], [10, 9, 9]]) {
+    const base = { a, b, answer: a + b, operation: 'add', operator: '+', text: `${a} + ${b} = ?`, curriculumStage: stage };
+    for (const type of tasks.allowedTypes(stage).filter(value => ['visualCount', 'tenFrame'].includes(value))) {
+      const problem = tasks.decorate(base, null, type);
+      const html = tasks.display(problem).html;
+      assert.ok(html.includes('task-operand-1') && html.includes('task-operand-2'), `${type} has separate operands`);
+      assert.equal((html.match(/class="task-operator"/g) || []).length, 1);
+      assert.ok(html.includes(`aria-label="${a}"`) && html.includes(`aria-label="${b}"`));
+      assert.equal((html.match(/class="task-cell filled"/g) || []).length || (html.match(/aria-label="●"/g) || []).length, a + b);
+    }
+  }
+  const count = tasks.decorate({ a: 5, b: 0, answer: 5, operation: 'count', operator: '', text: 'Wie viele?', curriculumStage: 1 }, null, 'visualCount');
+  assert.ok(!tasks.display(count).html.includes('task-operands'));
+});
+
 test('each alternative repeats with the same form and preserves firstTry and mastery', () => {
   for (const [stage, type] of [[5, 'missingOperand'], [7, 'tenFrame'], [12, 'numberLine'], [14, 'chooseExpression']]) {
     const { env, app, tasks } = context(0x778800 + stage);

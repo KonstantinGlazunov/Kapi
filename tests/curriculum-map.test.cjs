@@ -32,6 +32,39 @@ test('current, completed, locked and chapter step depend only on curriculum stag
   const at41 = map.chaptersAt(41);
   assert.equal(at41.at(-1).status, 'current');
   assert.ok(at41.slice(0, -1).every(chapter => chapter.status === 'completed'));
+  assert.ok(map.chaptersAt(41, true).every(chapter => chapter.status === 'completed'));
+  assert.equal(map.chaptersAt(40, true).at(-1).status, 'current', 'a lower current stage remains visible');
+});
+
+test('final stage requires the existing mastery threshold before showing a fully completed map', () => {
+  const env = environment({ app: true });
+  const app = env.sandbox.__app;
+  const profile = app.getProfile();
+  profile.currentStage = 41;
+  profile.curriculumStats['41'] = Array(9).fill(1);
+  profile.errorQueue.push({ curriculumStage: 41 });
+  app.saveProfile(profile);
+  app.state.stage = 41;
+  const problem = { curriculumStage: 41, operation: 'root', taskType: 'equation' };
+  app.showCurriculumMap();
+  assert.equal((env.elements.get('mapChapters').innerHTML.match(/map-chapter current/g) || []).length, 1);
+  assert.equal(app.updateAdaptiveProgress(problem, true, true, 5), '', 'pending review blocks mastery');
+  assert.equal(app.getProfile().curriculumCompleted, false);
+  const reviewed = app.getProfile();
+  reviewed.errorQueue = [];
+  app.saveProfile(reviewed);
+  assert.equal(app.updateAdaptiveProgress(problem, true, true, 5), 'Der ganze Lernweg ist geschafft! Kapi ist stolz auf dich.');
+  assert.equal(app.getProfile().curriculumCompleted, true);
+  app.showCurriculumMap();
+  assert.equal((env.elements.get('mapChapters').innerHTML.match(/map-chapter current/g) || []).length, 0);
+  assert.equal((env.elements.get('mapChapters').innerHTML.match(/map-chapter completed/g) || []).length, 13);
+  assert.ok(env.elements.get('mapIntro').textContent.includes('Alle Kapitel geschafft!'));
+  assert.equal(app.updateAdaptiveProgress(problem, true, true, 5), '', 'completion announced once');
+  app.state.trainingStartedCompleted = false;
+  app.state.trainingStartStage = 41;
+  app.state.stage = 41;
+  app.finishTraining();
+  assert.ok(env.elements.get('resultNote').textContent.includes('Der ganze Lernweg ist geschafft!'));
 });
 
 test('map dialog shows Kapi at the current chapter without XP gating', () => {

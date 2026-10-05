@@ -47,7 +47,7 @@
       largeAdditionHint: (a, b) => `Сложи по частям: ${a} + ${b}. Сначала крупные разряды, затем единицы.`,
       largeSubtractionHint: (a, b) => `Вычитай по частям: ${a} − ${b}. Сначала крупные разряды, затем единицы.`,
       resultEyebrow: "Тренировка завершена", correctOf20: "верно из 20", average: "в среднем", experience: "опыта",
-      levelUpTitle: "Новый уровень открыт!", completeTitle: "Тренировка завершена!", levelUpNote: (level, name) => `Теперь уровень ${level}: ${name}.`,
+      levelUpTitle: "Новый уровень открыт!", completeTitle: "Тренировка завершена!", levelUpNote: (level, name) => `Теперь уровень ${level}: ${name}.`, curriculumComplete: "Весь путь обучения пройден! Капи гордится тобой.",
       stayNote: "Продолжаем этот уровень, пока он не станет уверенным.", maxLevelNote: "Максимальный уровень освоен — продолжаем закреплять счёт до 10 000.", reviewsLeft: (count) => `Примеров для повторения: ${count}.`, again: "Дальше", viewHistory: "Посмотреть историю",
       forParents: "Для родителей", close: "Закрыть", clearHistory: "Удалить историю", emptyHistory: "Здесь появятся результаты после первой тренировки.",
       sessions: "тренировок", currentLevel: "текущий уровень", correctShort: "средний результат", correctHistory: (correct, total, seconds) => `${correct}/${total} верно · ${seconds} с`,
@@ -93,7 +93,7 @@
       largeAdditionHint: (a, b) => `Addiere in Schritten: ${a} + ${b}. Zuerst die großen Stellen, dann die Einer.`,
       largeSubtractionHint: (a, b) => `Subtrahiere in Schritten: ${a} − ${b}. Zuerst die großen Stellen, dann die Einer.`,
       resultEyebrow: "Training beendet", correctOf20: "richtig von 20", average: "im Durchschnitt", experience: "Erfahrung",
-      levelUpTitle: "Neue Stufe freigeschaltet!", completeTitle: "Training beendet!", levelUpNote: (level, name) => `Jetzt Stufe ${level}: ${name}.`,
+      levelUpTitle: "Neue Stufe freigeschaltet!", completeTitle: "Training beendet!", levelUpNote: (level, name) => `Jetzt Stufe ${level}: ${name}.`, curriculumComplete: "Der ganze Lernweg ist geschafft! Kapi ist stolz auf dich.",
       stayNote: "Wir üben diese Stufe weiter, bis sie sicher sitzt.", maxLevelNote: "Die höchste Stufe ist geschafft – jetzt festigen wir das Rechnen bis 10.000.", reviewsLeft: (count) => `Aufgaben zum Wiederholen: ${count}.`, again: "Weiter", viewHistory: "Verlauf ansehen",
       forParents: "Für Eltern", close: "Schließen", clearHistory: "Verlauf löschen", emptyHistory: "Nach dem ersten Training erscheinen hier die Ergebnisse.",
       sessions: "Trainings", currentLevel: "aktuelle Stufe", correctShort: "Durchschnitt", correctHistory: (correct, total, seconds) => `${correct}/${total} richtig · ${seconds} s`,
@@ -167,12 +167,12 @@
   });
   Object.assign(translations.de, {
     learningPath: "Lernweg", mapIntro: "So wächst dein Können Schritt für Schritt.",
-    mapCurrent: "Jetzt", mapCompleted: "Geschafft", mapLocked: "Kommt noch", mapSteps: (step, total) => `${step} von ${total} Schritten`,
+    mapCurrent: "Jetzt", mapCompleted: "Geschafft", mapLocked: "Kommt noch", mapSteps: (step, total) => `${step} von ${total} Schritten`, mapAllComplete: "Alle Kapitel geschafft! Du kannst jederzeit weiter üben.",
     chapterFinished: "Kapitel geschafft!", newChapter: (name) => `Nächstes Kapitel: ${name}`
   });
   Object.assign(translations.ru, {
     learningPath: "Путь обучения", mapIntro: "Шаг за шагом ты узнаёшь больше.",
-    mapCurrent: "Сейчас", mapCompleted: "Пройдено", mapLocked: "Впереди", mapSteps: (step, total) => `${step} из ${total} шагов`,
+    mapCurrent: "Сейчас", mapCompleted: "Пройдено", mapLocked: "Впереди", mapSteps: (step, total) => `${step} из ${total} шагов`, mapAllComplete: "Все главы пройдены! Можно продолжать тренироваться.",
     chapterFinished: "Глава пройдена!", newChapter: (name) => `Следующая глава: ${name}`
   });
   translations.ru.homeReactions = {
@@ -390,7 +390,7 @@
 
   function getProfile() {
     const defaults = {
-      totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, errorQueue: [],
+      totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, curriculumCompleted: false, errorQueue: [],
       adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveCorrectStreak: 0, adaptiveRecentResults: [],
       personalFastTime: null, bestPersonalFastTime: null, recordMilestoneTime: null,
       paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {},
@@ -416,6 +416,7 @@
         localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       }
       profile.currentStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(profile.currentStage) || 1));
+      profile.curriculumCompleted = profile.curriculumCompleted === true;
       profile.errorQueue = Array.isArray(profile.errorQueue) ? profile.errorQueue : [];
       profile.adaptiveOperand = Math.min(9, Math.max(1, Number(profile.adaptiveOperand) || 1));
       profile.adaptiveFastStreak = Math.min(2, Math.max(0, Number(profile.adaptiveFastStreak) || 0));
@@ -489,7 +490,7 @@
     renderRewardGoal("home", profile.totalXp);
     const displayStage = appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
     const stageName = copy.stageNames[displayStage - 1];
-    $("startEyebrow").textContent = copy.levelLabel(displayStage, stageName);
+    $("startEyebrow").textContent = profile.curriculumCompleted && profile.currentStage === CURRICULUM_STAGE_COUNT && appSettings.automatic ? copy.curriculumComplete : copy.levelLabel(displayStage, stageName);
   }
 
   function rewardName(reward) { return reward[language]; }
@@ -532,8 +533,12 @@
   }
 
   function renderCurriculumMap() {
-    const stage = getProfile().currentStage;
-    $("mapChapters").innerHTML = curriculumMap.chaptersAt(stage).map((chapter) => {
+    const profile = getProfile();
+    const stage = profile.currentStage;
+    const allComplete = profile.curriculumCompleted && stage === CURRICULUM_STAGE_COUNT;
+    $("mapIntro").textContent = allComplete ? copy.mapAllComplete : copy.mapIntro;
+    $("mapIntro").classList.toggle("map-complete", allComplete);
+    $("mapChapters").innerHTML = curriculumMap.chaptersAt(stage, profile.curriculumCompleted).map((chapter) => {
       const status = { completed: copy.mapCompleted, current: copy.mapCurrent, locked: copy.mapLocked }[chapter.status];
       const currentStep = chapter.status === "current" ? `<small>${copy.mapSteps(chapter.step, chapter.total)} · ${copy.stageNames[stage - 1]}</small>` : "";
       return `<article class="map-chapter ${chapter.status}" aria-label="${chapter[language]}: ${status}">
@@ -1142,7 +1147,7 @@ function makePowerProblem(max, mastered) {
     Object.assign(state, {
       index: 0, score: 0, correct: 0, streak: 0, stage: trainingStage,
       attempt: 1, problem: null, results: [], locked: false, enteredAnswer: "", stageAdvancedDuringSession: false,
-      previousTaskType: null, trainingStartStage: trainingStage,
+      previousTaskType: null, trainingStartStage: trainingStage, trainingStartedCompleted: profile.curriculumCompleted,
       finalMotivationEvents: []
     });
     showScreen($("gameScreen"));
@@ -1181,6 +1186,7 @@ function makePowerProblem(max, mastered) {
     $("problemText").classList.toggle("problem-story", problem.taskType === "microStory");
     $("taskVisual").innerHTML = display.html;
     $("taskVisual").classList.toggle("hidden", !display.html);
+    document.querySelector(".play-card").classList.toggle("has-task-visual", !!display.html);
   }
 
   function renderAnswer() {
@@ -1487,7 +1493,16 @@ function makePowerProblem(max, mastered) {
     const lastTen = profile.curriculumStats[stageKey].slice(-10);
     const accuracy = lastTen.length ? lastTen.reduce((sum, value) => sum + value, 0) / lastTen.length : 0;
     const pendingCurrentErrors = profile.errorQueue.some((item) => item.curriculumStage === profile.currentStage);
-    if (lastTen.length < 10 || accuracy < .9 || pendingCurrentErrors || profile.currentStage >= maximumAllowedStage()) {
+    if (lastTen.length < 10 || accuracy < .9 || pendingCurrentErrors) {
+      saveProfile(profile);
+      return "";
+    }
+    if (profile.currentStage === CURRICULUM_STAGE_COUNT && !profile.curriculumCompleted) {
+      profile.curriculumCompleted = true;
+      saveProfile(profile);
+      return copy.curriculumComplete;
+    }
+    if (profile.currentStage >= maximumAllowedStage()) {
       saveProfile(profile);
       return "";
     }
@@ -1813,9 +1828,9 @@ function makePowerProblem(max, mastered) {
     const freshProfile = getProfile();
     const chapterBefore = curriculumMap.chapterForStage(state.trainingStartStage);
     const chapterAfter = curriculumMap.chapterForStage(freshProfile.currentStage);
-    $("resultNote").textContent = advanced
+    $("resultNote").textContent = freshProfile.curriculumCompleted && !state.trainingStartedCompleted ? copy.curriculumComplete : advanced
       ? copy.levelUpNote(freshProfile.currentStage, copy.stageNames[freshProfile.currentStage - 1])
-      : `${state.stage === CURRICULUM_STAGE_COUNT ? copy.maxLevelNote : copy.stayNote}${freshProfile.errorQueue.length ? ` ${copy.reviewsLeft(freshProfile.errorQueue.length)}` : ""}`;
+      : `${freshProfile.curriculumCompleted && freshProfile.currentStage === CURRICULUM_STAGE_COUNT ? copy.maxLevelNote : copy.stayNote}${freshProfile.errorQueue.length ? ` ${copy.reviewsLeft(freshProfile.errorQueue.length)}` : ""}`;
     if (advanced && chapterBefore?.id !== chapterAfter?.id && chapterAfter) {
       $("resultNote").textContent += ` ${copy.chapterFinished} ${copy.newChapter(chapterAfter[language])}`;
     }

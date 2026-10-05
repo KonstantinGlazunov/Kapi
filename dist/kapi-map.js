@@ -18,10 +18,10 @@
   class KapiCurriculumMap {
     getChapters() { return CHAPTERS; }
     chapterForStage(stage) { return CHAPTERS.find((chapter) => stage >= chapter.first && stage <= chapter.last) || null; }
-    chaptersAt(stage) {
+    chaptersAt(stage, curriculumCompleted = false) {
       const current = Math.max(1, Math.min(41, Number(stage) || 1));
       return CHAPTERS.map((chapter) => ({ ...chapter,
-        status: current > chapter.last ? "completed" : current < chapter.first ? "locked" : "current",
+        status: (curriculumCompleted && current === 41) || current > chapter.last ? "completed" : current < chapter.first ? "locked" : "current",
         step: current < chapter.first ? 0 : current > chapter.last ? chapter.last - chapter.first + 1 : current - chapter.first + 1,
         total: chapter.last - chapter.first + 1
       }));
