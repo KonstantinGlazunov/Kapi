@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="description" content="Adaptives Rechentraining für Kinder.">
+  <title>Rechnen mit Kapi</title>
+  <link id="manifestLink" rel="manifest" href="manifest-de.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <button class="icon-button hidden" id="homeButton" type="button" aria-label="Вернуться в начало">⌂</button>
+      <div class="brand"><span class="brand-star">★</span> <span id="brandName">Считаем с Капи</span></div>
+      <button class="icon-button" id="settingsButton" type="button" aria-label="Настройки">⚙</button>
+    </header>
+
+    <section class="screen start-screen active" id="startScreen" aria-labelledby="startTitle">
+      <div class="start-copy">
+        <span class="eyebrow" id="startEyebrow">Уровень 1 · сложение до 10</span>
+        <h1 id="startTitle">Готовы считать?</h1>
+        <p id="startDescription">20 коротких примеров. Капи подберёт сложность сама.</p>
+        <div class="speech-bubble" id="speechBubble">У тебя получится!</div>
+        <div class="home-stats" id="homeStats" aria-label="Игровой прогресс">
+          <div><span aria-hidden="true">🔥</span><strong id="dayStreakValue">0</strong><small id="dayStreakLabel">дней подряд</small></div>
+          <div><span aria-hidden="true">⚡</span><strong id="totalXpValue">0</strong><small id="totalXpLabel">всего XP</small></div>
+        </div>
+        <button class="primary-button" id="startButton" type="button">Начать тренировку <span aria-hidden="true">→</span></button>
+        <button class="install-home-button hidden" id="installHomeButton" type="button">App installieren</button>
+        <button class="update-button hidden" id="updateButton" type="button">Доступно обновление</button>
+        <button class="text-button" id="statsButton" type="button">История занятий</button>
+      </div>
+      <div class="mascot-stage start-mascot">
+        <div class="spark spark-one">✦</div>
+        <div class="spark spark-two">✦</div>
+        <button class="home-mascot-sprite kapi-host" id="homeMascot" type="button" aria-label="Kapi reagieren lassen"><canvas class="kapi-rive-canvas" id="homeMascotCanvas" aria-hidden="true"></canvas></button>
+      </div>
+    </section>
+
+    <section class="screen game-screen" id="gameScreen" aria-labelledby="problemText">
+      <div class="game-status">
+        <div>
+          <span class="status-label" id="problemLabel">Пример</span>
+          <strong><span id="problemNumber">1</span> / <span id="problemTotal">20</span></strong>
+        </div>
+        <div class="game-badges">
+          <div class="streak-pill hidden" id="streakPill" aria-label="Серия правильных ответов">🔥 <strong id="streakValue">0</strong></div>
+          <div class="score-pill" id="scorePill" aria-label="Набранные очки опыта"><span aria-hidden="true">⚡</span> <strong id="scoreValue">0</strong> XP</div>
+        </div>
+      </div>
+      <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+
+      <div class="play-card">
+        <div class="mini-mascot kapi-host" id="gameMascot" aria-hidden="true"><canvas class="kapi-rive-canvas" id="gameMascotCanvas"></canvas></div>
+        <div class="feedback" id="feedback" role="status" aria-live="polite">Считай внимательно</div>
+        <div class="problem" id="problemText">12 − 5 = ?</div>
+        <div class="hint hidden" id="hint" aria-live="polite"></div>
+        <div class="answer-area" id="answerArea"></div>
+      </div>
+    </section>
+
+    <section class="screen result-screen" id="resultScreen" aria-labelledby="resultTitle">
+      <div class="confetti" id="confetti" aria-hidden="true"></div>
+      <div class="result-card">
+        <div class="result-mascot kapi-host" id="resultMascot" aria-hidden="true"><canvas class="kapi-rive-canvas" id="resultMascotCanvas"></canvas></div>
+        <span class="eyebrow" id="resultEyebrow">Тренировка завершена</span>
+        <h1 id="resultTitle">Отличная работа!</h1>
+        <div class="result-grid">
+          <div><strong id="correctValue">18</strong><span id="correctLabel">верно из 20</span></div>
+          <div><strong id="averageValue">6,2 c</strong><span id="averageLabel">в среднем</span></div>
+          <div><strong id="starsValue">48 XP</strong><span id="xpLabel">опыта</span></div>
+        </div>
+        <p class="result-note" id="resultNote"></p>
+        <button class="primary-button" id="againButton" type="button">Ещё раз</button>
+        <button class="share-button" id="shareButton" type="button">Поделиться результатом</button>
+        <button class="text-button" id="resultStatsButton" type="button">Посмотреть историю</button>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="stats-dialog" id="statsDialog">
+    <div class="dialog-head">
+      <div><span class="eyebrow" id="parentEyebrow">Для родителей</span><h2 id="historyTitle">История занятий</h2></div>
+      <button class="icon-button" id="closeStatsButton" type="button" aria-label="Закрыть">×</button>
+    </div>
+    <div id="statsContent"></div>
+    <button class="danger-text-button" id="clearStatsButton" type="button">Удалить историю</button>
+  </dialog>
+
+  <dialog class="settings-dialog" id="settingsDialog">
+    <div class="dialog-head">
+      <div><span class="eyebrow">KAPI</span><h2 id="settingsTitle">Настройки</h2></div>
+      <button class="icon-button" id="closeSettingsButton" type="button" aria-label="Закрыть настройки">×</button>
+    </div>
+    <p class="settings-hint" id="settingsHint"></p>
+    <div class="settings-content" id="settingsContent"></div>
+  </dialog>
+
+  <div class="motivation-pop hidden" id="motivationPop" role="status" aria-live="polite">
+    <div class="motivation-card" data-kapi-state="flag">
+      <div class="motivation-art" aria-hidden="true">
+        <canvas class="kapi-rive-canvas" id="motivationMascot" aria-hidden="true"></canvas>
+        <div class="motivation-burst" id="motivationBurst"></div>
+      </div>
+      <div class="motivation-copy">
+        <strong id="motivationText">Супер!</strong>
+        <span id="motivationSubtext">3 верных подряд</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="install-prompt hidden" id="installPrompt" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <div class="install-card">
+      <img src="assets/capybara.webp" alt="" width="700" height="700">
+      <span class="eyebrow" id="installKicker">Kapi-App</span>
+      <h2 id="installTitle">Auf dem Handy installieren?</h2>
+      <p id="installText">Kapi erscheint auf dem Startbildschirm und öffnet sich ohne Browserleiste.</p>
+      <button class="primary-button" id="installButton" type="button">Installieren</button>
+      <button class="text-button" id="installContinue" type="button">Im Browser fortfahren</button>
+    </div>
+  </div>
+
+  <script src="kapi.js" defer></script>
+  <script src="kapi-sound.js" defer></script>
+  <script src="kapi-motivation.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
