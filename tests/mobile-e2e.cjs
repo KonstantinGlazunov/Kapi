@@ -253,6 +253,54 @@ async function run() {
         assert.equal(outcome.firstTry, true);
         assert.equal(outcome.width, outcome.viewport);
         assert.ok(outcome.bottom <= height, `review controls offscreen: ${JSON.stringify(outcome)}`);
+
+        await page.waitForFunction(() => window.__e2e.state.index === 4, null, { timeout: 5000 });
+        page.once('dialog', dialog => dialog.accept());
+        await page.locator('#homeButton').click();
+        await page.evaluate(() => {
+          const api = window.__e2e;
+          const profile = api.getProfile();
+          profile.currentStage = 24;
+          profile.errorQueue = [];
+          profile.skillMastery = {};
+          profile.multiplicationSequence = { phase: 11, item: 10, mixed: true };
+          window.KapiMasterySystem.markStageMastered(profile, 23, new Date('2020-01-01T12:00:00Z'));
+          api.saveProfile(profile);
+        });
+        await page.locator('#statsButton').click();
+        assert.ok((await page.locator('#statsContent').innerText()).includes('Einmaleins-Reihen'), 'late skill needs a human History label');
+        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-late-skill-history.png`) });
+        await page.locator('#closeStatsButton').click();
+        await page.locator('#startButton').click();
+        for (let index = 0; index < 3; index++) {
+          const problem = await page.evaluate(() => ({ answer: window.__e2e.tasks.response(window.__e2e.state.problem),
+            mode: window.__e2e.state.problem.mode }));
+          if (problem.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${problem.answer}$`) }).click();
+          else for (const digit of String(problem.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+          await page.waitForFunction(expected => window.__e2e.state.index === expected, index + 1, { timeout: 5000 });
+        }
+        const late = await page.evaluate(() => ({ problem: window.__e2e.state.problem,
+          before: window.__e2e.getProfile().skillMastery['multiply:einmaleins-sequence'].nextReviewAt,
+          sequence: JSON.stringify(window.__e2e.getProfile().multiplicationSequence),
+          answer: window.__e2e.tasks.response(window.__e2e.state.problem) }));
+        assert.equal(late.problem.isSpacedReview, true);
+        assert.equal(late.problem.reviewSkillId, 'multiply:einmaleins-sequence');
+        assert.equal(late.problem.curriculumStage, 23);
+        assert.equal(late.problem.operation, 'multiply');
+        await page.waitForFunction(() => document.querySelector('#motivationPop').classList.contains('hidden'), null, { timeout: 5000 });
+        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-late-spaced-review.png`) });
+        if (late.problem.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${late.answer}$`) }).click();
+        else for (const digit of String(late.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+        const lateResult = await page.evaluate(() => ({ mastery: window.__e2e.getProfile().skillMastery['multiply:einmaleins-sequence'],
+          sequence: JSON.stringify(window.__e2e.getProfile().multiplicationSequence),
+          stage: window.__e2e.getProfile().currentStage, firstTry: window.__e2e.state.results.at(-1).firstTry,
+          viewport: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth }));
+        assert.equal(lateResult.mastery.intervalDays, 3);
+        assert.ok(Date.parse(lateResult.mastery.nextReviewAt) > Date.parse(late.before));
+        assert.equal(lateResult.sequence, late.sequence, 'late review must not mutate the multiplication sequence');
+        assert.equal(lateResult.stage, 24);
+        assert.equal(lateResult.firstTry, true);
+        assert.equal(lateResult.scrollWidth, lateResult.viewport);
       }
       assert.deepEqual(errors, [], `browser errors at ${width}×${height}`);
       console.log(`PASS ${width}×${height}: 6 visual formats, controls, complete map, weekly goal`);

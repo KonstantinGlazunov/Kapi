@@ -39,7 +39,7 @@
       changed = true;
     }
     for (const item of Array.isArray(profile.errorQueue) ? profile.errorQueue : []) {
-      if (!item?.fromSpacedReview) continue;
+      if (!item || (!item.fromSpacedReview && !item.reviewSkillId)) continue;
       const canonical = skills.canonicalId(item.reviewSkillId || `stage:${item.curriculumStage}`);
       if (skills.stageForSkill(canonical) && item.reviewSkillId !== canonical) {
         item.reviewSkillId = canonical;
@@ -51,7 +51,7 @@
 
   function skillIdForProblem(problem) {
     const stage = Number(problem?.curriculumStage);
-    return Number.isInteger(stage) && stage >= 1 && stage <= 41 ? skills.skillForStage(stage)?.id || `stage:${stage}` : null;
+    return Number.isInteger(stage) && stage >= 1 && stage <= 41 ? skills.skillForStage(stage)?.id || null : null;
   }
 
   function ensureSkill(profile, skillId) {

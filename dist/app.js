@@ -949,7 +949,9 @@
       problem = makePowerProblem(current === 30 ? 1000 : 10000, current === 38);
     } else if (current >= 31 && current <= 33) {
       operation = "fraction";
-      problem = makeFractionProblem(operationMastered(profile, "fraction"), current);
+      // Later fraction operations belong to stage 33, regardless of the
+      // accumulated operation score from earlier or later practice.
+      problem = makeFractionProblem(current === 33 && operationMastered(profile, "fraction"), current);
     } else if (current >= 34 && current <= 35) {
       operation = "decimal";
       problem = makeDecimalProblem(100, operationMastered(profile, "decimal"), current === 35);
@@ -1098,6 +1100,7 @@ function makeFractionProblem(mastered, stage = 31) {
     const rightDenominator = denominator;
     right = randomInt(1, denominator - 1);
     operator = Math.random() < .5 ? "+" : "−";
+    if (operator === "−" && right > left) [left, right] = [right, left];
     numerator = left * rightDenominator + (operator === "+" ? right * denominator : -right * denominator);
     resultDenominator = denominator * rightDenominator;
   } else {

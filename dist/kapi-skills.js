@@ -17,7 +17,34 @@
     { id: "subtract:to20:no-borrow", stage: 11, operations: ["subtract"], de: "Minus bis 20 ohne Übergang", ru: "Вычитание до 20 без перехода" },
     { id: "add:cross-ten", stage: 12, operations: ["add"], de: "Plus über den Zehner", ru: "Сложение через десяток" },
     { id: "subtract:cross-ten", stage: 13, operations: ["subtract"], de: "Minus über den Zehner", ru: "Вычитание через десяток" },
-    { id: "mixed:add-sub-to20", stage: 14, operations: ["add", "subtract"], de: "Plus und Minus bis 20", ru: "Сложение и вычитание до 20" }
+    { id: "mixed:add-sub-to20", stage: 14, operations: ["add", "subtract"], de: "Plus und Minus bis 20", ru: "Сложение и вычитание до 20" },
+    { id: "number:steps-to100", stage: 15, operations: ["add", "subtract"], de: "Schritte bis 100", ru: "Шаги до 100" },
+    { id: "mixed:to100:no-transition", stage: 16, operations: ["add", "subtract"], de: "Rechnen bis 100 ohne Übergang", ru: "Счёт до 100 без перехода" },
+    { id: "mixed:to100:transition", stage: 17, operations: ["add", "subtract"], de: "Rechnen bis 100 mit Übergang", ru: "Счёт до 100 с переходом" },
+    { id: "mixed:to100", stage: 18, operations: ["add", "subtract"], de: "Plus und Minus bis 100", ru: "Сложение и вычитание до 100" },
+    { id: "multiply:equal-groups", stage: 19, operations: ["multiply"], de: "Gleiche Gruppen", ru: "Одинаковые группы" },
+    { id: "multiply:first-tables", stage: 20, operations: ["multiply"], de: "Einmaleins mit 1, 2, 5 und 10", ru: "Умножение на 1, 2, 5 и 10" },
+    { id: "divide:equal-groups", stage: 21, operations: ["divide"], de: "In gleiche Gruppen teilen", ru: "Деление на равные группы" },
+    { id: "divide:core-tables", stage: 22, operations: ["divide"], de: "Division durch 1, 2, 5 und 10", ru: "Деление на 1, 2, 5 и 10" },
+    { id: "multiply:einmaleins-sequence", stage: 23, operations: ["multiply"], de: "Einmaleins-Reihen", ru: "Таблица умножения по рядам" },
+    { id: "mixed:derived-division", stage: 24, operations: ["multiply", "divide"], de: "Weitere Division und Einmaleins", ru: "Деление и таблица умножения" },
+    { id: "mixed:to1000:no-transition", stage: 25, operations: ["add", "subtract"], de: "Rechnen bis 1.000 ohne Übergang", ru: "Счёт до 1000 без перехода" },
+    { id: "mixed:to1000:transition", stage: 26, operations: ["add", "subtract"], de: "Rechnen bis 1.000 mit Übergang", ru: "Счёт до 1000 с переходом" },
+    { id: "mixed:to10000:no-transition", stage: 27, operations: ["add", "subtract"], de: "Rechnen bis 10.000 ohne Übergang", ru: "Счёт до 10 000 без перехода" },
+    { id: "mixed:to10000:transition", stage: 28, operations: ["add", "subtract"], de: "Rechnen bis 10.000 mit Übergang", ru: "Счёт до 10 000 с переходом" },
+    { id: "mixed:large-four-operations", stage: 29, operations: ["add", "subtract", "multiply", "divide"], de: "Vier Grundrechenarten mit großen Zahlen", ru: "Четыре действия с большими числами" },
+    { id: "power:squares-to1000", stage: 30, operations: ["power"], de: "Quadratzahlen", ru: "Квадраты чисел" },
+    { id: "fraction:same-denominator", stage: 31, operations: ["fraction"], de: "Brüche mit gleichem Nenner", ru: "Дроби с одинаковым знаменателем" },
+    { id: "fraction:add-subtract", stage: 32, operations: ["fraction"], de: "Brüche addieren und subtrahieren", ru: "Сложение и вычитание дробей" },
+    { id: "fraction:multiply-divide", stage: 33, operations: ["fraction"], de: "Brüche multiplizieren und dividieren", ru: "Умножение и деление дробей" },
+    { id: "decimal:add-subtract", stage: 34, operations: ["decimal"], de: "Dezimalzahlen addieren und subtrahieren", ru: "Сложение и вычитание десятичных чисел" },
+    { id: "decimal:multiply-divide", stage: 35, operations: ["decimal"], de: "Dezimalzahlen multiplizieren und dividieren", ru: "Умножение и деление десятичных чисел" },
+    { id: "negative:subtract", stage: 36, operations: ["negative"], de: "Unter null rechnen", ru: "Вычитание с отрицательным ответом" },
+    { id: "negative:four-operations", stage: 37, operations: ["negative"], de: "Mit negativen Zahlen rechnen", ru: "Действия с отрицательными числами" },
+    { id: "power:natural-exponents", stage: 38, operations: ["power"], de: "Potenzen mit natürlichen Exponenten", ru: "Степени с натуральным показателем" },
+    { id: "root:square", stage: 39, operations: ["root"], de: "Quadratwurzeln", ru: "Квадратный корень" },
+    { id: "root:cube", stage: 40, operations: ["root"], de: "Kubikwurzeln", ru: "Кубический корень" },
+    { id: "mixed:powers-roots", stage: 41, operations: ["power", "root"], de: "Potenzen und Wurzeln", ru: "Степени и корни" }
   ].map((skill) => Object.freeze({ ...skill, operations: Object.freeze(skill.operations) })));
   const byId = new Map(KAPI_SKILLS.map((skill) => [skill.id, skill]));
   const byStage = new Map(KAPI_SKILLS.map((skill) => [skill.stage, skill]));
@@ -31,7 +58,7 @@
   }
   function stageForSkill(id) {
     const canonical = canonicalId(id);
-    return byId.get(canonical)?.stage || (/^stage:(?:1[5-9]|[2-3]\d|4[01])$/.test(canonical) ? Number(canonical.slice(6)) : null);
+    return byId.get(canonical)?.stage || null;
   }
   function getSkill(id) { return byId.get(canonicalId(id)) || null; }
   function chapterIdForSkill(id) {
