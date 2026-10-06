@@ -244,7 +244,7 @@ async function run() {
         assert.equal(review.isSpacedReview, true, 'real training must select the due skill');
         assert.equal(review.skillId, 'add:cross-ten');
         assert.equal(review.stage, 12);
-        assert.equal(review.currentStage, 13);
+        assert.ok(review.currentStage >= 13, 'current curriculum may advance during the longer lead-in');
         await page.waitForFunction(() => document.querySelector('#motivationPop').classList.contains('hidden'), null, { timeout: 5000 });
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-spaced-review.png`) });
         await answerCurrent(page);
@@ -252,6 +252,7 @@ async function run() {
           after: window.__e2e.getProfile().skillMastery['add:cross-ten'].nextReviewAt,
           interval: window.__e2e.getProfile().skillMastery['add:cross-ten'].intervalDays,
           firstTry: window.__e2e.state.results.at(-1).firstTry,
+          stage: window.__e2e.getProfile().currentStage,
           width: document.documentElement.scrollWidth,
           viewport: document.documentElement.clientWidth,
           bottom: document.querySelector('#answerArea').getBoundingClientRect().bottom
@@ -259,6 +260,7 @@ async function run() {
         assert.ok(Date.parse(outcome.after) > Date.parse(review.before), `review date did not advance: ${JSON.stringify(outcome)}`);
         assert.equal(outcome.interval, 3);
         assert.equal(outcome.firstTry, true);
+        assert.equal(outcome.stage, review.currentStage, 'spaced review itself cannot advance the current stage');
         assert.equal(outcome.width, outcome.viewport);
         assert.ok(outcome.bottom <= height, `review controls offscreen: ${JSON.stringify(outcome)}`);
 
@@ -289,6 +291,7 @@ async function run() {
         const late = await page.evaluate(() => ({ problem: window.__e2e.state.problem,
           before: window.__e2e.getProfile().skillMastery['multiply:einmaleins-sequence'].nextReviewAt,
           sequence: JSON.stringify(window.__e2e.getProfile().multiplicationSequence),
+          stageBefore: window.__e2e.getProfile().currentStage,
           answer: window.__e2e.tasks.response(window.__e2e.state.problem) }));
         assert.equal(late.problem.isSpacedReview, true);
         assert.equal(late.problem.reviewSkillId, 'multiply:einmaleins-sequence');
@@ -304,7 +307,7 @@ async function run() {
         assert.equal(lateResult.mastery.intervalDays, 3);
         assert.ok(Date.parse(lateResult.mastery.nextReviewAt) > Date.parse(late.before));
         assert.equal(lateResult.sequence, late.sequence, 'late review must not mutate the multiplication sequence');
-        assert.equal(lateResult.stage, 24);
+        assert.equal(lateResult.stage, late.stageBefore, 'late review itself cannot advance the current stage');
         assert.equal(lateResult.firstTry, true);
         assert.equal(lateResult.scrollWidth, lateResult.viewport);
         await page.waitForFunction(expected => window.__e2e.state.index === expected, lateReviewSlot + 1, { timeout: 5000 });
