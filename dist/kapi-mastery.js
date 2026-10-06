@@ -3,6 +3,8 @@
 
   const REVIEW_INTERVALS = Object.freeze([1, 3, 7, 14, 30]);
   const REVIEW_SLOTS = Object.freeze({ 10: [3, 7], 20: [3, 8, 14], 30: [4, 10, 17, 24] });
+  const skills = window.KapiSkills;
+  const DIVERSITY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
   // Calendar addition preserves the local clock across daylight saving changes.
   function addCalendarDays(value, days) {
@@ -12,20 +14,50 @@
   }
 
   function migrate(profile) {
-    if (profile.skillMastery && typeof profile.skillMastery === "object" && !Array.isArray(profile.skillMastery)) return false;
-    profile.skillMastery = {};
-    return true;
+    let changed = false;
+    if (!profile.skillMastery || typeof profile.skillMastery !== "object" || Array.isArray(profile.skillMastery)) {
+      profile.skillMastery = {};
+      changed = true;
+    }
+    for (const [id, record] of Object.entries(profile.skillMastery)) {
+      const canonical = skills.canonicalId(id);
+      if (canonical === id) continue;
+      const existing = profile.skillMastery[canonical];
+      // A duplicate is the same skill, not another review. Preserve the more
+      // cautious due date and interval; do not double-count review history.
+      profile.skillMastery[canonical] = existing ? {
+        ...record, ...existing,
+        strength: Math.max(Number(record.strength) || 0, Number(existing.strength) || 0),
+        successfulReviews: Math.max(Number(record.successfulReviews) || 0, Number(existing.successfulReviews) || 0),
+        failedReviews: Math.max(Number(record.failedReviews) || 0, Number(existing.failedReviews) || 0),
+        intervalDays: Math.min(Number(record.intervalDays) || 1, Number(existing.intervalDays) || 1),
+        nextReviewAt: [record.nextReviewAt, existing.nextReviewAt].filter((value) => Number.isFinite(Date.parse(value))).sort()[0] || existing.nextReviewAt,
+        lastPracticedAt: [record.lastPracticedAt, existing.lastPracticedAt].filter((value) => Number.isFinite(Date.parse(value))).sort().at(-1) || existing.lastPracticedAt,
+        lastResult: Date.parse(record.lastPracticedAt) > Date.parse(existing.lastPracticedAt) ? record.lastResult : existing.lastResult
+      } : record;
+      delete profile.skillMastery[id];
+      changed = true;
+    }
+    for (const item of Array.isArray(profile.errorQueue) ? profile.errorQueue : []) {
+      if (!item?.fromSpacedReview) continue;
+      const canonical = skills.canonicalId(item.reviewSkillId || `stage:${item.curriculumStage}`);
+      if (skills.stageForSkill(canonical) && item.reviewSkillId !== canonical) {
+        item.reviewSkillId = canonical;
+        changed = true;
+      }
+    }
+    return changed;
   }
 
   function skillIdForProblem(problem) {
     const stage = Number(problem?.curriculumStage);
-    return Number.isInteger(stage) && stage >= 1 && stage <= 41 ? `stage:${stage}` : null;
+    return Number.isInteger(stage) && stage >= 1 && stage <= 41 ? skills.skillForStage(stage)?.id || `stage:${stage}` : null;
   }
 
   function ensureSkill(profile, skillId) {
     migrate(profile);
-    if (!/^stage:(?:[1-9]|[1-3]\d|4[01])$/.test(skillId)) return null;
-    return profile.skillMastery[skillId] || null;
+    if (!skills.stageForSkill(skillId)) return null;
+    return profile.skillMastery[skills.canonicalId(skillId)] || null;
   }
 
   function markStageMastered(profile, stage, now = new Date()) {
@@ -48,12 +80,23 @@
     const current = new Date(now).getTime();
     return Object.entries(profile.skillMastery)
       .filter(([id, skill]) => ensureSkill(profile, id) && skill && Number.isFinite(Date.parse(skill.nextReviewAt)) && Date.parse(skill.nextReviewAt) <= current)
-      .sort(([idA, a], [idB, b]) => Date.parse(a.nextReviewAt) - Date.parse(b.nextReviewAt) || idA.localeCompare(idB))
+      .sort(([idA, a], [idB, b]) => Date.parse(a.nextReviewAt) - Date.parse(b.nextReviewAt) || skills.stageForSkill(idA) - skills.stageForSkill(idB))
       .map(([skillId, skill]) => ({ skillId, skill }));
   }
 
   function selectReviewSkills(profile, count, now = new Date(), eligible = () => true) {
-    return getDueSkills(profile, now).filter(({ skillId }) => eligible(skillId)).slice(0, Math.max(0, count)).map(({ skillId }) => skillId);
+    const remaining = getDueSkills(profile, now).filter(({ skillId }) => eligible(skillId));
+    const selected = [];
+    const chapters = new Set();
+    while (remaining.length && selected.length < Math.max(0, count)) {
+      const earliest = Date.parse(remaining[0].skill.nextReviewAt);
+      const diverse = remaining.findIndex(({ skillId, skill }) =>
+        Date.parse(skill.nextReviewAt) - earliest <= DIVERSITY_WINDOW_MS && !chapters.has(skills.chapterIdForSkill(skillId)));
+      const [next] = remaining.splice(diverse < 0 ? 0 : diverse, 1);
+      selected.push(next.skillId);
+      chapters.add(skills.chapterIdForSkill(next.skillId));
+    }
+    return selected;
   }
 
   function recordReviewResult(profile, skillId, firstTry, now = new Date()) {

@@ -18,7 +18,7 @@ test('local ISO weeks run Monday through Sunday across New Year and DST', () => 
   assert.equal(w.getWeekKey(fixed('2026-03-29')), w.getWeekKey(fixed('2026-03-23')));
   assert.equal(w.getWeekKey(fixed('2026-03-30')), '2026-W14');
   const nearMidnight = new Date('2026-10-05T00:04:00+02:00');
-  assert.equal(w.getWeekKey(nearMidnight), process.env.TZ === 'Europe/Berlin' ? '2026-W41' : '2026-W40');
+  assert.equal(w.getWeekKey(nearMidnight), nearMidnight.getDay() === 1 ? '2026-W41' : '2026-W40');
 });
 
 test('Berlin midnight and DST boundaries follow the local completion date', () => {

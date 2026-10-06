@@ -53,7 +53,7 @@ function environment({ app = false, query = '', seed = 0x4b415049 } = {}) {
   };
   sandbox.window = sandbox;
   vm.createContext(sandbox);
-  for (const file of ['kapi.js', 'kapi-sound.js', 'kapi-motivation.js', 'kapi-rewards.js', 'kapi-tasks.js', 'kapi-map.js', 'kapi-weekly.js', 'kapi-mastery.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), sandbox, { filename: file });
+  for (const file of ['kapi.js', 'kapi-sound.js', 'kapi-motivation.js', 'kapi-rewards.js', 'kapi-tasks.js', 'kapi-map.js', 'kapi-weekly.js', 'kapi-skills.js', 'kapi-mastery.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), sandbox, { filename: file });
   if (app) {
     const expose = 'window.__app = {state, appSettings, startTraining, finishTraining, saveSession, submitAnswer, getProfile, saveProfile, getHistory, showStats, updateHomeStats, handleSettingsChange, registerProblemError, registerCorrectAnswer, showScreen, showWardrobe, showCurriculumMap, renderCurriculumMap, renderProblem, makeGeneratedProblem, makeCurriculumProblem, makeChoices, hasCarry, hasBorrow, selectProblem, reconcileOperationsForStage, maximumAllowedStage, canAppendKey, renderAnswer, updatePersonalPace, updateAdaptiveProgress, get machine(){return kapi}, get motivation(){return motivation}, get sound(){return soundManager}};';
     vm.runInContext(fs.readFileSync(path.join(root, 'app.js'), 'utf8').replace(/\}\)\(\);\s*$/, expose + '\n})();'), sandbox, { filename: 'app.js' });

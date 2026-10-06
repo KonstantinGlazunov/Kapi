@@ -19,8 +19,8 @@ function due(app, mastery, stage = 5) {
 
 test('stage skill is independent of the example; legacy data survives migration', () => {
   const { app, mastery, env } = setup();
-  assert.equal(mastery.skillIdForProblem({ curriculumStage: 12, a: 8, b: 5 }), 'stage:12');
-  assert.equal(mastery.skillIdForProblem({ curriculumStage: 12, a: 9, b: 4 }), 'stage:12');
+  assert.equal(mastery.skillIdForProblem({ curriculumStage: 12, a: 8, b: 5 }), 'add:cross-ten');
+  assert.equal(mastery.skillIdForProblem({ curriculumStage: 12, a: 9, b: 4 }), 'add:cross-ten');
   const legacy = { totalXp: 163, currentStage: 12, dayStreak: 4, errorQueue: [{ key: 'x' }],
     weeklySessions: { count: 2 }, equippedOutfit: { hat: 'hat-red' }, personalFastTime: 5.2 };
   const before = JSON.parse(JSON.stringify(legacy));
@@ -44,8 +44,8 @@ test('existing 9/10 promotion creates initial mastery with a next-day review', (
   app.updateAdaptiveProgress(app.makeCurriculumProblem(5, 0, profile), true, true, 5);
   const updated = app.getProfile();
   assert.equal(updated.currentStage, 6);
-  assert.equal(updated.skillMastery['stage:5'].intervalDays, 1);
-  assert.ok(Date.parse(updated.skillMastery['stage:5'].nextReviewAt) > Date.now());
+  assert.equal(updated.skillMastery['add:to10'].intervalDays, 1);
+  assert.ok(Date.parse(updated.skillMastery['add:to10'].nextReviewAt) > Date.now());
 });
 
 test('success advances 1/3/7/14/30; a failure returns sooner without a stage downgrade', () => {
@@ -53,15 +53,15 @@ test('success advances 1/3/7/14/30; a failure returns sooner without a stage dow
   const profile = { currentStage: 13 };
   const now = at('2026-10-06T12:00:00Z');
   mastery.markStageMastered(profile, 12, now);
-  assert.equal(profile.skillMastery['stage:12'].nextReviewAt, '2026-10-07T12:00:00.000Z');
+  assert.equal(profile.skillMastery['add:cross-ten'].nextReviewAt, '2026-10-07T12:00:00.000Z');
   for (const [index, interval] of [3, 7, 14, 30, 30].entries()) {
-    assert.equal(mastery.recordReviewResult(profile, 'stage:12', true, at('2026-10-' + String(7 + index).padStart(2, '0') + 'T12:00:00Z')).intervalDays, interval);
+    assert.equal(mastery.recordReviewResult(profile, 'add:cross-ten', true, at('2026-10-' + String(7 + index).padStart(2, '0') + 'T12:00:00Z')).intervalDays, interval);
   }
-  assert.equal(mastery.recordReviewResult(profile, 'stage:12', false, now).intervalDays, 14);
-  assert.equal(profile.skillMastery['stage:12'].nextReviewAt, '2026-10-07T12:00:00.000Z');
+  assert.equal(mastery.recordReviewResult(profile, 'add:cross-ten', false, now).intervalDays, 14);
+  assert.equal(profile.skillMastery['add:cross-ten'].nextReviewAt, '2026-10-07T12:00:00.000Z');
   assert.equal(profile.currentStage, 13);
-  assert.equal(profile.skillMastery['stage:12'].failedReviews, 1);
-  assert.equal(mastery.getMasteryStatus(profile.skillMastery['stage:12']), 'inPractice');
+  assert.equal(profile.skillMastery['add:cross-ten'].failedReviews, 1);
+  assert.equal(mastery.getMasteryStatus(profile.skillMastery['add:cross-ten']), 'inPractice');
 });
 
 test('due selection excludes future skills, sorts overdue skills, and caps spaced slots', () => {
@@ -71,8 +71,8 @@ test('due selection excludes future skills, sorts overdue skills, and caps space
     mastery.markStageMastered(profile, stage, at('2026-10-' + day + 'T12:00:00Z'));
   }
   const now = at('2026-10-09T12:00:00Z');
-  assert.deepEqual(Array.from(mastery.selectReviewSkills(profile, 2, now)), ['stage:5', 'stage:6']);
-  assert.deepEqual(Array.from(mastery.getDueSkills(profile, now), x => x.skillId), ['stage:5', 'stage:6', 'stage:7']);
+  assert.deepEqual(Array.from(mastery.selectReviewSkills(profile, 2, now)), ['add:to10', 'subtract:small']);
+  assert.deepEqual(Array.from(mastery.getDueSkills(profile, now), x => x.skillId), ['add:to10', 'subtract:small', 'subtract:to10']);
   assert.deepEqual(Array.from(mastery.REVIEW_SLOTS[10]), [3, 7]);
   assert.deepEqual(Array.from(mastery.REVIEW_SLOTS[20]), [3, 8, 14]);
   assert.deepEqual(Array.from(mastery.REVIEW_SLOTS[30]), [4, 10, 17, 24]);
@@ -98,10 +98,10 @@ test('spaced slots generate fresh examples, while errorQueue wins the same slot'
   const slot = [...app.state.spacedPlan.keys()][0];
   const first = app.selectProblem(app.state.stage, slot);
   assert.equal(first.isSpacedReview, true);
-  assert.equal(first.reviewSkillId, 'stage:5');
+  assert.equal(first.reviewSkillId, 'add:to10');
   assert.equal(first.curriculumStage, 5);
   assert.ok(['equation', 'missingOperand'].includes(first.taskType));
-  assert.ok(!('problem' in app.getProfile().skillMastery['stage:5']));
+  assert.ok(!('problem' in app.getProfile().skillMastery['add:to10']));
   const fresh = Array.from({ length: 30 }, () => app.selectProblem(app.state.stage, slot));
   assert.ok(fresh.some(item => item.a !== first.a || item.b !== first.b));
   const profile = app.getProfile();
@@ -143,15 +143,15 @@ test('wrong first review schedules reinforcement and queue; corrected retry rema
   app.submitAnswer(answer + 1);
   const wrong = app.getProfile();
   assert.equal(app.state.attempt, 2);
-  assert.equal(wrong.skillMastery['stage:5'].failedReviews, 1);
+  assert.equal(wrong.skillMastery['add:to10'].failedReviews, 1);
   assert.equal(wrong.personalFastTime, 6);
   assert.deepEqual(Array.from(wrong.curriculumStats['6']), [1, 1, 1]);
   assert.equal(wrong.errorQueue[0].curriculumStage, 5);
   assert.equal(wrong.errorQueue[0].fromSpacedReview, true);
   app.submitAnswer(answer);
   const corrected = app.getProfile();
-  assert.equal(corrected.skillMastery['stage:5'].successfulReviews, 0);
-  assert.equal(corrected.skillMastery['stage:5'].failedReviews, 1);
+  assert.equal(corrected.skillMastery['add:to10'].successfulReviews, 0);
+  assert.equal(corrected.skillMastery['add:to10'].failedReviews, 1);
   assert.equal(corrected.currentStage, 6);
   assert.equal(corrected.errorQueue.length, 1);
   assert.equal(app.selectProblem(6, 8).isReview, true);
@@ -168,7 +168,7 @@ test('first-try review advances mastery without changing current pace or adaptiv
   app.state.problem = app.selectProblem(app.state.stage, slot);
   app.submitAnswer(app.state.problem.responseAnswer ?? app.state.problem.answer);
   const updated = app.getProfile();
-  assert.equal(updated.skillMastery['stage:5'].intervalDays, 3);
+  assert.equal(updated.skillMastery['add:to10'].intervalDays, 3);
   assert.equal(updated.personalFastTime, 6);
   assert.equal(updated.currentStage, 6);
   assert.deepEqual(Array.from(updated.adaptiveRecentResults), []);

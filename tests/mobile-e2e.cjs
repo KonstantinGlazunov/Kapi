@@ -201,12 +201,16 @@ async function run() {
         await page.evaluate(() => {
           const api = window.__e2e;
           const profile = api.getProfile();
-          profile.currentStage = 6;
+          profile.currentStage = 13;
           profile.curriculumCompleted = false;
           profile.errorQueue = [];
-          window.KapiMasterySystem.markStageMastered(profile, 5, new Date('2020-01-01T12:00:00Z'));
+          window.KapiMasterySystem.markStageMastered(profile, 12, new Date('2020-01-01T12:00:00Z'));
           api.saveProfile(profile);
         });
+        await page.locator('#statsButton').click();
+        assert.ok((await page.locator('#statsContent').innerText()).includes('Plus über den Zehner'), 'History names due canonical skill');
+        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-due-skill-history.png`) });
+        await page.locator('#closeStatsButton').click();
         await page.locator('#startButton').click();
         for (let index = 0; index < 3; index++) {
           const problem = await page.evaluate(() => ({
@@ -222,21 +226,21 @@ async function run() {
           currentStage: window.__e2e.state.stage,
           isSpacedReview: window.__e2e.state.problem.isSpacedReview,
           skillId: window.__e2e.state.problem.reviewSkillId,
-          before: window.__e2e.getProfile().skillMastery['stage:5'].nextReviewAt,
+          before: window.__e2e.getProfile().skillMastery['add:cross-ten'].nextReviewAt,
           answer: window.__e2e.tasks.response(window.__e2e.state.problem),
           mode: window.__e2e.state.problem.mode
         }));
         assert.equal(review.isSpacedReview, true, 'real training must select the due skill');
-        assert.equal(review.skillId, 'stage:5');
-        assert.equal(review.stage, 5);
-        assert.equal(review.currentStage, 6);
+        assert.equal(review.skillId, 'add:cross-ten');
+        assert.equal(review.stage, 12);
+        assert.equal(review.currentStage, 13);
         await page.waitForFunction(() => document.querySelector('#motivationPop').classList.contains('hidden'), null, { timeout: 5000 });
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-spaced-review.png`) });
         if (review.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${review.answer}$`) }).click();
         else for (const digit of String(review.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
         const outcome = await page.evaluate(() => ({
-          after: window.__e2e.getProfile().skillMastery['stage:5'].nextReviewAt,
-          interval: window.__e2e.getProfile().skillMastery['stage:5'].intervalDays,
+          after: window.__e2e.getProfile().skillMastery['add:cross-ten'].nextReviewAt,
+          interval: window.__e2e.getProfile().skillMastery['add:cross-ten'].intervalDays,
           firstTry: window.__e2e.state.results.at(-1).firstTry,
           width: document.documentElement.scrollWidth,
           viewport: document.documentElement.clientWidth,

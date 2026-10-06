@@ -739,6 +739,9 @@ body.force-ultra .submit-button { min-height: 42px; }
 .map-chapter strong { font-size: .94rem; }
 .map-chapter p { margin: 3px 0; font-size: .75rem; color: var(--muted); }
 .map-chapter small { font-size: .72rem; font-weight: 800; }
+.map-mastery { display: block; color: #0f766e; margin-top: 3px; }
+.skill-summary p { margin: 0; }
+.due-skill-list { margin: 7px 0 0; padding-left: 20px; font-size: .86rem; line-height: 1.4; }
 .map-marker { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: #dff1ea; font-size: 1.15rem; overflow: hidden; }
 .map-marker img { width: 44px; height: 39px; object-fit: cover; object-position: top; }
 .map-status { font-size: .7rem; font-weight: 900; }
