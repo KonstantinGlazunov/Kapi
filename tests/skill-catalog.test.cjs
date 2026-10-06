@@ -251,7 +251,9 @@ test('a short-term recovery retains its skill link but cannot advance spaced mas
   app.submitAnswer((app.state.problem.responseAnswer ?? app.state.problem.answer) + 1);
   const before = app.getProfile().skillMastery['add:cross-ten'].nextReviewAt;
   assert.equal(app.getProfile().errorQueue[0].reviewSkillId, 'add:cross-ten');
-  const shortReview = app.selectProblem(13, 8);
+  app.startTraining();
+  const recoverySlot = app.state.sessionPlan.slots.findIndex(item => item.type === 'errorReview');
+  const shortReview = app.selectProblem(13, recoverySlot);
   assert.equal(shortReview.isReview, true);
   assert.equal(shortReview.reviewSkillId, 'add:cross-ten');
   assert.equal(app.registerCorrectAnswer(shortReview), 'errorRecovered');

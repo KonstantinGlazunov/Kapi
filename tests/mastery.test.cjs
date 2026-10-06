@@ -89,7 +89,7 @@ test('local calendar addition keeps the clock across daylight saving changes', (
   } finally { if (previous === undefined) delete process.env.TZ; else process.env.TZ = previous; }
 });
 
-test('spaced slots generate fresh examples, while errorQueue wins the same slot', () => {
+test('spaced slots generate fresh examples; a new error waits for the next session plan', () => {
   const { app, mastery } = setup();
   due(app, mastery);
   app.appSettings.problemCount = 20;
@@ -107,7 +107,10 @@ test('spaced slots generate fresh examples, while errorQueue wins the same slot'
   const profile = app.getProfile();
   profile.errorQueue.push({ ...app.makeCurriculumProblem(6, 0, profile), lastShown: 0, correctStreak: 0 });
   app.saveProfile(profile);
-  const priority = app.selectProblem(app.state.stage, slot);
+  assert.equal(app.selectProblem(app.state.stage, slot).isSpacedReview, true, 'snapshot stays fixed');
+  app.startTraining();
+  const errorSlot = app.state.sessionPlan.slots.findIndex(item => item.type === 'errorReview');
+  const priority = app.selectProblem(app.state.stage, errorSlot);
   assert.equal(priority.isReview, true);
   assert.equal(priority.isSpacedReview, false);
 });
@@ -154,7 +157,9 @@ test('wrong first review schedules reinforcement and queue; corrected retry rema
   assert.equal(corrected.skillMastery['add:to10'].failedReviews, 1);
   assert.equal(corrected.currentStage, 6);
   assert.equal(corrected.errorQueue.length, 1);
-  assert.equal(app.selectProblem(6, 8).isReview, true);
+  app.startTraining();
+  const recoverySlot = app.state.sessionPlan.slots.findIndex(item => item.type === 'errorReview');
+  assert.equal(app.selectProblem(6, recoverySlot).isReview, true);
 });
 
 test('first-try review advances mastery without changing current pace or adaptive stats', () => {

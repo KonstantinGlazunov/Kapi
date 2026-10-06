@@ -19,6 +19,7 @@
   const skills = window.KapiSkills;
   const mastery = window.KapiMasterySystem;
   const subskills = window.KapiSubskills;
+  const sessionPlanner = window.KapiSessionPlanner;
   const OPERATION_ORDER = ["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"];
   const OPERATION_MIN_STAGE = { add: 2, subtract: 6, multiply: 19, divide: 21, power: 30, fraction: 31, decimal: 34, negative: 36, root: 39 };
   const CURRICULUM_VERSION = 2;
@@ -1165,22 +1166,11 @@ function makePowerProblem(max, mastered) {
       if (!focused) throw new Error(`Cannot generate targeted problem for ${state.targeted.subskillId}`);
       return { ...focused, isTargetedPractice: true };
     }
-    const queue = profile.errorQueue;
-    const allowedOperations = new Set(activeOperations(profile, stage));
-    const eligibleReviews = queue.filter((item) => {
-      const sameStage = item.curriculumStage == null || item.curriculumStage === stage ||
-        (item.fromSpacedReview && item.curriculumStage < stage);
-      const operation = reviewOperation(item);
-      return sameStage && (allowedOperations.has(operation) ||
-        (item.fromSpacedReview && (appSettings.automatic || operation === "count")));
-    });
-    const remaining = TOTAL - index;
-    const shouldReview = eligibleReviews.length > 0 && (index % 3 === 2 || remaining <= eligibleReviews.length * 2 || state.spacedPlan?.has(index));
-    if (shouldReview) {
-      const sorted = [...eligibleReviews].sort((left, right) => (left.lastShown || 0) - (right.lastShown || 0));
-      const review = sorted.find((item) => item.key !== state.problem?.key) || sorted[0];
-      const stored = queue.find((item) => item.key === review.key);
-      stored.lastShown = Date.now();
+    const slot = state.sessionPlan?.slots[index] || { type: "current" };
+    if (slot.type === "errorReview") {
+      const review = profile.errorQueue.find((item) => item.key === slot.key);
+      if (!review) return makeGeneratedProblem(stage, index, profile);
+      review.lastShown = Date.now();
       saveProfile(profile);
       return {
         ...review,
@@ -1191,7 +1181,7 @@ function makePowerProblem(max, mastered) {
         isReview: true, isSpacedReview: false, reviewSkillId: review.reviewSkillId || null
       };
     }
-    const skillId = state.spacedPlan?.get(index);
+    const skillId = slot.type === "spacedReview" ? slot.skillId : null;
     if (skillId) {
       const reviewStage = skills.stageForSkill(skillId);
       if (reviewStage < stage) {
@@ -1206,15 +1196,21 @@ function makePowerProblem(max, mastered) {
     return makeGeneratedProblem(stage, index, profile);
   }
 
-  function planSpacedReviews(profile, stage, count) {
-    const slots = mastery.REVIEW_SLOTS[count] || [];
+  function planTraining(profile, stage, count, targeted) {
     const allowed = new Set(activeOperations(profile, stage));
-    const ids = mastery.selectReviewSkills(profile, slots.length, new Date(), (id) => {
+    return sessionPlanner.planSession({ profile, settings: appSettings, total: count, currentStage: stage,
+      now: new Date(), mode: targeted ? "targeted" : "normal", targeted,
+      eligibleError: (item) => {
+        const sameStage = item.curriculumStage == null || item.curriculumStage === stage ||
+          (item.fromSpacedReview && item.curriculumStage < stage);
+        const operation = reviewOperation(item);
+        return sameStage && (allowed.has(operation) ||
+          (item.fromSpacedReview && (appSettings.automatic || operation === "count")));
+      }, eligibleSkill: (id) => {
       const reviewStage = skills.stageForSkill(id);
       return reviewStage < stage && reviewStage <= maximumAllowedStage() &&
         (appSettings.automatic || reviewStage === 1 || curriculumOperationsForStage(reviewStage).some((operation) => allowed.has(operation)));
-    });
-    return new Map(ids.map((id, index) => [slots[index], id]));
+      } });
   }
 
   function startTraining(options = {}) {
@@ -1236,12 +1232,14 @@ function makePowerProblem(max, mastered) {
     $("correctLabel").textContent = copy.correctOfTotal(TOTAL);
     const trainingStage = targeted?.skillId ? skills.stageForSkill(targeted.skillId)
       : appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
+    const sessionPlan = planTraining(profile, trainingStage, TOTAL, targeted);
     Object.assign(state, {
       index: 0, score: 0, correct: 0, streak: 0, stage: trainingStage,
       attempt: 1, problem: null, results: [], locked: false, enteredAnswer: "", stageAdvancedDuringSession: false,
       sessionId: `${Date.now()}-${++sessionSequence}-${Math.random().toString(36).slice(2)}`, finished: false,
       previousTaskType: null, trainingStartStage: trainingStage, trainingStartedCompleted: profile.curriculumCompleted,
-      finalMotivationEvents: [], spacedPlan: targeted ? new Map() : planSpacedReviews(profile, trainingStage, TOTAL),
+      finalMotivationEvents: [], sessionMode: targeted ? "targeted" : "normal", sessionPlan,
+      spacedPlan: new Map(sessionPlan.slots.flatMap((slot, index) => slot.type === "spacedReview" ? [[index, slot.skillId]] : [])),
       spacedReviewRecorded: false, targeted, recentFacts: []
     });
     showScreen($("gameScreen"));

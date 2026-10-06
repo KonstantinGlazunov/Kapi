@@ -133,7 +133,10 @@ test('review queue preserves stage, operation, difficulty and safe choices', asy
       const original = app.makeGeneratedProblem(stage, 0, profile);
       app.state.stage = stage;
       app.registerProblemError(original);
-      const review = app.selectProblem(stage, 2);
+      app.startTraining();
+      const slot = app.state.sessionPlan.slots.findIndex(item => item.type === 'errorReview');
+      assert.ok(slot > 0, 'pending error has a planned recovery slot');
+      const review = app.selectProblem(stage, slot);
       assert.equal(review.isReview, true);
       for (const field of ['key', 'a', 'b', 'answer', 'operator', 'operation', 'curriculumStage']) {
         assert.equal(review[field], original[field], `stage ${stage}: review preserves ${field}`);

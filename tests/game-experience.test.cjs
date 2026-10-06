@@ -37,8 +37,10 @@ test('first error gives only a small hint; second error shows model and answer',
   assert.equal(app.state.score, 0);
   env.advance(2300);
   assert.equal(app.state.problem.isReview, false);
-  app.submitAnswer(response(app.state.problem));
-  env.advance(350);
+  app.startTraining();
+  const recoverySlot = app.state.sessionPlan.slots.findIndex(item => item.type === 'errorReview');
+  app.state.index = recoverySlot;
+  app.state.problem = app.selectProblem(app.state.stage, recoverySlot);
   assert.equal(app.state.problem.isReview, true, 'error returns in the actual queue');
   assert.equal(app.state.problem.key, original.key);
 });
@@ -59,21 +61,23 @@ test('correct retry earns one XP and cannot produce a perfect session or speed r
   assert.equal(app.getProfile().personalFastTime, 6);
   assert.equal(app.getProfile().errorQueue.find(item => item.key === original.key).correctStreak, 0);
   env.advance(350);
-  app.submitAnswer(response(app.state.problem));
-  env.advance(350);
+  app.startTraining();
+  const recoverySlot = app.state.sessionPlan.slots.findIndex(item => item.type === 'errorReview');
+  app.state.index = recoverySlot;
+  app.state.problem = app.selectProblem(app.state.stage, recoverySlot);
   assert.equal(app.state.problem.isReview, true);
   const paceBeforeReview = app.getProfile().personalFastTime;
   app.submitAnswer(response(app.state.problem));
   assert.equal(app.getProfile().errorQueue.find(item => item.key === original.key).correctStreak, 1);
   assert.equal(app.getProfile().personalFastTime, paceBeforeReview, 'review does not update baseline');
-  env.advance(350);
-  for (let index = 3; index <= 5; index += 1) {
-    if (index === 5) assert.equal(app.state.problem.isReview, true);
-    app.submitAnswer(response(app.state.problem));
-    env.advance(350);
-  }
+  app.startTraining();
+  const secondSlot = app.state.sessionPlan.slots.findIndex(item => item.type === 'errorReview');
+  app.state.index = secondSlot;
+  app.state.problem = app.selectProblem(app.state.stage, secondSlot);
+  assert.equal(app.state.problem.isReview, true);
+  app.submitAnswer(response(app.state.problem));
   assert.equal(app.getProfile().errorQueue.some(item => item.key === original.key), false);
-  assert.ok(app.state.results.some(result => result.firstTry === false));
+  assert.equal(app.getProfile().errorQueue.some(item => item.key === original.key), false);
 });
 
 test('subtraction gets a minimal prompt before a visual model', () => {

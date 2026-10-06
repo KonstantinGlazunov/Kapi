@@ -36,7 +36,7 @@ async function run() {
         const source = await response.text();
         const marker = /\}\)\(\);\s*$/;
         assert.match(source, marker);
-        const exposure = 'window.__e2e = {state, tasks, renderProblem, renderAnswer, getProfile, saveProfile, updateHomeStats, finishTraining, renderCurriculumMap};\n})();';
+        const exposure = 'window.__e2e = {state, tasks, renderProblem, renderAnswer, getProfile, saveProfile, updateHomeStats, finishTraining, renderCurriculumMap, makeCurriculumProblem};\n})();';
         await route.fulfill({ response, body: source.replace(marker, exposure) });
       });
       await page.goto(baseUrl, { waitUntil: 'load' });
@@ -214,7 +214,9 @@ async function run() {
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-due-skill-history.png`) });
         await page.locator('#closeStatsButton').click();
         await page.locator('#startButton').click();
-        for (let index = 0; index < 3; index++) {
+        const firstReviewSlot = await page.evaluate(() => window.__e2e.state.sessionPlan.slots.findIndex(slot => slot.type === 'spacedReview'));
+        assert.ok(firstReviewSlot > 0, 'due skill must have a planned slot');
+        for (let index = 0; index < firstReviewSlot; index++) {
           const problem = await page.evaluate(() => ({
             answer: window.__e2e.tasks.response(window.__e2e.state.problem),
             mode: window.__e2e.state.problem.mode
@@ -254,7 +256,7 @@ async function run() {
         assert.equal(outcome.width, outcome.viewport);
         assert.ok(outcome.bottom <= height, `review controls offscreen: ${JSON.stringify(outcome)}`);
 
-        await page.waitForFunction(() => window.__e2e.state.index === 4, null, { timeout: 5000 });
+        await page.waitForFunction(expected => window.__e2e.state.index === expected, firstReviewSlot + 1, { timeout: 5000 });
         page.once('dialog', dialog => dialog.accept());
         await page.locator('#homeButton').click();
         await page.evaluate(() => {
@@ -272,7 +274,9 @@ async function run() {
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-late-skill-history.png`) });
         await page.locator('#closeStatsButton').click();
         await page.locator('#startButton').click();
-        for (let index = 0; index < 3; index++) {
+        const lateReviewSlot = await page.evaluate(() => window.__e2e.state.sessionPlan.slots.findIndex(slot => slot.type === 'spacedReview'));
+        assert.ok(lateReviewSlot > 0, 'late due skill must have a planned slot');
+        for (let index = 0; index < lateReviewSlot; index++) {
           const problem = await page.evaluate(() => ({ answer: window.__e2e.tasks.response(window.__e2e.state.problem),
             mode: window.__e2e.state.problem.mode }));
           if (problem.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${problem.answer}$`) }).click();
@@ -301,7 +305,7 @@ async function run() {
         assert.equal(lateResult.stage, 24);
         assert.equal(lateResult.firstTry, true);
         assert.equal(lateResult.scrollWidth, lateResult.viewport);
-        await page.waitForFunction(() => window.__e2e.state.index === 4, null, { timeout: 5000 });
+        await page.waitForFunction(expected => window.__e2e.state.index === expected, lateReviewSlot + 1, { timeout: 5000 });
         page.once('dialog', dialog => dialog.accept());
         await page.locator('#homeButton').click();
         await page.evaluate(() => {
@@ -345,6 +349,43 @@ async function run() {
         assert.equal(targetOutcome.firstTry, true);
         assert.equal(targetOutcome.width, targetOutcome.viewport);
         assert.ok(targetOutcome.controlsBottom <= height, `targeted controls below viewport: ${JSON.stringify(targetOutcome)}`);
+        await page.waitForFunction(() => window.__e2e.state.index === 1, null, { timeout: 5000 });
+        page.once('dialog', dialog => dialog.accept());
+        await page.locator('#homeButton').click();
+        await page.evaluate(() => {
+          const api = window.__e2e;
+          const profile = api.getProfile();
+          profile.currentStage = 13;
+          profile.errorQueue = [{ ...api.makeCurriculumProblem(13, 0, profile), correctStreak: 0, lastShown: 1 }];
+          profile.skillMastery = {};
+          window.KapiMasterySystem.markStageMastered(profile, 12, new Date('2020-01-01T12:00:00Z'));
+          api.saveProfile(profile);
+        });
+        await page.locator('#startButton').click();
+        const planned = await page.evaluate(() => ({ mode: window.__e2e.state.sessionMode,
+          slots: window.__e2e.state.sessionPlan.slots.map(slot => slot.type),
+          counts: window.__e2e.state.sessionPlan.counts }));
+        assert.equal(planned.mode, 'normal');
+        assert.equal(planned.slots[0], 'current');
+        assert.equal(planned.counts.errorReview, 1);
+        assert.equal(planned.counts.spacedReview, 1);
+        const lastPlanned = Math.max(planned.slots.indexOf('errorReview'), planned.slots.indexOf('spacedReview'));
+        const encountered = new Set();
+        for (let index = 0; index <= lastPlanned; index++) {
+          const current = await page.evaluate(() => ({ index: window.__e2e.state.index,
+            isReview: !!window.__e2e.state.problem.isReview,
+            isSpacedReview: !!window.__e2e.state.problem.isSpacedReview,
+            answer: window.__e2e.tasks.response(window.__e2e.state.problem), mode: window.__e2e.state.problem.mode }));
+          assert.equal(current.index, index);
+          const actual = current.isReview ? 'errorReview' : current.isSpacedReview ? 'spacedReview' : 'current';
+          assert.equal(actual, planned.slots[index], `planner slot ${index}: ${JSON.stringify(current)}`);
+          encountered.add(actual);
+          if (current.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${current.answer}$`) }).click();
+          else for (const digit of String(current.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+          await page.waitForFunction(expected => window.__e2e.state.index === expected, index + 1, { timeout: 5000 });
+        }
+        assert.deepEqual([...encountered].sort(), ['current', 'errorReview', 'spacedReview']);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), true);
       }
       assert.deepEqual(errors, [], `browser errors at ${width}×${height}`);
       console.log(`PASS ${width}×${height}: 6 visual formats, controls, complete map, weekly goal`);

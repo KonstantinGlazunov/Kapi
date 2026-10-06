@@ -161,7 +161,9 @@ test('each alternative repeats with the same form and preserves firstTry and mas
     app.submitAnswer(tasks.response(original) + 100);
     assert.equal(app.state.hintLevel, 1);
     assert.equal(app.getProfile().errorQueue[0].taskType, type);
-    const review = app.selectProblem(stage, 2);
+    app.startTraining();
+    const recoverySlot = app.state.sessionPlan.slots.findIndex(item => item.type === 'errorReview');
+    const review = app.selectProblem(stage, recoverySlot);
     validateStageProblem(app, stage, review, `${type} review`);
     assert.equal(review.taskType, type);
     assert.equal(tasks.response(review), tasks.response(original));
