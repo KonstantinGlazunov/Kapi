@@ -1,5 +1,5 @@
 // Real Chromium layout and interaction check. Run against a local server serving dist/.
-// KAPI_BASE_URL=http://127.0.0.1:8765 KAPI_CHROME=/path/to/chrome node tests/mobile-e2e.cjs
+// KAPI_BASE_URL=http://127.0.0.1:8765 node tests/mobile-e2e.cjs
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
@@ -21,7 +21,9 @@ const cases = [
 ];
 
 async function run() {
-  const browser = await playwright.chromium.launch({ headless: true, executablePath: chrome, args: ['--no-sandbox'] });
+  const launchOptions = { headless: true, args: ['--no-sandbox'] };
+  if (chrome) launchOptions.executablePath = chrome;
+  const browser = await playwright.chromium.launch(launchOptions);
   try {
     for (const [width, height] of [[320, 568], [360, 640], [390, 844], [430, 932]]) {
       const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, serviceWorkers: 'block', reducedMotion: 'reduce' });
@@ -38,6 +40,7 @@ async function run() {
         await route.fulfill({ response, body: source.replace(marker, exposure) });
       });
       await page.goto(baseUrl, { waitUntil: 'load' });
+      if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-start.png`) });
       await page.locator('#startButton').click();
       assert.equal(await page.locator('#gameScreen').isVisible(), true, 'tap starts training');
       // A real first answer must pass through the visible choice/keypad and advance the app.
@@ -79,15 +82,15 @@ async function run() {
             frameCells: visual.querySelectorAll('.task-cell').length
           };
         });
+        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-${item.type}-${item.stage}.png`) });
         assert.equal(geometry.bodyWidth, geometry.viewportWidth, `${width} ${item.type}: horizontal overflow`);
         assert.ok(geometry.controlBottom <= height - 2, `${width} ${item.type}: answer control below viewport: ${JSON.stringify(geometry)}`);
         assert.ok(geometry.controlLeft >= 0 && geometry.controlRight <= width, `${width} ${item.type}: answer controls offscreen`);
         assert.ok(geometry.visibleVisual, `${width} ${item.type}: visual clipped: ${JSON.stringify(geometry)}`);
         assert.ok(geometry.visibleWidth, `${width} ${item.type}: visual cropped horizontally: ${JSON.stringify(geometry)}`);
         assert.ok(geometry.visualBottom <= geometry.answerTop + 1, `${width} ${item.type}: visual overlaps answers`);
-        if (['visualCount', 'tenFrame'].includes(item.type)) assert.equal(geometry.groups, 2);
-        if (item.type === 'tenFrame') assert.ok(geometry.frameCells >= 20);
-        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-${item.type}-${item.stage}.png`) });
+        if (['visualCount', 'tenFrame'].includes(item.type)) assert.equal(geometry.groups, 2, `${width} ${item.type}: operand groups`);
+        if (item.type === 'tenFrame') assert.ok(geometry.frameCells >= 20, `${width} ${item.type}: frame cells`);
       }
       await page.evaluate(() => {
         const api = window.__e2e;
@@ -107,8 +110,8 @@ async function run() {
         bottom: document.querySelector('#answerArea .submit-button').getBoundingClientRect().bottom,
         hintVisible: !document.querySelector('#hint').classList.contains('hidden')
       }));
-      assert.ok(hintLayout.hintVisible && hintLayout.bottom <= height - 2, `${width}: first hint hides the controls: ${JSON.stringify(hintLayout)}`);
       if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-first-hint.png`) });
+      assert.ok(hintLayout.hintVisible && hintLayout.bottom <= height - 2, `${width}: first hint hides the controls: ${JSON.stringify(hintLayout)}`);
       // The completed curriculum is an actual dialog state, also in reduced motion.
       await page.evaluate(() => {
         const api = window.__e2e;
@@ -120,13 +123,13 @@ async function run() {
       page.once('dialog', dialog => dialog.accept());
       await page.locator('#homeButton').click();
       await page.locator('#mapButton').click();
-      assert.equal(await page.locator('#mapChapters .completed').count(), 13);
-      assert.equal(await page.locator('#mapChapters .current').count(), 0);
-      assert.ok((await page.locator('#mapIntro').innerText()).includes('Alle Kapitel geschafft'));
       if (screenshots) {
         await page.locator('#mapChapters .map-chapter').last().scrollIntoViewIfNeeded();
         await page.screenshot({ path: path.join(screenshots, `${width}x${height}-completed-map.png`) });
       }
+      assert.equal(await page.locator('#mapChapters .completed').count(), 13);
+      assert.equal(await page.locator('#mapChapters .current').count(), 0);
+      assert.ok((await page.locator('#mapIntro').innerText()).includes('Alle Kapitel geschafft'), `${width}: completed curriculum text`);
       assert.deepEqual(errors, [], `browser errors at ${width}×${height}`);
       console.log(`PASS ${width}×${height}: 6 visual formats, controls, complete map`);
       await context.close();

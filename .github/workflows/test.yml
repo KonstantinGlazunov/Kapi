@@ -16,3 +16,42 @@ jobs:
           node-version: 24
       - name: Run test suite
         run: node --test tests/*.test.cjs
+
+  mobile-e2e:
+    runs-on: ubuntu-latest
+    env:
+      KAPI_BASE_URL: http://127.0.0.1:8765/
+      KAPI_E2E_SCREENSHOTS: artifacts/mobile-e2e
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Use Node.js 24 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install Playwright
+        run: npm install --no-save playwright
+      - name: Install Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Start HTTP server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory dist > /tmp/kapi-http.log 2>&1 &
+          echo $! > /tmp/kapi-http.pid
+      - name: Wait for HTTP server
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error "$KAPI_BASE_URL" > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/kapi-http.log
+          exit 1
+      - name: Run mobile E2E in Chromium
+        run: node tests/mobile-e2e.cjs
+      - name: Upload mobile screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-e2e-screenshots
+          path: artifacts/mobile-e2e
