@@ -15,6 +15,7 @@
   const rewards = new window.KapiRewardSystem();
   const tasks = new window.KapiTaskSystem();
   const curriculumMap = new window.KapiCurriculumMap();
+  const weekly = window.KapiWeeklyProgress;
   const OPERATION_ORDER = ["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"];
   const OPERATION_MIN_STAGE = { add: 2, subtract: 6, multiply: 19, divide: 21, power: 30, fraction: 31, decimal: 34, negative: 36, root: 39 };
   const CURRICULUM_VERSION = 2;
@@ -34,6 +35,11 @@
       locale: "ru-RU", appName: "Считаем с Капи", description: "Адаптивный тренажёр арифметики для детей — от сложения до корней.",
       startEyebrow: "Уровень 1", startTitle: "Готовы считать?", startDescription: "20 коротких примеров. Капи постепенно повышает сложность.",
       dayStreak: "дней подряд", totalXp: "всего XP", start: "Начать тренировку", history: "История занятий", speech: "Hey!",
+      weeklyGoal: "Цель на неделю", thisWeek: "На этой неделе", weeklyZero: "Первое занятие ждёт",
+      weeklyCount: (count, goal) => `${count} из ${goal} тренировок`,
+      weeklyDone: "Цель недели выполнена!", weeklyExtra: (count) => `${count} тренировок на этой неделе`,
+      weeklyOption: (count) => `${count} ${count === 5 ? "тренировок" : "тренировки"}`,
+      lastFourWeeks: "за последние 4 недели", learningProgress: "Прогресс в математике", weeklyAndReward: "Большой прогресс!",
       home: "Вернуться в начало", soundOn: "Выключить звук", soundOff: "Включить звук", gameProgress: "Игровой прогресс",
       problem: "Пример", answerStreak: "Серия правильных ответов", xpEarned: "Набранные очки опыта", careful: "Считай внимательно", next: "Следующий пример",
       answer: "Ответ", numberPad: "Цифровая клавиатура", clear: "Очистить", backspace: "Удалить последнюю цифру", check: "Проверить",
@@ -48,6 +54,7 @@
       largeSubtractionHint: (a, b) => `Вычитай по частям: ${a} − ${b}. Сначала крупные разряды, затем единицы.`,
       resultEyebrow: "Тренировка завершена", correctOf20: "верно из 20", average: "в среднем", experience: "опыта",
       levelUpTitle: "Новый уровень открыт!", completeTitle: "Тренировка завершена!", levelUpNote: (level, name) => `Теперь уровень ${level}: ${name}.`, curriculumComplete: "Весь путь обучения пройден! Капи гордится тобой.",
+      curriculumHomeComplete: "Весь путь пройден!",
       stayNote: "Продолжаем этот уровень, пока он не станет уверенным.", maxLevelNote: "Максимальный уровень освоен — продолжаем закреплять счёт до 10 000.", reviewsLeft: (count) => `Примеров для повторения: ${count}.`, again: "Дальше", viewHistory: "Посмотреть историю",
       forParents: "Для родителей", close: "Закрыть", clearHistory: "Удалить историю", emptyHistory: "Здесь появятся результаты после первой тренировки.",
       sessions: "тренировок", currentLevel: "текущий уровень", correctShort: "средний результат", correctHistory: (correct, total, seconds) => `${correct}/${total} верно · ${seconds} с`,
@@ -80,6 +87,11 @@
       locale: "de-DE", appName: "Rechnen mit Kapi", description: "Adaptives Rechentraining für Kinder – von Addition bis zu Wurzeln.",
       startEyebrow: "Stufe 1", startTitle: "Bereit zum Rechnen?", startDescription: "20 kurze Aufgaben. Kapi erhöht die Schwierigkeit Schritt für Schritt.",
       dayStreak: "Tage in Folge", totalXp: "XP insgesamt", start: "Training starten", history: "Trainingsverlauf", speech: "Hey!",
+      weeklyGoal: "Wochenziel", thisWeek: "Diese Woche", weeklyZero: "Erstes Training wartet",
+      weeklyCount: (count, goal) => `${count} von ${goal} Trainings`,
+      weeklyDone: "Wochenziel geschafft!", weeklyExtra: (count) => `${count} Trainings diese Woche`,
+      weeklyOption: (count) => `${count} Trainings`,
+      lastFourWeeks: "in den letzten 4 Wochen", learningProgress: "Lernfortschritt", weeklyAndReward: "Großer Fortschritt!",
       home: "Zur Startseite", soundOn: "Ton ausschalten", soundOff: "Ton einschalten", gameProgress: "Spielfortschritt",
       problem: "Aufgabe", answerStreak: "Richtige Antworten in Folge", xpEarned: "Gesammelte Erfahrungspunkte", careful: "Rechne in Ruhe", next: "Nächste Aufgabe",
       answer: "Antwort", numberPad: "Zahlentastatur", clear: "Löschen", backspace: "Letzte Ziffer löschen", check: "Prüfen",
@@ -94,6 +106,7 @@
       largeSubtractionHint: (a, b) => `Subtrahiere in Schritten: ${a} − ${b}. Zuerst die großen Stellen, dann die Einer.`,
       resultEyebrow: "Training beendet", correctOf20: "richtig von 20", average: "im Durchschnitt", experience: "Erfahrung",
       levelUpTitle: "Neue Stufe freigeschaltet!", completeTitle: "Training beendet!", levelUpNote: (level, name) => `Jetzt Stufe ${level}: ${name}.`, curriculumComplete: "Der ganze Lernweg ist geschafft! Kapi ist stolz auf dich.",
+      curriculumHomeComplete: "Lernweg geschafft!",
       stayNote: "Wir üben diese Stufe weiter, bis sie sicher sitzt.", maxLevelNote: "Die höchste Stufe ist geschafft – jetzt festigen wir das Rechnen bis 10.000.", reviewsLeft: (count) => `Aufgaben zum Wiederholen: ${count}.`, again: "Weiter", viewHistory: "Verlauf ansehen",
       forParents: "Für Eltern", close: "Schließen", clearHistory: "Verlauf löschen", emptyHistory: "Nach dem ersten Training erscheinen hier die Ergebnisse.",
       sessions: "Trainings", currentLevel: "aktuelle Stufe", correctShort: "Durchschnitt", correctHistory: (correct, total, seconds) => `${correct}/${total} richtig · ${seconds} s`,
@@ -127,6 +140,8 @@
   translations.de.stageNames[8] = "Zahlen 11–20 als 10 + n";
   translations.ru.homeMascotAction = "Запустить реакцию Капи";
   translations.de.homeMascotAction = "Kapis Reaktion starten";
+  translations.ru.settingsGeneralMenu = "Язык, звук и цель на неделю";
+  translations.de.settingsGeneralMenu = "Sprache, Ton und Wochenziel";
   Object.assign(translations.ru, {
     recoveredTitle: "Получилось!", recoveredNote: "Этот пример уже получается.",
     masteredTitle: "Закрепили!", masteredNote: "Два верных повтора — уверенно!",
@@ -217,6 +232,7 @@
   let advanceTimer = 0;
   let rewardRevealTimer = 0;
   let rewardGoalTimer = 0;
+  let sessionSequence = 0;
 
   function applyLanguage() {
     copy = translations[language];
@@ -229,7 +245,7 @@
     $("startEyebrow").textContent = copy.startEyebrow;
     $("startTitle").textContent = copy.startTitle;
     $("startDescription").textContent = copy.startDescriptionFor(TOTAL);
-    $("dayStreakLabel").textContent = copy.dayStreak;
+    $("weeklyLabel").textContent = copy.thisWeek;
     $("totalXpLabel").textContent = copy.totalXp;
     $("startButton").innerHTML = `${copy.start} <span aria-hidden="true">→</span>`;
     $("statsButton").textContent = copy.history;
@@ -324,6 +340,7 @@
     const sectionLabel = items.find(([key]) => key === settingsSection)?.[2] || copy.settings;
     const navigation = `<div class="settings-section-head"><button type="button" data-settings-back><span aria-hidden="true">←</span> ${copy.backToSettings}</button><h3>${sectionLabel}</h3></div>`;
     if (settingsSection === "general") {
+      const selectedWeeklyGoal = getProfile().weeklyGoal;
       content.innerHTML = `${navigation}
         <section class="settings-panel">
           <fieldset><legend>${copy.language}</legend>
@@ -332,6 +349,9 @@
           </fieldset>
           <fieldset><legend>${copy.sound}</legend>
             <button class="setting-toggle" id="soundButton" type="button" aria-pressed="${state.sound}">${state.sound ? `🔊 ${copy.soundEnabled}` : `🔇 ${copy.soundDisabled}`}</button>
+          </fieldset>
+          <fieldset><legend>${copy.weeklyGoal}</legend>
+            ${weekly.GOALS.map((goal) => `<label><input type="radio" name="weeklyGoal" value="${goal}" ${selectedWeeklyGoal === goal ? "checked" : ""}> ${copy.weeklyOption(goal)}</label>`).join("")}
           </fieldset>
         </section>`;
       return;
@@ -391,6 +411,7 @@
   function getProfile() {
     const defaults = {
       totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, curriculumCompleted: false, errorQueue: [],
+      weeklyGoal: 3, weeklySessions: null, weeklyHistory: [],
       adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveCorrectStreak: 0, adaptiveRecentResults: [],
       personalFastTime: null, bestPersonalFastTime: null, recordMilestoneTime: null,
       paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {},
@@ -458,9 +479,11 @@
         const values = Array.isArray(profile.operationStats[operation]) ? profile.operationStats[operation] : [];
         profile.operationStats[operation] = values.filter((value) => value === 0 || value === 1).slice(-10);
       });
-      if (rewards.migrate(profile)) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      const rewardMigration = rewards.migrate(profile);
+      const weeklyMigration = weekly.migrate(profile, getHistory());
+      if (rewardMigration || weeklyMigration) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       return profile;
-    } catch { rewards.migrate(defaults); return defaults; }
+    } catch { rewards.migrate(defaults); weekly.migrate(defaults); return defaults; }
   }
 
   function saveProfile(profile) {
@@ -485,12 +508,17 @@
   function updateHomeStats() {
     const profile = getProfile();
     updateMascotOutfit(profile);
-    $("dayStreakValue").textContent = String(profile.dayStreak);
+    const progress = weekly.getWeeklyProgress(profile);
+    $("weeklyValue").textContent = Array.from({ length: progress.goal }, (_, index) => index < progress.count ? "●" : "○").join(" ");
+    $("weeklyValue").setAttribute("aria-label", copy.weeklyCount(progress.count, progress.goal));
+    $("weeklyDetail").textContent = progress.count === 0 ? copy.weeklyZero : progress.count === progress.goal
+      ? copy.weeklyDone : progress.count > progress.goal ? copy.weeklyExtra(progress.count) : copy.weeklyCount(progress.count, progress.goal);
     $("totalXpValue").textContent = String(profile.totalXp);
     renderRewardGoal("home", profile.totalXp);
     const displayStage = appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
     const stageName = copy.stageNames[displayStage - 1];
-    $("startEyebrow").textContent = profile.curriculumCompleted && profile.currentStage === CURRICULUM_STAGE_COUNT && appSettings.automatic ? copy.curriculumComplete : copy.levelLabel(displayStage, stageName);
+    $("startEyebrow").textContent = profile.curriculumCompleted && profile.currentStage === CURRICULUM_STAGE_COUNT && appSettings.automatic ? copy.curriculumHomeComplete : copy.levelLabel(displayStage, stageName);
+    scheduleFitCheck();
   }
 
   function rewardName(reward) { return reward[language]; }
@@ -1147,6 +1175,7 @@ function makePowerProblem(max, mastered) {
     Object.assign(state, {
       index: 0, score: 0, correct: 0, streak: 0, stage: trainingStage,
       attempt: 1, problem: null, results: [], locked: false, enteredAnswer: "", stageAdvancedDuringSession: false,
+      sessionId: `${Date.now()}-${++sessionSequence}-${Math.random().toString(36).slice(2)}`, finished: false,
       previousTaskType: null, trainingStartStage: trainingStage, trainingStartedCompleted: profile.curriculumCompleted,
       finalMotivationEvents: []
     });
@@ -1776,7 +1805,7 @@ function makePowerProblem(max, mastered) {
     screen.style.removeProperty("--start-fit-scale");
     const isOverflowing = () => {
       const shell = document.querySelector(".app-shell");
-      const items = [...screen.querySelectorAll(".start-copy, .mascot-stage, #statsButton")];
+      const items = [...screen.querySelectorAll(".start-copy, .mascot-stage, #mapButton")];
       const contentBottom = Math.max(...items.map((item) => item.getBoundingClientRect().bottom));
       return contentBottom > viewportBottom || shell.scrollHeight > visibleHeight() + 1 || screen.scrollHeight > screen.clientHeight + 1;
     };
@@ -1797,6 +1826,8 @@ function makePowerProblem(max, mastered) {
   }
 
   function finishTraining() {
+    if (state.finished) return;
+    state.finished = true;
     const perfect = state.results.length === TOTAL && state.results.every((item) => item.firstTry);
     const average = state.results.length
       ? state.results.reduce((sum, item) => sum + item.seconds, 0) / state.results.length
@@ -1804,7 +1835,9 @@ function makePowerProblem(max, mastered) {
     const profile = getProfile();
     const advanced = state.stageAdvancedDuringSession;
     const session = {
+      id: state.sessionId || `${Date.now()}-${++sessionSequence}`,
       date: new Date().toISOString(),
+      completed: state.results.length === TOTAL,
       correct: state.correct,
       total: TOTAL,
       average: Number(average.toFixed(1)),
@@ -1815,12 +1848,14 @@ function makePowerProblem(max, mastered) {
         return counts;
       }, {}),
       stage: state.stage,
+      stageStart: state.trainingStartStage || state.stage,
+      stageEnd: getProfile().currentStage,
       curriculumVersion: CURRICULUM_VERSION,
       advanced,
       perfect,
       trouble: state.results.filter((item) => !item.firstTry).map((item) => item.key).slice(0, 5)
     };
-    const unlocked = saveSession(session);
+    const { unlocked, weeklyGoalComplete } = saveSession(session);
     $("correctValue").textContent = String(state.correct);
     $("averageValue").textContent = `${formatSeconds(average)} ${copy.seconds}`;
     $("starsValue").textContent = `${state.score} XP`;
@@ -1836,6 +1871,8 @@ function makePowerProblem(max, mastered) {
     }
     renderRewardGoal("result", freshProfile.totalXp);
     $("resultRewardProgress").classList.toggle("hidden", unlocked.length > 0);
+    $("weeklyResult").classList.add("hidden");
+    $("weeklyResult").textContent = "";
     $("rewardReveal").classList.add("hidden");
     $("rewardReveal").innerHTML = "";
     $("progressFill").style.width = "100%";
@@ -1843,7 +1880,7 @@ function makePowerProblem(max, mastered) {
     const events = [...(state.finalMotivationEvents || []), { type: "trainingComplete", total: TOTAL }];
     if (perfect) events.push({ type: "perfectTraining", total: TOTAL });
     motivation.handle(events, { batchId: "completion", surface: "result" });
-    if (unlocked.length) {
+    if (unlocked.length || weeklyGoalComplete) {
       rewardRevealTimer = window.setTimeout(() => {
         if (!$("resultScreen").classList.contains("active")) return;
         dismissMotivation();
@@ -1854,12 +1891,16 @@ function makePowerProblem(max, mastered) {
         }
         saveProfile(profile);
         updateMascotOutfit(profile);
-        $("rewardReveal").innerHTML = `<strong>${copy.newThings(earned.length)}</strong><div>${earned.map((reward) =>
-          `<img src="assets/cosmetics/${reward.asset}.svg" alt="">${rewardName(reward)} ${copy.rewardUnlocked}`).join(" · ")}</div>`;
+        $("rewardReveal").innerHTML = `<strong>${weeklyGoalComplete && earned.length ? copy.weeklyAndReward : earned.length ? copy.newThings(earned.length) : copy.weeklyDone}</strong>${earned.length ? `<div>${earned.map((reward) =>
+          `<img src="assets/cosmetics/${reward.asset}.svg" alt="">${rewardName(reward)} ${copy.rewardUnlocked}`).join(" · ")}</div>` : ""}${weeklyGoalComplete && earned.length ? `<div>${copy.weeklyDone}</div>` : ""}`;
         $("rewardReveal").classList.remove("hidden");
-        kapi.trigger("rewardReveal", { surface: "result", rewardAsset: earned[0].asset });
+        kapi.trigger("rewardReveal", { surface: "result", rewardAsset: earned[0]?.asset });
         rewardGoalTimer = window.setTimeout(() => {
           $("resultRewardProgress").classList.remove("hidden");
+          if (weeklyGoalComplete) {
+            $("weeklyResult").textContent = copy.weeklyDone;
+            $("weeklyResult").classList.remove("hidden");
+          }
         }, 1600);
       }, perfect ? 2500 : TOTAL === 30 ? 2400 : 2000);
     }
@@ -1868,12 +1909,17 @@ function makePowerProblem(max, mastered) {
   }
 
   function saveSession(session) {
+    if (!session.id) throw new Error("Session ID required");
+    const profile = getProfile();
     const history = getHistory();
+    if (history.some((item) => item.id === session.id) || profile.weeklySessions.sessionIds.includes(session.id) ||
+      profile.weeklyHistory.some((week) => week.sessionIds?.includes(session.id))) return { unlocked: [], weeklyGoalComplete: false };
     history.unshift(session);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 30)));
-    const profile = getProfile();
     const today = localDay(new Date());
-    const yesterday = localDay(new Date(Date.now() - 86400000));
+    const previousDay = new Date();
+    previousDay.setDate(previousDay.getDate() - 1);
+    const yesterday = localDay(previousDay);
     if (profile.lastDay !== today) {
       profile.dayStreak = profile.lastDay === yesterday ? profile.dayStreak + 1 : 1;
       profile.lastDay = today;
@@ -1881,13 +1927,14 @@ function makePowerProblem(max, mastered) {
     const oldXp = profile.totalXp;
     profile.totalXp += session.score;
     const unlocked = rewards.unlock(profile, oldXp, profile.totalXp);
+    const weeklyResult = session.completed ? weekly.recordCompletedSession(profile, session.id, new Date(session.date)) : null;
     saveProfile(profile);
     updateHomeStats();
-    return unlocked;
+    return { unlocked, weeklyGoalComplete: weeklyResult?.weeklyGoalComplete === true };
   }
 
   function localDay(date) {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return weekly.getLocalDateKey(date);
   }
 
   function getHistory() {
@@ -1903,14 +1950,15 @@ function makePowerProblem(max, mastered) {
       content.innerHTML = `<div class="empty-state">${copy.emptyHistory}</div>`;
     } else {
       const profile = getProfile();
-      const avgCorrect = history.reduce((sum, item) => sum + (item.correct / (item.total || 20)) * 100, 0) / history.length;
+      const summary = weekly.getHistorySummary(profile, history);
       const commonTrouble = mostCommon(history.flatMap((item) => item.trouble || []));
       content.innerHTML = `
         <div class="summary-stats">
-          <div><strong>${history.length}</strong><span>${copy.sessions}</span></div>
+          <div><strong>${summary.thisWeek}</strong><span>${copy.thisWeek}</span></div>
+          <div><strong>${summary.lastFourWeeks}</strong><span>${copy.lastFourWeeks}</span></div>
           <div><strong>${profile.currentStage}</strong><span>${copy.currentLevel}</span></div>
-          <div><strong>${formatNumber(avgCorrect)}%</strong><span>${copy.correctShort}</span></div>
         </div>
+        ${summary.stageStart && summary.stageEnd && summary.stageEnd > summary.stageStart ? `<p class="learning-summary"><strong>${copy.learningProgress}:</strong> ${copy.stageNames[summary.stageStart - 1]} → ${copy.stageNames[summary.stageEnd - 1]}</p>` : ""}
         <div class="history-list">${history.slice(0, 10).map((item) => {
           const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(item.stage) || 1));
           const currentScale = item.curriculumVersion === CURRICULUM_VERSION || new Date(item.date).getTime() >= Date.parse("2026-09-27T18:11:52Z");
@@ -2168,6 +2216,15 @@ function makePowerProblem(max, mastered) {
       appSettings.problemCount = TOTAL;
       saveSettings();
       applyLanguage();
+      return;
+    }
+    if (input.name === "weeklyGoal") {
+      const profile = getProfile();
+      profile.weeklyGoal = weekly.GOALS.includes(Number(input.value)) ? Number(input.value) : 3;
+      profile.weeklySessions.goal = profile.weeklyGoal;
+      saveProfile(profile);
+      renderSettingsContent();
+      updateHomeStats();
       return;
     }
     if (input.name === "automatic") {

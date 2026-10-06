@@ -25,7 +25,7 @@
         <p id="startDescription">20 коротких примеров. Капи подберёт сложность сама.</p>
         <div class="speech-bubble" id="speechBubble">У тебя получится!</div>
         <div class="home-stats" id="homeStats" aria-label="Игровой прогресс">
-          <div><span aria-hidden="true">🔥</span><strong id="dayStreakValue">0</strong><small id="dayStreakLabel">дней подряд</small></div>
+          <div class="weekly-stat" id="weeklyStat"><strong id="weeklyValue">○ ○ ○</strong><small id="weeklyLabel">На этой неделе</small><small id="weeklyDetail">Первое занятие этой недели уже ждёт</small></div>
           <div><span aria-hidden="true">⚡</span><strong id="totalXpValue">0</strong><small id="totalXpLabel">всего XP</small></div>
         </div>
         <div class="reward-goal" id="homeRewardGoal" aria-live="polite"><strong id="homeRewardText"></strong><span class="reward-track"><span id="homeRewardFill"></span></span><small id="homeRewardNext"></small></div>
@@ -78,6 +78,7 @@
           <div><strong id="starsValue">48 XP</strong><span id="xpLabel">опыта</span></div>
         </div>
         <p class="result-note" id="resultNote"></p>
+        <div class="weekly-result hidden" id="weeklyResult" role="status"></div>
         <div class="reward-goal result-reward" id="resultRewardGoal" aria-live="polite"><div id="rewardReveal" class="reward-reveal hidden"></div><div id="resultRewardProgress"><strong id="resultRewardText"></strong><span class="reward-track"><span id="resultRewardFill"></span></span><small id="resultRewardNext"></small></div></div>
         <button class="primary-button" id="againButton" type="button">Ещё раз</button>
         <button class="share-button" id="shareButton" type="button">Поделиться результатом</button>
@@ -145,6 +146,7 @@
   <script src="kapi-rewards.js" defer></script>
   <script src="kapi-tasks.js" defer></script>
   <script src="kapi-map.js" defer></script>
+  <script src="kapi-weekly.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>

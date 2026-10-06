@@ -36,10 +36,21 @@ async function run() {
         const source = await response.text();
         const marker = /\}\)\(\);\s*$/;
         assert.match(source, marker);
-        const exposure = 'window.__e2e = {state, tasks, renderProblem, renderAnswer, getProfile, saveProfile, renderCurriculumMap};\n})();';
+        const exposure = 'window.__e2e = {state, tasks, renderProblem, renderAnswer, getProfile, saveProfile, updateHomeStats, finishTraining, renderCurriculumMap};\n})();';
         await route.fulfill({ response, body: source.replace(marker, exposure) });
       });
       await page.goto(baseUrl, { waitUntil: 'load' });
+      assert.equal(await page.locator('#weeklyStat').isVisible(), true, `${width}: weekly progress missing`);
+      assert.equal(await page.locator('#weeklyLabel').innerText(), 'Diese Woche');
+      assert.equal(await page.locator('#startButton').isVisible(), true);
+      const homeLayout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth,
+        viewport: document.documentElement.clientWidth, bottom: document.querySelector('#startButton').getBoundingClientRect().bottom,
+        historyTop: document.querySelector('#statsButton').getBoundingClientRect().top,
+        mapBottom: document.querySelector('#mapButton').getBoundingClientRect().bottom }));
+      assert.equal(homeLayout.width, homeLayout.viewport, `${width}: home horizontal overflow`);
+      assert.ok(homeLayout.bottom <= height, `${width}: start button below viewport: ${JSON.stringify(homeLayout)}`);
+      assert.ok(homeLayout.historyTop >= homeLayout.bottom + 8 && homeLayout.mapBottom <= height - 2,
+        `${width}: home actions overlap or leave viewport: ${JSON.stringify(homeLayout)}`);
       if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-start.png`) });
       await page.locator('#startButton').click();
       assert.equal(await page.locator('#gameScreen').isVisible(), true, 'tap starts training');
@@ -130,8 +141,62 @@ async function run() {
       assert.equal(await page.locator('#mapChapters .completed').count(), 13);
       assert.equal(await page.locator('#mapChapters .current').count(), 0);
       assert.ok((await page.locator('#mapIntro').innerText()).includes('Alle Kapitel geschafft'), `${width}: completed curriculum text`);
+      await page.locator('#closeMapButton').click();
+      await page.locator('#settingsButton').click();
+      await page.locator('[data-settings-section="general"]').click();
+      await page.locator('input[name="weeklyGoal"][value="4"]').check();
+      if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-weekly-settings.png`) });
+      assert.equal(await page.locator('input[name="weeklyGoal"]:checked').inputValue(), '4');
+      await page.locator('#closeSettingsButton').click();
+      await page.locator('#settingsButton').click();
+      await page.locator('[data-settings-section="general"]').click();
+      assert.equal(await page.locator('input[name="weeklyGoal"]:checked').inputValue(), '4', `${width}: weekly setting not persistent`);
+      await page.locator('input[name="weeklyGoal"][value="3"]').check();
+      await page.locator('#closeSettingsButton').click();
+      await page.evaluate(() => {
+        const api = window.__e2e;
+        const profile = api.getProfile();
+        profile.weeklySessions.count = 2;
+        profile.weeklySessions.sessionIds = ['before-a', 'before-b'];
+        api.saveProfile(profile);
+        api.updateHomeStats();
+      });
+      await page.waitForTimeout(350);
+      if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-weekly-2-of-3.png`) });
+      assert.ok((await page.locator('#weeklyDetail').innerText()).includes('2 von 3'));
+      const updatedHomeLayout = await page.evaluate(() => ({ mapBottom: document.querySelector('#mapButton').getBoundingClientRect().bottom,
+        mapHeight: document.querySelector('#mapButton').getBoundingClientRect().height,
+        mascotHeight: document.querySelector('#homeMascot').getBoundingClientRect().height,
+        mascotVisible: getComputedStyle(document.querySelector('#homeMascot')).visibility }));
+      assert.ok(updatedHomeLayout.mapHeight > 0 && updatedHomeLayout.mapBottom <= height - 2,
+        `${width}: completed curriculum home clips map entry: ${JSON.stringify(updatedHomeLayout)}`);
+      await page.locator('#startButton').click();
+      await page.evaluate(() => {
+        const api = window.__e2e;
+        api.state.results = Array.from({ length: 20 }, () => ({ firstTry: false, seconds: 5, taskType: 'equation', key: '8 + 5 = ?' }));
+        api.state.correct = 18;
+        api.state.score = 0;
+        api.finishTraining();
+      });
+      await page.waitForTimeout(2200);
+      assert.ok((await page.locator('#rewardReveal').innerText()).includes('Wochenziel geschafft'));
+      if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-weekly-reveal.png`) });
+      const resultLayout = await page.evaluate(() => ({ nextBottom: document.querySelector('#againButton').getBoundingClientRect().bottom,
+        historyBottom: document.querySelector('#resultStatsButton').getBoundingClientRect().bottom,
+        screenHeight: document.querySelector('#resultScreen').clientHeight,
+        contentHeight: document.querySelector('#resultScreen').scrollHeight }));
+      assert.ok(resultLayout.nextBottom <= height - 2, `${width}: result CTA not visible: ${JSON.stringify(resultLayout)}`);
+      assert.ok(resultLayout.historyBottom <= height - 2, `${width}: result actions not visible: ${JSON.stringify(resultLayout)}`);
+      await page.locator('#resultStatsButton').click();
+      const historyText = await page.locator('#statsContent').innerText();
+      assert.ok(historyText.includes('Diese Woche'), `${width}: weekly history summary missing: ${historyText}; errors=${JSON.stringify(errors)}`);
+      assert.ok(historyText.includes('letzten 4 Wochen'), `${width}: four-week history summary missing: ${historyText}`);
+      if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-weekly-history.png`) });
+      const dialogLayout = await page.evaluate(() => { const dialog = document.querySelector('#statsDialog');
+        return { scrollWidth: dialog.scrollWidth, clientWidth: dialog.clientWidth, scrollLeft: dialog.scrollLeft }; });
+      assert.ok(dialogLayout.scrollWidth <= dialogLayout.clientWidth + 1, `${width}: history dialog horizontal clipping: ${JSON.stringify(dialogLayout)}`);
       assert.deepEqual(errors, [], `browser errors at ${width}×${height}`);
-      console.log(`PASS ${width}×${height}: 6 visual formats, controls, complete map`);
+      console.log(`PASS ${width}×${height}: 6 visual formats, controls, complete map, weekly goal`);
       await context.close();
     }
   } finally { await browser.close(); }
