@@ -38,6 +38,7 @@
     ru: {
       locale: "ru-RU", appName: "Считаем с Капи", description: "Адаптивный тренажёр арифметики для детей — от сложения до корней.",
       startEyebrow: "Уровень 1", startTitle: "Готовы считать?", startDescription: "20 коротких примеров. Капи постепенно повышает сложность.",
+      homeSubtitle: "Шаг за шагом с Капи.", homeHistory: "История", homeStage: (stage) => `Ступень ${stage}`,
       dayStreak: "дней подряд", totalXp: "всего XP", start: "Начать тренировку", history: "История занятий", speech: "Hey!",
       weeklyGoal: "Цель на неделю", thisWeek: "На этой неделе", weeklyZero: "Первое занятие ждёт",
       weeklyCount: (count, goal) => `${count} из ${goal} тренировок`,
@@ -90,6 +91,7 @@
     de: {
       locale: "de-DE", appName: "Rechnen mit Kapi", description: "Adaptives Rechentraining für Kinder – von Addition bis zu Wurzeln.",
       startEyebrow: "Stufe 1", startTitle: "Bereit zum Rechnen?", startDescription: "20 kurze Aufgaben. Kapi erhöht die Schwierigkeit Schritt für Schritt.",
+      homeSubtitle: "Schritt für Schritt mit Kapi.", homeHistory: "Verlauf", homeStage: (stage) => `Stufe ${stage}`,
       dayStreak: "Tage in Folge", totalXp: "XP insgesamt", start: "Training starten", history: "Trainingsverlauf", speech: "Hey!",
       weeklyGoal: "Wochenziel", thisWeek: "Diese Woche", weeklyZero: "Erstes Training wartet",
       weeklyCount: (count, goal) => `${count} von ${goal} Trainings`,
@@ -262,11 +264,11 @@
     $("brandName").textContent = copy.appName;
     $("startEyebrow").textContent = copy.startEyebrow;
     $("startTitle").textContent = copy.startTitle;
-    $("startDescription").textContent = copy.startDescriptionFor(TOTAL);
+    $("startDescription").textContent = copy.homeSubtitle;
     $("weeklyLabel").textContent = copy.thisWeek;
     $("totalXpLabel").textContent = copy.totalXp;
     $("startButton").innerHTML = `${copy.start} <span aria-hidden="true">→</span>`;
-    $("statsButton").textContent = copy.history;
+    $("statsButton").textContent = copy.homeHistory;
     $("wardrobeButton").textContent = copy.meinKapi;
     $("mapButton").textContent = copy.learningPath;
     $("mapTitle").textContent = copy.learningPath;
@@ -529,7 +531,7 @@
     const profile = getProfile();
     updateMascotOutfit(profile);
     const progress = weekly.getWeeklyProgress(profile);
-    $("weeklyValue").textContent = Array.from({ length: progress.goal }, (_, index) => index < progress.count ? "●" : "○").join(" ");
+    $("weeklyValue").textContent = Array.from({ length: progress.goal }, (_, index) => index < progress.count ? "★" : "☆").join(" ");
     $("weeklyValue").setAttribute("aria-label", copy.weeklyCount(progress.count, progress.goal));
     $("weeklyDetail").textContent = progress.count === 0 ? copy.weeklyZero : progress.count === progress.goal
       ? copy.weeklyDone : progress.count > progress.goal ? copy.weeklyExtra(progress.count) : copy.weeklyCount(progress.count, progress.goal);
@@ -537,7 +539,9 @@
     renderRewardGoal("home", profile.totalXp);
     const displayStage = appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
     const stageName = copy.stageNames[displayStage - 1];
-    $("startEyebrow").textContent = profile.curriculumCompleted && profile.currentStage === CURRICULUM_STAGE_COUNT && appSettings.automatic ? copy.curriculumHomeComplete : copy.levelLabel(displayStage, stageName);
+    const completed = profile.curriculumCompleted && profile.currentStage === CURRICULUM_STAGE_COUNT && appSettings.automatic;
+    $("startEyebrow").textContent = completed ? copy.curriculumHomeComplete : copy.homeStage(displayStage);
+    $("startTitle").textContent = stageName;
     scheduleFitCheck();
   }
 
@@ -549,6 +553,10 @@
     $(prefix + "Fill").style.width = `${next.progress * 100}%`;
     $(prefix + "Next").textContent = next.allUnlocked ? "" : next.currentXp === 0 && surface === "home"
       ? copy.firstReward : `${surface === "result" ? `${copy.nextTarget}: ` : ""}${copy.nextGoal(next.remainingXp, rewardName(next.reward))}`;
+    if (surface === "home") {
+      $("homeRewardPreview").classList.toggle("hidden", next.allUnlocked);
+      if (next.reward) $("homeRewardPreview").src = `assets/cosmetics/${next.reward.asset}.svg`;
+    }
   }
 
   function updateMascotOutfit(profile = getProfile()) {
