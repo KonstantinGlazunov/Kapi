@@ -743,6 +743,11 @@ body.force-ultra .submit-button { min-height: 42px; }
 .map-mastery { display: block; color: #0f766e; margin-top: 3px; }
 .skill-summary p { margin: 0; }
 .due-skill-list { margin: 7px 0 0; padding-left: 20px; font-size: .86rem; line-height: 1.4; }
+.subskill-summary { margin: 10px 0; padding: 12px; border-radius: 16px; background: #eaf7ee; font-size: .88rem; }
+.subskill-actions { display: grid; gap: 7px; margin-top: 8px; }
+.target-skill-button { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px; padding: 7px 10px; border: 1px solid #add7c7; border-radius: 11px; background: #fff; color: #164f49; text-align: left; font: inherit; cursor: pointer; }
+.target-skill-button small { flex: none; font-size: .78rem; font-weight: 700; }
+.target-skill-button:focus-visible { outline: 3px solid #177a73; outline-offset: 2px; }
 .map-marker { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: #dff1ea; font-size: 1.15rem; overflow: hidden; }
 .map-marker img { width: 44px; height: 39px; object-fit: cover; object-position: top; }
 .map-status { font-size: .7rem; font-weight: 900; }

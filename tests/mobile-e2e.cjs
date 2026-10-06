@@ -301,6 +301,50 @@ async function run() {
         assert.equal(lateResult.stage, 24);
         assert.equal(lateResult.firstTry, true);
         assert.equal(lateResult.scrollWidth, lateResult.viewport);
+        await page.waitForFunction(() => window.__e2e.state.index === 4, null, { timeout: 5000 });
+        page.once('dialog', dialog => dialog.accept());
+        await page.locator('#homeButton').click();
+        await page.evaluate(() => {
+          const api = window.__e2e;
+          const profile = api.getProfile();
+          for (let i = 0; i < 6; i++) window.KapiSubskills.recordEvidence(profile,
+            { curriculumStage: 23, operation: 'multiply', a: 7, b: 8, answer: 56 },
+            { firstAttempt: true, correct: false, source: 'curriculum' });
+          api.saveProfile(profile);
+        });
+        await page.locator('#statsButton').click();
+        const targetButton = page.locator('[data-target-subskill="multiply:table:7"]');
+        assert.equal(await targetButton.isVisible(), true, 'History should offer the 7er-Reihe as targeted practice');
+        await targetButton.scrollIntoViewIfNeeded();
+        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-subskill-history.png`) });
+        await targetButton.click();
+        const targetStart = await page.evaluate(() => ({ target: window.__e2e.state.targeted,
+          stage: window.__e2e.state.stage, total: document.querySelector('#problemTotal').textContent,
+          part: window.KapiSkills.classifyProblem(window.__e2e.state.problem).subskillId,
+          pace: window.__e2e.getProfile().personalFastTime,
+          adaptive: JSON.stringify(window.__e2e.getProfile().adaptiveRecentResults) }));
+        assert.equal(targetStart.target.subskillId, 'multiply:table:7');
+        assert.equal(targetStart.stage, 23);
+        assert.equal(targetStart.total, '10');
+        assert.equal(targetStart.part, 'multiply:table:7');
+        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-targeted-practice.png`) });
+        const targetedAnswer = await page.evaluate(() => ({ answer: window.__e2e.tasks.response(window.__e2e.state.problem),
+          mode: window.__e2e.state.problem.mode }));
+        if (targetedAnswer.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${targetedAnswer.answer}$`) }).click();
+        else for (const digit of String(targetedAnswer.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+        const targetOutcome = await page.evaluate(() => ({ target: window.__e2e.state.targeted,
+          stage: window.__e2e.getProfile().currentStage, pace: window.__e2e.getProfile().personalFastTime,
+          adaptive: JSON.stringify(window.__e2e.getProfile().adaptiveRecentResults),
+          firstTry: window.__e2e.state.results.at(-1).firstTry,
+          width: document.documentElement.scrollWidth, viewport: document.documentElement.clientWidth,
+          controlsBottom: document.querySelector('#answerArea').getBoundingClientRect().bottom }));
+        assert.equal(targetOutcome.target.subskillId, 'multiply:table:7');
+        assert.equal(targetOutcome.stage, 24);
+        assert.equal(targetOutcome.pace, targetStart.pace);
+        assert.equal(targetOutcome.adaptive, targetStart.adaptive);
+        assert.equal(targetOutcome.firstTry, true);
+        assert.equal(targetOutcome.width, targetOutcome.viewport);
+        assert.ok(targetOutcome.controlsBottom <= height, `targeted controls below viewport: ${JSON.stringify(targetOutcome)}`);
       }
       assert.deepEqual(errors, [], `browser errors at ${width}×${height}`);
       console.log(`PASS ${width}×${height}: 6 visual formats, controls, complete map, weekly goal`);

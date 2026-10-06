@@ -3,6 +3,22 @@
 
   // Each skill names one curriculum contract. The stage generator remains the
   // source of the arithmetic rules; this catalog describes its meaning.
+  const MULTIPLY_TABLES = Object.freeze(Array.from({ length: 11 }, (_, n) => `multiply:table:${n}`));
+  const DIVIDE_TABLES = Object.freeze(Array.from({ length: 10 }, (_, n) => `divide:table:${n + 1}`));
+  const SUBSKILLS = Object.freeze([
+    ...MULTIPLY_TABLES.map((id, n) => Object.freeze({ id, operation: "multiply", factor: n,
+      de: `${n}er-Reihe`, ru: `Таблица на ${n}` })),
+    ...DIVIDE_TABLES.map((id, index) => Object.freeze({ id, operation: "divide", factor: index + 1,
+      de: `Division durch ${index + 1}`, ru: `Деление на ${index + 1}` }))
+  ]);
+  const subskillById = new Map(SUBSKILLS.map((item) => [item.id, item]));
+  const SUBSKILLS_BY_STAGE = Object.freeze({
+    20: [1, 2, 5, 10].map((n) => `multiply:table:${n}`),
+    21: [2, 5, 10].map((n) => `divide:table:${n}`),
+    22: [1, 2, 10, 5].map((n) => `divide:table:${n}`),
+    23: MULTIPLY_TABLES,
+    24: [...MULTIPLY_TABLES.slice(2), ...DIVIDE_TABLES.slice(1)]
+  });
   const KAPI_SKILLS = Object.freeze([
     { id: "count:to5", stage: 1, operations: ["count"], de: "Mengen bis 5", ru: "Количество до 5" },
     { id: "add:plus-one", stage: 2, operations: ["add"], de: "+0 und +1 bis 5", ru: "+0 и +1 до 5" },
@@ -45,7 +61,8 @@
     { id: "root:square", stage: 39, operations: ["root"], de: "Quadratwurzeln", ru: "Квадратный корень" },
     { id: "root:cube", stage: 40, operations: ["root"], de: "Kubikwurzeln", ru: "Кубический корень" },
     { id: "mixed:powers-roots", stage: 41, operations: ["power", "root"], de: "Potenzen und Wurzeln", ru: "Степени и корни" }
-  ].map((skill) => Object.freeze({ ...skill, operations: Object.freeze(skill.operations) })));
+  ].map((skill) => Object.freeze({ ...skill, operations: Object.freeze(skill.operations),
+    subskills: Object.freeze(SUBSKILLS_BY_STAGE[skill.stage] || []) })));
   const byId = new Map(KAPI_SKILLS.map((skill) => [skill.id, skill]));
   const byStage = new Map(KAPI_SKILLS.map((skill) => [skill.stage, skill]));
   const STAGE_SKILLS = Object.freeze(Object.fromEntries(KAPI_SKILLS.map((skill) =>
@@ -69,6 +86,19 @@
     const skill = getSkill(id);
     return skill ? skill[language === "ru" ? "ru" : "de"] : fallback;
   }
+  function getSubskill(id) { return subskillById.get(id) || null; }
+  function subskillLabel(id, language = "de") { return getSubskill(id)?.[language === "ru" ? "ru" : "de"] || ""; }
+  // The first factor is the studied Reihe in the structured curriculum.
+  // Division uses its divisor. The two directions stay related but independent.
+  function classifyProblem(problem) {
+    const skill = skillForStage(problem?.curriculumStage);
+    if (!skill) return { skillId: null, subskillId: null };
+    const factor = problem.operation === "multiply" ? (skill.stage === 23 && Number(problem.b) === 0 ? 0 : Number(problem.a))
+      : problem.operation === "divide" ? Number(problem.b) : null;
+    const id = factor !== null && Number.isInteger(factor)
+      ? `${problem.operation}:table:${factor}` : null;
+    return { skillId: skill.id, subskillId: id && skill.subskills.includes(id) ? id : null };
+  }
   function makeProblemForSkill(id, generateStage, index, profile) {
     const stage = stageForSkill(id);
     if (!stage) throw new Error(`Unknown skill: ${id}`);
@@ -80,6 +110,6 @@
     return problem;
   }
 
-  window.KapiSkills = Object.freeze({ KAPI_SKILLS, STAGE_SKILLS, skillForStage, canonicalId, stageForSkill,
-    getSkill, chapterIdForSkill, label, makeProblemForSkill });
+  window.KapiSkills = Object.freeze({ KAPI_SKILLS, SUBSKILLS, STAGE_SKILLS, skillForStage, canonicalId, stageForSkill,
+    getSkill, getSubskill, subskillLabel, classifyProblem, chapterIdForSkill, label, makeProblemForSkill });
 })();

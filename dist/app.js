@@ -18,6 +18,7 @@
   const weekly = window.KapiWeeklyProgress;
   const skills = window.KapiSkills;
   const mastery = window.KapiMasterySystem;
+  const subskills = window.KapiSubskills;
   const OPERATION_ORDER = ["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"];
   const OPERATION_MIN_STAGE = { add: 2, subtract: 6, multiply: 19, divide: 21, power: 30, fraction: 31, decimal: 34, negative: 36, root: 39 };
   const CURRICULUM_VERSION = 2;
@@ -214,6 +215,10 @@
   translations.ru.moreAreas = (count) => `+ ещё ${count}`;
   translations.de.mapReinforced = "Gefestigt";
   translations.ru.mapReinforced = "Закреплено";
+  Object.assign(translations.de, { targetedPractice: "Gezielt üben", subskillsToPractice: "Noch üben",
+    targetedIntro: (name) => `Kapi übt mit dir die ${name}.` });
+  Object.assign(translations.ru, { targetedPractice: "Потренировать", subskillsToPractice: "Повторим вместе",
+    targetedIntro: (name) => `Капи потренирует с тобой: ${name}.` });
   let copy = translations[language];
   let messages = copy.messages;
   let deferredInstallPrompt = null;
@@ -423,7 +428,7 @@
   function getProfile() {
     const defaults = {
       totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, curriculumCompleted: false, errorQueue: [],
-      weeklyGoal: 3, weeklySessions: null, weeklyHistory: [], skillMastery: {},
+      weeklyGoal: 3, weeklySessions: null, weeklyHistory: [], skillMastery: {}, subskillMastery: {},
       adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveCorrectStreak: 0, adaptiveRecentResults: [],
       personalFastTime: null, bestPersonalFastTime: null, recordMilestoneTime: null,
       paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {},
@@ -494,9 +499,10 @@
       const rewardMigration = rewards.migrate(profile);
       const weeklyMigration = weekly.migrate(profile, getHistory());
       const masteryMigration = mastery.migrate(profile) || !Object.hasOwn(stored, "skillMastery");
-      if (rewardMigration || weeklyMigration || masteryMigration) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      const subskillMigration = subskills.migrate(profile);
+      if (rewardMigration || weeklyMigration || masteryMigration || subskillMigration) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       return profile;
-    } catch { rewards.migrate(defaults); weekly.migrate(defaults); mastery.migrate(defaults); return defaults; }
+    } catch { rewards.migrate(defaults); weekly.migrate(defaults); mastery.migrate(defaults); subskills.migrate(defaults); return defaults; }
   }
 
   function saveProfile(profile) {
@@ -1153,6 +1159,12 @@ function makePowerProblem(max, mastered) {
 
   function selectProblem(stage, index) {
     const profile = getProfile();
+    if (state.targeted) {
+      const focused = subskills.makeProblemForSubskill(state.targeted.skillId, state.targeted.subskillId,
+        makeCurriculumProblem, index, profile, state.recentFacts);
+      if (!focused) throw new Error(`Cannot generate targeted problem for ${state.targeted.subskillId}`);
+      return { ...focused, isTargetedPractice: true };
+    }
     const queue = profile.errorQueue;
     const allowedOperations = new Set(activeOperations(profile, stage));
     const eligibleReviews = queue.filter((item) => {
@@ -1183,7 +1195,10 @@ function makePowerProblem(max, mastered) {
     if (skillId) {
       const reviewStage = skills.stageForSkill(skillId);
       if (reviewStage < stage) {
-        const fresh = skills.makeProblemForSkill(skillId, makeCurriculumProblem, index, profile);
+        const chosen = subskills.selectSubskill(profile, skillId);
+        const fresh = chosen && subskills.makeProblemForSubskill(skillId, chosen,
+          makeCurriculumProblem, index, profile, state.recentFacts)
+          || skills.makeProblemForSkill(skillId, makeCurriculumProblem, index, profile);
         const type = tasks.allowedTypes(reviewStage).includes("missingOperand") && Math.random() < .2 ? "missingOperand" : "equation";
         return { ...tasks.decorate(fresh, null, type), isSpacedReview: true, reviewSkillId: skillId };
       }
@@ -1202,24 +1217,32 @@ function makePowerProblem(max, mastered) {
     return new Map(ids.map((id, index) => [slots[index], id]));
   }
 
-  function startTraining() {
+  function startTraining(options = {}) {
     window.clearTimeout(advanceTimer);
     window.clearTimeout(rewardRevealTimer);
     window.clearTimeout(rewardGoalTimer);
     soundManager?.unlock();
     motivation?.resetSession();
     dismissMotivation();
-    TOTAL = appSettings.problemCount;
+    const profile = getProfile();
+    const candidate = options?.targetSkillId && skills.getSkill(options.targetSkillId);
+    const targetLimit = Math.min(maximumAllowedStage(), appSettings.automatic ? profile.currentStage : Math.max(profile.currentStage, appSettings.manualStage));
+    const targeted = candidate && candidate.stage <= targetLimit &&
+      (appSettings.automatic || appSettings.operations.includes(skills.getSubskill(options.targetSubskillId)?.operation)) &&
+      subskills.availableSubskills(candidate.id, profile).includes(options.targetSubskillId)
+      ? { skillId: candidate.id, subskillId: options.targetSubskillId } : null;
+    TOTAL = targeted ? 10 : appSettings.problemCount;
     $("problemTotal").textContent = String(TOTAL);
     $("correctLabel").textContent = copy.correctOfTotal(TOTAL);
-    const profile = getProfile();
-    const trainingStage = appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
+    const trainingStage = targeted?.skillId ? skills.stageForSkill(targeted.skillId)
+      : appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
     Object.assign(state, {
       index: 0, score: 0, correct: 0, streak: 0, stage: trainingStage,
       attempt: 1, problem: null, results: [], locked: false, enteredAnswer: "", stageAdvancedDuringSession: false,
       sessionId: `${Date.now()}-${++sessionSequence}-${Math.random().toString(36).slice(2)}`, finished: false,
       previousTaskType: null, trainingStartStage: trainingStage, trainingStartedCompleted: profile.curriculumCompleted,
-      finalMotivationEvents: [], spacedPlan: planSpacedReviews(profile, trainingStage, TOTAL), spacedReviewRecorded: false
+      finalMotivationEvents: [], spacedPlan: targeted ? new Map() : planSpacedReviews(profile, trainingStage, TOTAL),
+      spacedReviewRecorded: false, targeted, recentFacts: []
     });
     showScreen($("gameScreen"));
     $("feedback").textContent = copy.careful;
@@ -1236,6 +1259,9 @@ function makePowerProblem(max, mastered) {
     state.spacedReviewRecorded = false;
     const base = selectProblem(state.stage, state.index);
     state.problem = base.isReview || base.isSpacedReview ? base : tasks.decorate(base, state.previousTaskType);
+    state.recentFacts ||= [];
+    state.recentFacts.push(state.problem.key);
+    state.recentFacts = state.recentFacts.slice(-4);
     state.previousTaskType = state.problem.taskType;
     state.startedAt = performance.now();
     $("problemNumber").textContent = String(state.index + 1);
@@ -1246,7 +1272,9 @@ function makePowerProblem(max, mastered) {
     renderProblem(state.problem);
     $("hint").classList.add("hidden");
     $("hint").innerHTML = "";
-    $("feedback").textContent = state.index === 0 ? copy.careful : copy.next;
+    $("feedback").textContent = state.index === 0 && state.targeted
+      ? copy.targetedIntro(skills.subskillLabel(state.targeted.subskillId, language))
+      : state.index === 0 ? copy.careful : copy.next;
     renderAnswer();
     if ((state.problem.operation === "count" && state.problem.taskType !== "visualCount") || state.problem.conceptVisual) showHint(2);
   }
@@ -1420,9 +1448,17 @@ function makePowerProblem(max, mastered) {
     state.paceUpdate = null;
     const elapsed = Math.max(.2, (performance.now() - state.startedAt) / 1000);
     const isCorrect = answersEqual(value, tasks.response(state.problem), state.problem.answerType);
-    const operationMessage = state.attempt === 1 && !state.problem.isReview && !state.problem.isSpacedReview
+    const operationMessage = state.attempt === 1 && !state.problem.isReview && !state.problem.isSpacedReview && !state.targeted
       ? recordOperationAttempt(state.problem.operation, isCorrect)
       : "";
+    if (state.attempt === 1 || isCorrect) {
+      const profile = getProfile();
+      if (subskills.recordEvidence(profile, state.problem, {
+        firstAttempt: state.attempt === 1, correct: isCorrect,
+        source: state.targeted ? "targeted" : state.problem.isSpacedReview ? "spaced"
+          : state.problem.isReview ? "errorRecovery" : "curriculum"
+      })) saveProfile(profile);
+    }
 
     if (isCorrect) {
       if (state.problem.isSpacedReview && !state.spacedReviewRecorded) recordSpacedReview(state.attempt === 1);
@@ -1500,7 +1536,8 @@ function makePowerProblem(max, mastered) {
       firstTry: success && attempt === 1,
       seconds: Number(elapsed.toFixed(1)),
       stage: state.problem.curriculumStage || state.stage,
-      isSpacedReview: state.problem.isSpacedReview === true
+      isSpacedReview: state.problem.isSpacedReview === true,
+      isTargetedPractice: !!state.targeted
     };
     state.results.push(item);
   }
@@ -1543,7 +1580,7 @@ function makePowerProblem(max, mastered) {
   }
 
   function updateAdaptiveProgress(problem, isFirstAttempt, isCorrect, elapsed) {
-    if (problem.isSpacedReview || problem.isReview) return "";
+    if (problem.isSpacedReview || problem.isReview || state.targeted) return "";
     const profile = getProfile();
     const structured = updateStructuredOperationProgress(profile, problem, isFirstAttempt, isCorrect);
     if (structured.handled) {
@@ -2013,6 +2050,19 @@ function makePowerProblem(max, mastered) {
       const profile = getProfile();
       const summary = weekly.getHistorySummary(profile, history);
       const dueSkills = mastery.getDueSkills(profile, new Date());
+      const targetLimit = Math.min(maximumAllowedStage(), appSettings.automatic ? profile.currentStage : Math.max(profile.currentStage, appSettings.manualStage));
+      const focusTargets = skills.KAPI_SKILLS.filter((skill) => skill.stage <= targetLimit)
+        .flatMap((skill) => subskills.availableSubskills(skill.id, profile)
+          .filter((id) => profile.subskillMastery[id]?.attempts > 0 && subskills.status(profile.subskillMastery[id]) !== "secure" &&
+            (appSettings.automatic || appSettings.operations.includes(skills.getSubskill(id)?.operation)))
+          .map((id) => ({ skillId: skill.id, subskillId: id })))
+        .filter((item, index, all) => all.findIndex((other) => other.subskillId === item.subskillId) === index)
+        .sort((a, b) => {
+          const left = profile.subskillMastery[a.subskillId];
+          const right = profile.subskillMastery[b.subskillId];
+          return (left.firstTryCorrect / left.attempts) - (right.firstTryCorrect / right.attempts) ||
+            b.skillId.localeCompare(a.skillId);
+        }).slice(0, 3);
       const stableSkills = Object.values(profile.skillMastery).filter((skill) => mastery.getMasteryStatus(skill) === "stable").length;
       const practicingSkills = Object.values(profile.skillMastery).filter((skill) => mastery.getMasteryStatus(skill) === "inPractice").length;
       const commonTrouble = mostCommon(history.flatMap((item) => item.trouble || []));
@@ -2029,6 +2079,8 @@ function makePowerProblem(max, mastered) {
           practicingSkills ? copy.practiceAreas(practicingSkills) : ""
         ].filter(Boolean).join(" · ")}</p>${dueSkills.length ? `<ul class="due-skill-list">${dueSkills.slice(0, 3).map(({ skillId }) =>
           `<li>${skills.label(skillId, language, copy.stageNames[skills.stageForSkill(skillId) - 1] || "")}</li>`).join("")}${dueSkills.length > 3 ? `<li>${copy.moreAreas(dueSkills.length - 3)}</li>` : ""}</ul>` : ""}</div>` : ""}
+        ${focusTargets.length ? `<div class="subskill-summary"><strong>${copy.subskillsToPractice}</strong><div class="subskill-actions">${focusTargets.map(({ skillId, subskillId }) =>
+          `<button class="target-skill-button" type="button" data-target-skill="${skillId}" data-target-subskill="${subskillId}" aria-label="${skills.subskillLabel(subskillId, language)}: ${copy.targetedPractice}"><span>${skills.subskillLabel(subskillId, language)}</span><small>${copy.targetedPractice} →</small></button>`).join("")}</div></div>` : ""}
         <div class="history-list">${history.slice(0, 10).map((item) => {
           const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(item.stage) || 1));
           const currentScale = item.curriculumVersion === CURRICULUM_VERSION || new Date(item.date).getTime() >= Date.parse("2026-09-27T18:11:52Z");
@@ -2546,6 +2598,18 @@ function makePowerProblem(max, mastered) {
     renderWardrobe();
   });
   $("resultStatsButton").addEventListener("click", showStats);
+  $("statsContent").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-target-subskill]");
+    if (!button) return;
+    const profile = getProfile();
+    const skill = skills.getSkill(button.dataset.targetSkill);
+    const targetLimit = Math.min(maximumAllowedStage(), appSettings.automatic ? profile.currentStage : Math.max(profile.currentStage, appSettings.manualStage));
+    if (!skill || skill.stage > targetLimit ||
+      (!appSettings.automatic && !appSettings.operations.includes(skills.getSubskill(button.dataset.targetSubskill)?.operation)) ||
+      !subskills.availableSubskills(skill.id, profile).includes(button.dataset.targetSubskill)) return;
+    $("statsDialog").close();
+    startTraining({ targetSkillId: skill.id, targetSubskillId: button.dataset.targetSubskill });
+  });
   $("closeStatsButton").addEventListener("click", () => $("statsDialog").close());
   $("clearStatsButton").addEventListener("click", () => {
     if (!window.confirm(copy.deleteConfirm)) return;
