@@ -40,6 +40,7 @@
       startEyebrow: "Уровень 1", startTitle: "Готовы считать?", startDescription: "20 коротких примеров. Капи постепенно повышает сложность.",
       homeSubtitle: "Шаг за шагом с Капи.", homeHistory: "История", homeXp: "XP", homeStage: (stage) => `Ступень ${stage}`,
       dayStreak: "дней подряд", totalXp: "всего XP", start: "Начать тренировку", history: "История занятий", speech: "Hey!",
+      homeGreetings: ["Начнём?", "Поехали!", "Продолжим!", "Рад тебя видеть!"],
       weeklyGoal: "Цель на неделю", thisWeek: "На этой неделе", weeklyZero: "Первое занятие ждёт",
       weeklyCount: (count, goal) => `${count} из ${goal} тренировок`,
       weeklyDone: "Цель недели выполнена!", weeklyExtra: (count) => `${count} тренировок на этой неделе`,
@@ -93,6 +94,7 @@
       startEyebrow: "Stufe 1", startTitle: "Bereit zum Rechnen?", startDescription: "20 kurze Aufgaben. Kapi erhöht die Schwierigkeit Schritt für Schritt.",
       homeSubtitle: "Schritt für Schritt mit Kapi.", homeHistory: "Verlauf", homeXp: "XP", homeStage: (stage) => `Stufe ${stage}`,
       dayStreak: "Tage in Folge", totalXp: "XP insgesamt", start: "Training starten", history: "Trainingsverlauf", speech: "Hey!",
+      homeGreetings: ["Bereit?", "Los geht’s!", "Weiter geht’s!", "Schön, dass du da bist!"],
       weeklyGoal: "Wochenziel", thisWeek: "Diese Woche", weeklyZero: "Erstes Training wartet",
       weeklyCount: (count, goal) => `${count} von ${goal} Trainings`,
       weeklyDone: "Wochenziel geschafft!", weeklyExtra: (count) => `${count} Trainings diese Woche`,
@@ -267,7 +269,7 @@
     $("startDescription").textContent = copy.homeSubtitle;
     $("weeklyLabel").textContent = copy.thisWeek;
     $("totalXpLabel").textContent = copy.homeXp;
-    $("startButton").innerHTML = `${copy.start} <span aria-hidden="true">→</span>`;
+    $("startButton").innerHTML = `<span class="home-start-icon" aria-hidden="true">▶</span> ${copy.start}`;
     $("statsButton").textContent = copy.homeHistory;
     $("wardrobeButton").textContent = copy.meinKapi;
     $("mapButton").textContent = copy.learningPath;
@@ -277,7 +279,8 @@
     $("wardrobeTitle").textContent = copy.meinKapi;
     $("wardrobeIntro").textContent = copy.wardrobeIntro;
     $("closeWardrobeButton").setAttribute("aria-label", copy.close);
-    $("speechBubble").textContent = copy.speech;
+    currentHomeGreeting = copy.homeGreetings[0];
+    $("speechBubble").textContent = currentHomeGreeting;
     $("homeMascot").setAttribute("aria-label", copy.homeMascotAction);
     $("homeStats").setAttribute("aria-label", copy.gameProgress);
     $("homeButton").setAttribute("aria-label", copy.home);
@@ -531,7 +534,8 @@
     const profile = getProfile();
     updateMascotOutfit(profile);
     const progress = weekly.getWeeklyProgress(profile);
-    $("weeklyValue").textContent = Array.from({ length: progress.goal }, (_, index) => index < progress.count ? "★" : "☆").join(" ");
+    $("weeklyValue").innerHTML = Array.from({ length: progress.goal }, (_, index) =>
+      `<span class="week-star ${index < progress.count ? "filled" : "empty"}" aria-hidden="true"></span>`).join("");
     $("weeklyValue").setAttribute("aria-label", copy.weeklyCount(progress.count, progress.goal));
     $("weeklyDetail").textContent = progress.count === 0 ? copy.weeklyZero : progress.count === progress.goal
       ? copy.weeklyDone : progress.count > progress.goal ? copy.weeklyExtra(progress.count) : copy.weeklyCount(progress.count, progress.goal);
@@ -642,18 +646,21 @@
 
   let homeReactionLockedUntil = 0;
   let lastHomeReaction = "";
+  let homeGreetingIndex = 0;
+  let currentHomeGreeting = "";
   const HOME_REACTION_COOLDOWN = 5000;
   const homeReactionScenes = ["flag", "horn", "dance", "levelUp"];
 
   function clearHomeReaction(restoreSpeech = true) {
     $("speechBubble").classList.remove("is-reacting");
-    if (restoreSpeech) $("speechBubble").textContent = copy.speech;
+    if (restoreSpeech) $("speechBubble").textContent = currentHomeGreeting;
     if (kapi?.surface === "home") kapi.trigger("idle", { surface: "home" });
   }
 
   function restartHomeGreeting() {
     if (!kapi) return;
-    $("speechBubble").textContent = copy.speech;
+    currentHomeGreeting = copy.homeGreetings[homeGreetingIndex++ % copy.homeGreetings.length];
+    $("speechBubble").textContent = currentHomeGreeting;
     $("speechBubble").classList.remove("is-reacting");
     kapi.setSurface("home", "idle");
     kapi.trigger("hey", { surface: "home" });
@@ -674,7 +681,7 @@
   }
 
   function speakHomeGreeting() {
-    soundManager?.speak("Hey!", language === "ru" ? "ru-RU" : "de-DE");
+    soundManager?.speak(currentHomeGreeting, language === "ru" ? "ru-RU" : "de-DE");
   }
 
   function randomInt(min, max) {

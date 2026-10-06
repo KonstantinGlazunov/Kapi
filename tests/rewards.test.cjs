@@ -245,4 +245,8 @@ test('assets are preloaded once and all eight cosmetics cached for offline use',
     assert.ok(fs.existsSync(path.join(root, 'assets', 'cosmetics', `${reward.asset}.svg`)));
     assert.ok(sw.includes(reward.asset));
   }
+  for (const scene of ['home-world.webp', 'home-world-wide.webp']) {
+    assert.ok(fs.existsSync(path.join(root, 'assets', scene)));
+    assert.ok(sw.includes(`assets/${scene}`));
+  }
 });
