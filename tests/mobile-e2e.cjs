@@ -20,6 +20,18 @@ const cases = [
   { type: 'placeValue', stage: 9, a: 10, b: 7, answer: 17 }
 ];
 
+async function answerCurrent(page) {
+  const problem = await page.evaluate(() => ({
+    answer: window.__e2e.tasks.response(window.__e2e.state.problem),
+    mode: window.__e2e.state.problem.mode,
+    labeled: !!window.__e2e.tasks.choiceLabels(window.__e2e.state.problem, 'de')
+  }));
+  if (problem.mode === 'choice') {
+    if (problem.labeled) await page.locator('#answerArea .answer-button').nth(problem.answer).click();
+    else await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${problem.answer}$`) }).click();
+  } else for (const digit of String(problem.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+}
+
 async function run() {
   const launchOptions = { headless: true, args: ['--no-sandbox'] };
   if (chrome) launchOptions.executablePath = chrome;
@@ -217,12 +229,7 @@ async function run() {
         const firstReviewSlot = await page.evaluate(() => window.__e2e.state.sessionPlan.slots.findIndex(slot => slot.type === 'spacedReview'));
         assert.ok(firstReviewSlot > 0, 'due skill must have a planned slot');
         for (let index = 0; index < firstReviewSlot; index++) {
-          const problem = await page.evaluate(() => ({
-            answer: window.__e2e.tasks.response(window.__e2e.state.problem),
-            mode: window.__e2e.state.problem.mode
-          }));
-          if (problem.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${problem.answer}$`) }).click();
-          else for (const digit of String(problem.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+          await answerCurrent(page);
           await page.waitForFunction(expected => window.__e2e.state.index === expected, index + 1, { timeout: 5000 });
         }
         const review = await page.evaluate(() => ({
@@ -240,8 +247,7 @@ async function run() {
         assert.equal(review.currentStage, 13);
         await page.waitForFunction(() => document.querySelector('#motivationPop').classList.contains('hidden'), null, { timeout: 5000 });
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-spaced-review.png`) });
-        if (review.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${review.answer}$`) }).click();
-        else for (const digit of String(review.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+        await answerCurrent(page);
         const outcome = await page.evaluate(() => ({
           after: window.__e2e.getProfile().skillMastery['add:cross-ten'].nextReviewAt,
           interval: window.__e2e.getProfile().skillMastery['add:cross-ten'].intervalDays,
@@ -277,10 +283,7 @@ async function run() {
         const lateReviewSlot = await page.evaluate(() => window.__e2e.state.sessionPlan.slots.findIndex(slot => slot.type === 'spacedReview'));
         assert.ok(lateReviewSlot > 0, 'late due skill must have a planned slot');
         for (let index = 0; index < lateReviewSlot; index++) {
-          const problem = await page.evaluate(() => ({ answer: window.__e2e.tasks.response(window.__e2e.state.problem),
-            mode: window.__e2e.state.problem.mode }));
-          if (problem.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${problem.answer}$`) }).click();
-          else for (const digit of String(problem.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+          await answerCurrent(page);
           await page.waitForFunction(expected => window.__e2e.state.index === expected, index + 1, { timeout: 5000 });
         }
         const late = await page.evaluate(() => ({ problem: window.__e2e.state.problem,
@@ -293,8 +296,7 @@ async function run() {
         assert.equal(late.problem.operation, 'multiply');
         await page.waitForFunction(() => document.querySelector('#motivationPop').classList.contains('hidden'), null, { timeout: 5000 });
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-late-spaced-review.png`) });
-        if (late.problem.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${late.answer}$`) }).click();
-        else for (const digit of String(late.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+        await answerCurrent(page);
         const lateResult = await page.evaluate(() => ({ mastery: window.__e2e.getProfile().skillMastery['multiply:einmaleins-sequence'],
           sequence: JSON.stringify(window.__e2e.getProfile().multiplicationSequence),
           stage: window.__e2e.getProfile().currentStage, firstTry: window.__e2e.state.results.at(-1).firstTry,
@@ -334,8 +336,7 @@ async function run() {
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-targeted-practice.png`) });
         const targetedAnswer = await page.evaluate(() => ({ answer: window.__e2e.tasks.response(window.__e2e.state.problem),
           mode: window.__e2e.state.problem.mode }));
-        if (targetedAnswer.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${targetedAnswer.answer}$`) }).click();
-        else for (const digit of String(targetedAnswer.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+        await answerCurrent(page);
         const targetOutcome = await page.evaluate(() => ({ target: window.__e2e.state.targeted,
           stage: window.__e2e.getProfile().currentStage, pace: window.__e2e.getProfile().personalFastTime,
           adaptive: JSON.stringify(window.__e2e.getProfile().adaptiveRecentResults),
@@ -380,8 +381,7 @@ async function run() {
           const actual = current.isReview ? 'errorReview' : current.isSpacedReview ? 'spacedReview' : 'current';
           assert.equal(actual, planned.slots[index], `planner slot ${index}: ${JSON.stringify(current)}`);
           encountered.add(actual);
-          if (current.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${current.answer}$`) }).click();
-          else for (const digit of String(current.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+          await answerCurrent(page);
           await page.waitForFunction(expected => window.__e2e.state.index === expected, index + 1, { timeout: 5000 });
         }
         assert.deepEqual([...encountered].sort(), ['current', 'errorReview', 'spacedReview']);
