@@ -195,6 +195,58 @@ async function run() {
       const dialogLayout = await page.evaluate(() => { const dialog = document.querySelector('#statsDialog');
         return { scrollWidth: dialog.scrollWidth, clientWidth: dialog.clientWidth, scrollLeft: dialog.scrollLeft }; });
       assert.ok(dialogLayout.scrollWidth <= dialogLayout.clientWidth + 1, `${width}: history dialog horizontal clipping: ${JSON.stringify(dialogLayout)}`);
+      if (width === 390) {
+        await page.locator('#closeStatsButton').click();
+        await page.locator('#homeButton').click();
+        await page.evaluate(() => {
+          const api = window.__e2e;
+          const profile = api.getProfile();
+          profile.currentStage = 6;
+          profile.curriculumCompleted = false;
+          profile.errorQueue = [];
+          window.KapiMasterySystem.markStageMastered(profile, 5, new Date('2020-01-01T12:00:00Z'));
+          api.saveProfile(profile);
+        });
+        await page.locator('#startButton').click();
+        for (let index = 0; index < 3; index++) {
+          const problem = await page.evaluate(() => ({
+            answer: window.__e2e.tasks.response(window.__e2e.state.problem),
+            mode: window.__e2e.state.problem.mode
+          }));
+          if (problem.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${problem.answer}$`) }).click();
+          else for (const digit of String(problem.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+          await page.waitForFunction(expected => window.__e2e.state.index === expected, index + 1, { timeout: 5000 });
+        }
+        const review = await page.evaluate(() => ({
+          stage: window.__e2e.state.problem.curriculumStage,
+          currentStage: window.__e2e.state.stage,
+          isSpacedReview: window.__e2e.state.problem.isSpacedReview,
+          skillId: window.__e2e.state.problem.reviewSkillId,
+          before: window.__e2e.getProfile().skillMastery['stage:5'].nextReviewAt,
+          answer: window.__e2e.tasks.response(window.__e2e.state.problem),
+          mode: window.__e2e.state.problem.mode
+        }));
+        assert.equal(review.isSpacedReview, true, 'real training must select the due skill');
+        assert.equal(review.skillId, 'stage:5');
+        assert.equal(review.stage, 5);
+        assert.equal(review.currentStage, 6);
+        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-spaced-review.png`) });
+        if (review.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${review.answer}$`) }).click();
+        else for (const digit of String(review.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+        const outcome = await page.evaluate(() => ({
+          after: window.__e2e.getProfile().skillMastery['stage:5'].nextReviewAt,
+          interval: window.__e2e.getProfile().skillMastery['stage:5'].intervalDays,
+          firstTry: window.__e2e.state.results.at(-1).firstTry,
+          width: document.documentElement.scrollWidth,
+          viewport: document.documentElement.clientWidth,
+          bottom: document.querySelector('#answerArea').getBoundingClientRect().bottom
+        }));
+        assert.ok(Date.parse(outcome.after) > Date.parse(review.before), `review date did not advance: ${JSON.stringify(outcome)}`);
+        assert.equal(outcome.interval, 3);
+        assert.equal(outcome.firstTry, true);
+        assert.equal(outcome.width, outcome.viewport);
+        assert.ok(outcome.bottom <= height, `review controls offscreen: ${JSON.stringify(outcome)}`);
+      }
       assert.deepEqual(errors, [], `browser errors at ${width}×${height}`);
       console.log(`PASS ${width}×${height}: 6 visual formats, controls, complete map, weekly goal`);
       await context.close();

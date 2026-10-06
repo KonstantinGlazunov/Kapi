@@ -16,6 +16,7 @@
   const tasks = new window.KapiTaskSystem();
   const curriculumMap = new window.KapiCurriculumMap();
   const weekly = window.KapiWeeklyProgress;
+  const mastery = window.KapiMasterySystem;
   const OPERATION_ORDER = ["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"];
   const OPERATION_MIN_STAGE = { add: 2, subtract: 6, multiply: 19, divide: 21, power: 30, fraction: 31, decimal: 34, negative: 36, root: 39 };
   const CURRICULUM_VERSION = 2;
@@ -202,6 +203,10 @@
     dance: ["Tanzen!", "Klasse!"],
     handshake: ["Abgemacht!", "Wir sind ein Team!"]
   };
+  translations.de.dueAreas = (count) => `${count} Bereiche werden demnächst wiederholt`;
+  translations.ru.dueAreas = (count) => `Скоро повторим: ${count} тем`;
+  translations.de.stableAreas = (count) => `Gefestigt: ${count} Bereiche`;
+  translations.ru.stableAreas = (count) => `Закреплено: ${count} тем`;
   let copy = translations[language];
   let messages = copy.messages;
   let deferredInstallPrompt = null;
@@ -411,7 +416,7 @@
   function getProfile() {
     const defaults = {
       totalXp: 0, dayStreak: 0, lastDay: null, currentStage: 1, curriculumCompleted: false, errorQueue: [],
-      weeklyGoal: 3, weeklySessions: null, weeklyHistory: [],
+      weeklyGoal: 3, weeklySessions: null, weeklyHistory: [], skillMastery: {},
       adaptiveOperand: 1, adaptiveFastStreak: 0, adaptiveCorrectStreak: 0, adaptiveRecentResults: [],
       personalFastTime: null, bestPersonalFastTime: null, recordMilestoneTime: null,
       paceCalibration: [], fasterPaceSamples: [], accelerationWindow: [], operationStats: {},
@@ -481,9 +486,10 @@
       });
       const rewardMigration = rewards.migrate(profile);
       const weeklyMigration = weekly.migrate(profile, getHistory());
-      if (rewardMigration || weeklyMigration) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      const masteryMigration = !Object.hasOwn(stored, "skillMastery") || mastery.migrate(profile);
+      if (rewardMigration || weeklyMigration || masteryMigration) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       return profile;
-    } catch { rewards.migrate(defaults); weekly.migrate(defaults); return defaults; }
+    } catch { rewards.migrate(defaults); weekly.migrate(defaults); mastery.migrate(defaults); return defaults; }
   }
 
   function saveProfile(profile) {
@@ -1137,11 +1143,14 @@ function makePowerProblem(max, mastered) {
     const queue = profile.errorQueue;
     const allowedOperations = new Set(activeOperations(profile, stage));
     const eligibleReviews = queue.filter((item) => {
-      const sameStage = item.curriculumStage == null || item.curriculumStage === stage;
-      return allowedOperations.has(reviewOperation(item)) && sameStage;
+      const sameStage = item.curriculumStage == null || item.curriculumStage === stage ||
+        (item.fromSpacedReview && item.curriculumStage < stage);
+      const operation = reviewOperation(item);
+      return sameStage && (allowedOperations.has(operation) ||
+        (item.fromSpacedReview && (appSettings.automatic || operation === "count")));
     });
     const remaining = TOTAL - index;
-    const shouldReview = eligibleReviews.length > 0 && (index % 3 === 2 || remaining <= eligibleReviews.length * 2);
+    const shouldReview = eligibleReviews.length > 0 && (index % 3 === 2 || remaining <= eligibleReviews.length * 2 || state.spacedPlan?.has(index));
     if (shouldReview) {
       const sorted = [...eligibleReviews].sort((left, right) => (left.lastShown || 0) - (right.lastShown || 0));
       const review = sorted.find((item) => item.key !== state.problem?.key) || sorted[0];
@@ -1154,10 +1163,30 @@ function makePowerProblem(max, mastered) {
         operation: reviewOperation(review),
         taskType: review.taskType || "equation",
         mode: review.taskType === "chooseExpression" || review.placeValue?.variant === "decompose" ? "choice" : index % 2 === 0 ? "choice" : "input",
-        isReview: true
+        isReview: true, isSpacedReview: false, reviewSkillId: null
       };
     }
+    const skillId = state.spacedPlan?.get(index);
+    if (skillId) {
+      const reviewStage = Number(skillId.slice(6));
+      if (reviewStage < stage) {
+        const fresh = makeCurriculumProblem(reviewStage, index, profile);
+        const type = tasks.allowedTypes(reviewStage).includes("missingOperand") && Math.random() < .2 ? "missingOperand" : "equation";
+        return { ...tasks.decorate(fresh, null, type), isSpacedReview: true, reviewSkillId: skillId };
+      }
+    }
     return makeGeneratedProblem(stage, index, profile);
+  }
+
+  function planSpacedReviews(profile, stage, count) {
+    const slots = mastery.REVIEW_SLOTS[count] || [];
+    const allowed = new Set(activeOperations(profile, stage));
+    const ids = mastery.selectReviewSkills(profile, slots.length, new Date(), (id) => {
+      const reviewStage = Number(id.slice(6));
+      return reviewStage < stage && reviewStage <= maximumAllowedStage() &&
+        (appSettings.automatic || reviewStage === 1 || curriculumOperationsForStage(reviewStage).some((operation) => allowed.has(operation)));
+    });
+    return new Map(ids.map((id, index) => [slots[index], id]));
   }
 
   function startTraining() {
@@ -1177,7 +1206,7 @@ function makePowerProblem(max, mastered) {
       attempt: 1, problem: null, results: [], locked: false, enteredAnswer: "", stageAdvancedDuringSession: false,
       sessionId: `${Date.now()}-${++sessionSequence}-${Math.random().toString(36).slice(2)}`, finished: false,
       previousTaskType: null, trainingStartStage: trainingStage, trainingStartedCompleted: profile.curriculumCompleted,
-      finalMotivationEvents: []
+      finalMotivationEvents: [], spacedPlan: planSpacedReviews(profile, trainingStage, TOTAL), spacedReviewRecorded: false
     });
     showScreen($("gameScreen"));
     $("feedback").textContent = copy.careful;
@@ -1191,8 +1220,9 @@ function makePowerProblem(max, mastered) {
     state.hintLevel = 0;
     state.locked = false;
     state.enteredAnswer = "";
+    state.spacedReviewRecorded = false;
     const base = selectProblem(state.stage, state.index);
-    state.problem = base.isReview ? base : tasks.decorate(base, state.previousTaskType);
+    state.problem = base.isReview || base.isSpacedReview ? base : tasks.decorate(base, state.previousTaskType);
     state.previousTaskType = state.problem.taskType;
     state.startedAt = performance.now();
     $("problemNumber").textContent = String(state.index + 1);
@@ -1377,11 +1407,12 @@ function makePowerProblem(max, mastered) {
     state.paceUpdate = null;
     const elapsed = Math.max(.2, (performance.now() - state.startedAt) / 1000);
     const isCorrect = answersEqual(value, tasks.response(state.problem), state.problem.answerType);
-    const operationMessage = state.attempt === 1 && !state.problem.isReview
+    const operationMessage = state.attempt === 1 && !state.problem.isReview && !state.problem.isSpacedReview
       ? recordOperationAttempt(state.problem.operation, isCorrect)
       : "";
 
     if (isCorrect) {
+      if (state.problem.isSpacedReview && !state.spacedReviewRecorded) recordSpacedReview(state.attempt === 1);
       state.locked = true;
       const pace = getProfile().personalFastTime;
       const fastBonus = tasks.isPaceComparableTask(state.problem)
@@ -1416,6 +1447,7 @@ function makePowerProblem(max, mastered) {
       return;
     }
 
+    if (state.problem.isSpacedReview && !state.spacedReviewRecorded) recordSpacedReview(false);
     const adaptiveMessage = updateAdaptiveProgress(state.problem, state.attempt === 1, false, elapsed);
     state.streak = 0;
     $("streakPill").classList.add("hidden");
@@ -1454,9 +1486,17 @@ function makePowerProblem(max, mastered) {
       success,
       firstTry: success && attempt === 1,
       seconds: Number(elapsed.toFixed(1)),
-      stage: state.stage
+      stage: state.problem.curriculumStage || state.stage,
+      isSpacedReview: state.problem.isSpacedReview === true
     };
     state.results.push(item);
+  }
+
+  function recordSpacedReview(firstTry) {
+    const profile = getProfile();
+    mastery.recordReviewResult(profile, state.problem.reviewSkillId, firstTry, new Date());
+    state.spacedReviewRecorded = true;
+    saveProfile(profile);
   }
 
   function recordOperationAttempt(operation, isCorrect) {
@@ -1474,7 +1514,9 @@ function makePowerProblem(max, mastered) {
     const profile = getProfile();
     let item = profile.errorQueue.find((entry) => entry.key === problem.key);
     if (!item) {
-      item = { ...problem, curriculumStage: state.stage, correctStreak: 0, lastShown: Date.now() };
+      item = { ...problem, isSpacedReview: false, reviewSkillId: null,
+        curriculumStage: problem.curriculumStage || state.stage, fromSpacedReview: problem.isSpacedReview === true,
+        correctStreak: 0, lastShown: Date.now() };
       profile.errorQueue.push(item);
     } else {
       item.correctStreak = 0;
@@ -1484,6 +1526,7 @@ function makePowerProblem(max, mastered) {
   }
 
   function updateAdaptiveProgress(problem, isFirstAttempt, isCorrect, elapsed) {
+    if (problem.isSpacedReview || problem.isReview) return "";
     const profile = getProfile();
     const structured = updateStructuredOperationProgress(profile, problem, isFirstAttempt, isCorrect);
     if (structured.handled) {
@@ -1491,7 +1534,7 @@ function makePowerProblem(max, mastered) {
       saveProfile(profile);
       return structured.message;
     }
-    if (problem.isReview || !isFirstAttempt) return "";
+    if (!isFirstAttempt) return "";
     if (!appSettings.automatic) {
       if (isCorrect && tasks.isPaceComparableTask(problem)) state.paceUpdate = updatePersonalPace(profile, elapsed);
       saveProfile(profile);
@@ -1526,6 +1569,7 @@ function makePowerProblem(max, mastered) {
       saveProfile(profile);
       return "";
     }
+    mastery.markStageMastered(profile, profile.currentStage, new Date());
     if (profile.currentStage === CURRICULUM_STAGE_COUNT && !profile.curriculumCompleted) {
       profile.curriculumCompleted = true;
       saveProfile(profile);
@@ -1951,6 +1995,8 @@ function makePowerProblem(max, mastered) {
     } else {
       const profile = getProfile();
       const summary = weekly.getHistorySummary(profile, history);
+      const dueSkills = mastery.getDueSkills(profile, new Date());
+      const stableSkills = Object.values(profile.skillMastery).filter((skill) => mastery.getMasteryStatus(skill) === "stable").length;
       const commonTrouble = mostCommon(history.flatMap((item) => item.trouble || []));
       content.innerHTML = `
         <div class="summary-stats">
@@ -1959,6 +2005,7 @@ function makePowerProblem(max, mastered) {
           <div><strong>${profile.currentStage}</strong><span>${copy.currentLevel}</span></div>
         </div>
         ${summary.stageStart && summary.stageEnd && summary.stageEnd > summary.stageStart ? `<p class="learning-summary"><strong>${copy.learningProgress}:</strong> ${copy.stageNames[summary.stageStart - 1]} → ${copy.stageNames[summary.stageEnd - 1]}</p>` : ""}
+        <p class="learning-summary">${copy.dueAreas(dueSkills.length)} · ${copy.stableAreas(stableSkills)}</p>
         <div class="history-list">${history.slice(0, 10).map((item) => {
           const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(item.stage) || 1));
           const currentScale = item.curriculumVersion === CURRICULUM_VERSION || new Date(item.date).getTime() >= Date.parse("2026-09-27T18:11:52Z");
