@@ -38,7 +38,7 @@
     ru: {
       locale: "ru-RU", appName: "Считаем с Капи", description: "Адаптивный тренажёр арифметики для детей — от сложения до корней.",
       startEyebrow: "Уровень 1", startTitle: "Готовы считать?", startDescription: "20 коротких примеров. Капи постепенно повышает сложность.",
-      homeSubtitle: "Шаг за шагом с Капи.", homeHistory: "История", homeStage: (stage) => `Ступень ${stage}`,
+      homeSubtitle: "Шаг за шагом с Капи.", homeHistory: "История", homeXp: "XP", homeStage: (stage) => `Ступень ${stage}`,
       dayStreak: "дней подряд", totalXp: "всего XP", start: "Начать тренировку", history: "История занятий", speech: "Hey!",
       weeklyGoal: "Цель на неделю", thisWeek: "На этой неделе", weeklyZero: "Первое занятие ждёт",
       weeklyCount: (count, goal) => `${count} из ${goal} тренировок`,
@@ -91,7 +91,7 @@
     de: {
       locale: "de-DE", appName: "Rechnen mit Kapi", description: "Adaptives Rechentraining für Kinder – von Addition bis zu Wurzeln.",
       startEyebrow: "Stufe 1", startTitle: "Bereit zum Rechnen?", startDescription: "20 kurze Aufgaben. Kapi erhöht die Schwierigkeit Schritt für Schritt.",
-      homeSubtitle: "Schritt für Schritt mit Kapi.", homeHistory: "Verlauf", homeStage: (stage) => `Stufe ${stage}`,
+      homeSubtitle: "Schritt für Schritt mit Kapi.", homeHistory: "Verlauf", homeXp: "XP", homeStage: (stage) => `Stufe ${stage}`,
       dayStreak: "Tage in Folge", totalXp: "XP insgesamt", start: "Training starten", history: "Trainingsverlauf", speech: "Hey!",
       weeklyGoal: "Wochenziel", thisWeek: "Diese Woche", weeklyZero: "Erstes Training wartet",
       weeklyCount: (count, goal) => `${count} von ${goal} Trainings`,
@@ -266,7 +266,7 @@
     $("startTitle").textContent = copy.startTitle;
     $("startDescription").textContent = copy.homeSubtitle;
     $("weeklyLabel").textContent = copy.thisWeek;
-    $("totalXpLabel").textContent = copy.totalXp;
+    $("totalXpLabel").textContent = copy.homeXp;
     $("startButton").innerHTML = `${copy.start} <span aria-hidden="true">→</span>`;
     $("statsButton").textContent = copy.homeHistory;
     $("wardrobeButton").textContent = copy.meinKapi;

@@ -58,7 +58,7 @@ async function run() {
       assert.equal(await page.locator('#startButton').isVisible(), true);
       assert.equal(await page.locator('#speechBubble').isVisible(), true);
       assert.equal(await page.locator('#homeMascot').isVisible(), true);
-      assert.ok((await page.locator('#startEyebrow').innerText()).includes('Stufe'),
+      assert.match(await page.locator('#startEyebrow').innerText(), /Stufe/i,
         `${width}: stage label = ${JSON.stringify(await page.locator('#startEyebrow').innerText())}; page errors = ${JSON.stringify(errors)}`);
       assert.equal(await page.locator('.home-nav .text-button').count(), 3);
       const homeLayout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth,
