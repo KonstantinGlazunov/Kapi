@@ -52,12 +52,14 @@ async function run() {
         await route.fulfill({ response, body: source.replace(marker, exposure) });
       });
       await page.goto(baseUrl, { waitUntil: 'load' });
+      if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-home.png`) });
       assert.equal(await page.locator('#weeklyStat').isVisible(), true, `${width}: weekly progress missing`);
       assert.equal(await page.locator('#weeklyLabel').innerText(), 'Diese Woche');
       assert.equal(await page.locator('#startButton').isVisible(), true);
       assert.equal(await page.locator('#speechBubble').isVisible(), true);
       assert.equal(await page.locator('#homeMascot').isVisible(), true);
-      assert.ok((await page.locator('#startEyebrow').innerText()).includes('Stufe'));
+      assert.ok((await page.locator('#startEyebrow').innerText()).includes('Stufe'),
+        `${width}: stage label = ${JSON.stringify(await page.locator('#startEyebrow').innerText())}; page errors = ${JSON.stringify(errors)}`);
       assert.equal(await page.locator('.home-nav .text-button').count(), 3);
       const homeLayout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth,
         viewport: document.documentElement.clientWidth, bottom: document.querySelector('#startButton').getBoundingClientRect().bottom,
@@ -75,7 +77,6 @@ async function run() {
       assert.ok(homeLayout.settingsBottom <= height && homeLayout.historyTop >= homeLayout.bottom + 8 &&
         homeLayout.mapBottom <= height - 2 && homeLayout.wardrobeBottom <= height - 2,
         `${width}: home actions overlap or leave viewport: ${JSON.stringify(homeLayout)}`);
-      if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-home.png`) });
       await page.locator('#startButton').click();
       assert.equal(await page.locator('#gameScreen').isVisible(), true, 'tap starts training');
       // A real first answer must pass through the visible choice/keypad and advance the app.
