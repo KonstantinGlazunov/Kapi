@@ -209,6 +209,8 @@ async function run() {
         });
         await page.locator('#statsButton').click();
         assert.ok((await page.locator('#statsContent').innerText()).includes('Plus über den Zehner'), 'History names due canonical skill');
+        const titleHeight = await page.locator('#historyTitle').evaluate(element => element.getBoundingClientRect().height);
+        assert.ok(titleHeight <= 35, `History title wraps on ${width}px: ${titleHeight}`);
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-due-skill-history.png`) });
         await page.locator('#closeStatsButton').click();
         await page.locator('#startButton').click();

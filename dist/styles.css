@@ -412,6 +412,7 @@ body.kapi-demo-active { height: auto; min-height: 100dvh; overflow: auto; }
 .dialog-head h2 { overflow-wrap: anywhere; }
 .dialog-head .icon-button { flex-shrink: 0; }
 .dialog-head h2 { margin: 4px 0 18px; font-size: 1.8rem; }
+.stats-dialog .dialog-head h2 { font-size: clamp(1.2rem, 5vw, 1.5rem); overflow-wrap: normal; }
 .summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
 .summary-stats div { padding: 12px 8px; border-radius: 14px; background: var(--teal-pale); text-align: center; display: grid; }
 .summary-stats strong { color: var(--teal-dark); font-size: 1.25rem; }
