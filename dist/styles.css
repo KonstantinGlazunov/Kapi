@@ -943,7 +943,7 @@ body.start-active .home-maintenance .update-button, body.start-active .home-main
 @media (max-width: 680px) {
   body.start-active .app-shell { padding: max(8px, env(safe-area-inset-top)) 12px max(8px, env(safe-area-inset-bottom)); }
   body.start-active .topbar { min-height: 42px; }
-  body.start-active .home-hero { width: 100%; }
+  body.start-active .home-hero { width: 100%; max-height: min(50dvh, 460px); }
   body.start-active .start-mascot { width: min(70vw, 315px); bottom: -22px; }
   body.start-active .speech-bubble { right: 6%; top: 12%; }
 }
@@ -958,4 +958,7 @@ body.start-active .home-maintenance .update-button, body.start-active .home-main
   body.start-active .home-stats > div { min-height: 48px; padding: 5px 8px; }
   body.start-active #homeRewardGoal { min-height: 42px; padding: 4px 8px; }
   body.start-active .home-nav .text-button { min-height: 44px; font-size: .72rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.start-active .speech-bubble, body.start-active .spark { animation: none !important; opacity: 1; }
 }
