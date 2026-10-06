@@ -203,9 +203,9 @@
     dance: ["Tanzen!", "Klasse!"],
     handshake: ["Abgemacht!", "Wir sind ein Team!"]
   };
-  translations.de.dueAreas = (count) => `${count} Bereiche werden demnächst wiederholt`;
+  translations.de.dueAreas = (count) => `Zum Wiederholen: ${count} ${count === 1 ? "Bereich" : "Bereiche"}`;
   translations.ru.dueAreas = (count) => `Скоро повторим: ${count} тем`;
-  translations.de.stableAreas = (count) => `Gefestigt: ${count} Bereiche`;
+  translations.de.stableAreas = (count) => `Gefestigt: ${count} ${count === 1 ? "Bereich" : "Bereiche"}`;
   translations.ru.stableAreas = (count) => `Закреплено: ${count} тем`;
   let copy = translations[language];
   let messages = copy.messages;
@@ -2005,7 +2005,10 @@ function makePowerProblem(max, mastered) {
           <div><strong>${profile.currentStage}</strong><span>${copy.currentLevel}</span></div>
         </div>
         ${summary.stageStart && summary.stageEnd && summary.stageEnd > summary.stageStart ? `<p class="learning-summary"><strong>${copy.learningProgress}:</strong> ${copy.stageNames[summary.stageStart - 1]} → ${copy.stageNames[summary.stageEnd - 1]}</p>` : ""}
-        <p class="learning-summary">${copy.dueAreas(dueSkills.length)} · ${copy.stableAreas(stableSkills)}</p>
+        ${dueSkills.length || stableSkills ? `<p class="learning-summary">${[
+          dueSkills.length ? copy.dueAreas(dueSkills.length) : "",
+          stableSkills ? copy.stableAreas(stableSkills) : ""
+        ].filter(Boolean).join(" · ")}</p>` : ""}
         <div class="history-list">${history.slice(0, 10).map((item) => {
           const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(item.stage) || 1));
           const currentScale = item.curriculumVersion === CURRICULUM_VERSION || new Date(item.date).getTime() >= Date.parse("2026-09-27T18:11:52Z");

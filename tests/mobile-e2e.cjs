@@ -230,6 +230,7 @@ async function run() {
         assert.equal(review.skillId, 'stage:5');
         assert.equal(review.stage, 5);
         assert.equal(review.currentStage, 6);
+        await page.waitForFunction(() => document.querySelector('#motivationPop').classList.contains('hidden'), null, { timeout: 5000 });
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-spaced-review.png`) });
         if (review.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${review.answer}$`) }).click();
         else for (const digit of String(review.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();

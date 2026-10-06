@@ -179,3 +179,14 @@ test('mastery script is loaded in HTML, precached, and available in test runtime
   assert.ok(fs.readFileSync(path.join(root, 'sw.js'), 'utf8').includes('"kapi-mastery.js"'));
   assert.ok(environment().sandbox.KapiMasterySystem);
 });
+
+test('parent history shows due areas without a punitive warning or empty zero-state block', () => {
+  const { app, mastery, env } = setup();
+  env.storage.set('capy-count-history-v1', JSON.stringify([{ date: new Date().toISOString(), total: 10, correct: 9, average: 4, stage: 6 }]));
+  app.showStats();
+  assert.ok(!env.elements.get('statsContent').innerHTML.includes('Zum Wiederholen: 0'));
+  const profile = due(app, mastery);
+  app.showStats();
+  assert.ok(env.elements.get('statsContent').innerHTML.includes('Zum Wiederholen: 1 Bereich'));
+  assert.equal(profile.currentStage, 6);
+});
