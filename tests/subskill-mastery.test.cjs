@@ -79,6 +79,40 @@ test('weak practiced table is selected more often, while other learned tables re
   assert.ok(counts['multiply:table:7'] < 900);
 });
 
+test('scheduled spaced review actually favors the practiced table without repeating its exact fact', () => {
+  const { app, model, catalog } = setup();
+  const profile = app.getProfile();
+  profile.currentStage = 24;
+  profile.multiplicationSequence = { phase: 11, item: 10, mixed: true };
+  for (let i = 0; i < 10; i++) {
+    model.recordEvidence(profile, { curriculumStage: 23, operation: 'multiply', a: 7, b: 8 },
+      { firstAttempt: true, correct: false });
+    model.recordEvidence(profile, { curriculumStage: 23, operation: 'multiply', a: 2, b: 8 },
+      { firstAttempt: true, correct: true });
+  }
+  const mastery = catalog.skillForStage(23).id;
+  const record = { strength: 1, successfulReviews: 0, failedReviews: 0, intervalDays: 1,
+    nextReviewAt: '2020-01-02T12:00:00Z', lastPracticedAt: '2020-01-01T12:00:00Z', lastResult: 'mastered' };
+  profile.skillMastery[mastery] = record;
+  app.saveProfile(profile);
+  app.startTraining();
+  const slot = [...app.state.spacedPlan.keys()][0];
+  const counts = {};
+  let previous = null;
+  for (let i = 0; i < 300; i++) {
+    app.state.recentFacts = previous ? [previous] : [];
+    const problem = app.selectProblem(24, slot);
+    assert.equal(problem.isSpacedReview, true);
+    const part = catalog.classifyProblem(problem).subskillId;
+    counts[part] = (counts[part] || 0) + 1;
+    // The most recent fact can be excluded even when a table is selected again.
+    if (previous) assert.notEqual(problem.key, previous);
+    previous = problem.key;
+  }
+  assert.ok(counts['multiply:table:7'] > counts['multiply:table:2'] * 2, JSON.stringify(counts));
+  assert.ok(counts['multiply:table:2'] > 0, JSON.stringify(counts));
+});
+
 test('early sequence never selects an unopened table; focused examples vary without advancing the sequence', () => {
   const { app, catalog, model } = setup();
   const profile = app.getProfile();
