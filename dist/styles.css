@@ -1180,3 +1180,21 @@ body.start-active #settingsButton:focus-visible { outline-color: #003e93; }
   body.start-active #startButton { min-height: 53px; border-radius: 18px; }
   body.start-active .home-nav .text-button { min-height: 44px; border-radius: 12px; }
 }
+
+/* Parent-facing storage status and backups use the existing settings palette. */
+.storage-notice { flex-shrink: 0; margin: 0 0 8px; padding: 8px 12px; border: 1px solid #c69224; border-radius: 16px; background: #fff2bd; color: #554119; font-size: .85rem; box-shadow: var(--shadow); }
+.backup-controls .setting-toggle { width: 100%; min-height: 44px; }
+.backup-file { display: grid !important; gap: 8px; font-weight: 750; }
+.backup-file { position: relative; padding: 10px 14px; min-height: 44px; border: 2px solid #c5dedd; border-radius: 16px; color: var(--teal-dark); text-align: center; cursor: pointer; }
+.backup-file:focus-within { outline: 3px solid var(--teal); outline-offset: 3px; }
+.backup-file input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+#backupStatus:empty { display: none; }
+#backupStatus { margin: 0; color: var(--teal-dark); font-size: .9rem; }
+@media (max-width: 380px) and (max-height: 700px) {
+  .result-mascot { width: 60px; height: 60px; }
+  .result-card h1 { margin: 6px 0 8px; }
+  .result-card .primary-button, .result-card .share-button, .result-card .text-button { min-height: 44px; }
+}
+@media (max-width: 380px) {
+  .settings-dialog .dialog-head h2 { font-size: 1.45rem; overflow-wrap: normal; word-break: normal; }
+}

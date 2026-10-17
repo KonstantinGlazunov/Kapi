@@ -1,6 +1,11 @@
+/* kapi-public-url:v1 */
 (() => {
   "use strict";
 
+  const storage = window.KapiStorage.create(() => window.localStorage, () => {
+    const notice = document.getElementById("storageNotice");
+    if (notice) { notice.hidden = false; notice.textContent = copy.storageWarning; }
+  });
   let TOTAL = 20;
   const HISTORY_KEY = "capy-count-history-v1";
   const SETTINGS_KEY = "capy-count-settings-v1";
@@ -8,7 +13,7 @@
   const INSTALL_DISMISS_KEY = "capy-count-install-dismissed-v1";
   const INSTALLED_KEY = "capy-count-installed-v1";
   let language = "de";
-  const APP_URL = "https://schitaem-s-kapi.lsdglider.chatgpt.site";
+  const APP_URL = "https://erstellen-websiten.de/kapi";
   const INVITE_URL = `${APP_URL}/?install=1`;
   const UNIVERSAL_FAST_TIME = 4;
   const PERSONAL_RECORD_MIN_RATIO = .10;
@@ -224,6 +229,28 @@
     targetedIntro: (name) => `Kapi übt mit dir die ${name}.` });
   Object.assign(translations.ru, { targetedPractice: "Потренировать", subskillsToPractice: "Повторим вместе",
     targetedIntro: (name) => `Капи потренирует с тобой: ${name}.` });
+  Object.assign(translations.ru, {
+    updateCloseTabs: "Закройте другие старые вкладки Капи и повторите обновление.",
+    storageWarning: "Прогресс не сохраняется. Скачайте копию в настройках.",
+    backupTitle: "Резервная копия", backupExport: "Скачать копию", backupImport: "Выбрать файл для восстановления",
+    backupHelp: "Сохраните файл в надёжном месте. Он содержит прогресс, историю и настройки этого браузера.",
+    backupConfirm: "Заменить текущий прогресс, историю и настройки данными из файла? Сначала сохраните копию текущих данных.",
+    backupInvalid: "Не удалось прочитать копию: файл повреждён или имеет неподдерживаемый формат. Текущие данные не изменены.",
+    backupFailed: "Не удалось сохранить копию в браузере. Текущие данные не заменены.",
+    backupDone: "Копия восстановлена.", backupBusy: "Сначала завершите тренировку или вернитесь в начало.",
+    localPrivacy: "Прогресс хранится только в этом браузере на этом устройстве. Очистка данных браузера удалит его. У разных адресов сайта отдельные хранилища: автоматического переноса со старого адреса нет. Перенести доступные данные можно файлом резервной копии. Недоступные данные восстановить нельзя. Результат или отзыв отправляются только по вашему действию через выбранное приложение."
+  });
+  Object.assign(translations.de, {
+    updateCloseTabs: "Andere alte Kapi-Tabs schließen, dann erneut aktualisieren.",
+    storageWarning: "Fortschritt wird nicht gespeichert. Sicherung in den Einstellungen herunterladen.",
+    backupTitle: "Sicherung", backupExport: "Sicherung herunterladen", backupImport: "Sicherungsdatei wählen",
+    backupHelp: "Die Datei enthält Fortschritt, Verlauf und Einstellungen dieses Browsers. Bitte sicher aufbewahren.",
+    backupConfirm: "Fortschritt, Verlauf und Einstellungen durch die Datei ersetzen? Bitte zuerst die aktuellen Daten sichern.",
+    backupInvalid: "Die Sicherung ist beschädigt oder hat ein nicht unterstütztes Format. Die aktuellen Daten wurden nicht geändert.",
+    backupFailed: "Die Sicherung konnte nicht im Browser gespeichert werden. Die aktuellen Daten wurden nicht ersetzt.",
+    backupDone: "Sicherung wiederhergestellt.", backupBusy: "Bitte zuerst das Training beenden oder zur Startseite zurückkehren.",
+    localPrivacy: "Der Fortschritt bleibt nur in diesem Browser auf diesem Gerät. Beim Löschen der Browserdaten geht er verloren. Verschiedene Website-Adressen haben getrennte Speicher: Vom alten Standort wird nichts automatisch übertragen. Verfügbare Daten lassen sich mit einer Sicherungsdatei übertragen. Nicht mehr zugängliche Daten können wir nicht wiederherstellen. Ein Ergebnis oder Feedback wird nur auf Ihren Wunsch über die ausgewählte App gesendet."
+  });
   let copy = translations[language];
   let messages = copy.messages;
   let deferredInstallPrompt = null;
@@ -304,6 +331,7 @@
     $("clearStatsButton").textContent = copy.clearHistory;
     $("settingsTitle").textContent = copy.settings;
     $("settingsHint").textContent = copy.settingsHint;
+    if (storage.failed) $("storageNotice").textContent = copy.storageWarning;
     $("closeSettingsButton").setAttribute("aria-label", copy.closeSettings);
     $("installKicker").textContent = copy.installKicker;
     $("installTitle").textContent = copy.installTitle;
@@ -319,13 +347,13 @@
 
   function loadSettings() {
     try {
-      const value = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+      const value = storage.readJSON(SETTINGS_KEY, {});
       appSettings.language = value.language === "ru" ? "ru" : "de";
       appSettings.problemCount = [10, 20, 30].includes(Number(value.problemCount)) ? Number(value.problemCount) : 20;
       const currentCurriculum = value.curriculumVersion === CURRICULUM_VERSION;
-      appSettings.automatic = currentCurriculum ? value.automatic !== false : true;
-      appSettings.range = currentCurriculum && ["10", "20", "100", "above100"].includes(String(value.range)) ? String(value.range) : "above100";
-      appSettings.operations = currentCurriculum && Array.isArray(value.operations)
+      appSettings.automatic = value.automatic !== false;
+      appSettings.range = ["10", "20", "100", "above100"].includes(String(value.range)) ? String(value.range) : "above100";
+      appSettings.operations = Array.isArray(value.operations)
         ? OPERATION_ORDER.filter((operation) => value.operations.includes(operation))
         : [...OPERATION_ORDER];
       appSettings.manualStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(value.manualStage) || 1));
@@ -333,7 +361,7 @@
       appSettings.sound = value.sound !== false;
       appSettings.curriculumVersion = CURRICULUM_VERSION;
       if (!appSettings.automatic) syncStageToOperations();
-      if (!currentCurriculum) localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+      if (!currentCurriculum) storage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
     } catch { /* Keep defaults. */ }
     language = appSettings.language;
     TOTAL = appSettings.problemCount;
@@ -342,7 +370,7 @@
 
   function saveSettings() {
     appSettings.sound = state.sound;
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+    storage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
   }
 
   function renderSettingsContent() {
@@ -366,6 +394,12 @@
       const selectedWeeklyGoal = getProfile().weeklyGoal;
       content.innerHTML = `${navigation}
         <section class="settings-panel">
+          <fieldset class="backup-controls"><legend>${copy.backupTitle}</legend>
+            <p class="settings-note">${copy.backupHelp}</p>
+            <button class="setting-toggle" type="button" data-backup-export>${copy.backupExport}</button>
+            <label class="backup-file">${copy.backupImport}<input type="file" data-backup-import accept="application/json,.json"></label>
+            <p id="backupStatus" role="status"></p>
+          </fieldset>
           <fieldset><legend>${copy.language}</legend>
             <label><input type="radio" name="language" value="de" ${language === "de" ? "checked" : ""}> Deutsch</label>
             <label><input type="radio" name="language" value="ru" ${language === "ru" ? "checked" : ""}> Русский</label>
@@ -382,7 +416,7 @@
     if (settingsSection === "about") {
       content.innerHTML = `${navigation}
         <section class="settings-panel about-panel">
-          <p class="about-copy">${copy.aboutText}</p>
+          <p class="about-copy">${copy.aboutText}</p><p class="about-copy">${copy.localPrivacy}</p>
           <a class="author-link" href="https://erstellen-websiten.de/ueber-mich" target="_blank" rel="noopener noreferrer">${copy.author} ↗</a>
           <form class="feedback-form" id="feedbackForm">
             <h3>${copy.feedbackTitle}</h3>
@@ -444,20 +478,11 @@
       divisionDerivedSequence: { phase: 0, item: 0, mixed: false }
     };
     try {
-      const stored = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}");
+      const stored = storage.readJSON(PROFILE_KEY, {});
       const profile = { ...defaults, ...stored };
       if (stored.curriculumVersion !== CURRICULUM_VERSION) {
-        profile.currentStage = 1;
-        profile.errorQueue = [];
-        profile.adaptiveOperand = 1;
-        profile.adaptiveFastStreak = 0;
-        profile.adaptiveCorrectStreak = 0;
-        profile.adaptiveRecentResults = [];
-        profile.accelerationWindow = [];
-        profile.operationStats = {};
-        profile.curriculumStats = {};
         profile.curriculumVersion = CURRICULUM_VERSION;
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+        storage.setItem(PROFILE_KEY, JSON.stringify(profile));
       }
       profile.currentStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(profile.currentStage) || 1));
       profile.curriculumCompleted = profile.curriculumCompleted === true;
@@ -506,13 +531,13 @@
       const weeklyMigration = weekly.migrate(profile, getHistory());
       const masteryMigration = mastery.migrate(profile) || !Object.hasOwn(stored, "skillMastery");
       const subskillMigration = subskills.migrate(profile);
-      if (rewardMigration || weeklyMigration || masteryMigration || subskillMigration) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      if (rewardMigration || weeklyMigration || masteryMigration || subskillMigration) storage.setItem(PROFILE_KEY, JSON.stringify(profile));
       return profile;
-    } catch { rewards.migrate(defaults); weekly.migrate(defaults); mastery.migrate(defaults); subskills.migrate(defaults); return defaults; }
+    } catch { storage.markCorrupt(PROFILE_KEY); rewards.migrate(defaults); weekly.migrate(defaults); mastery.migrate(defaults); subskills.migrate(defaults); return defaults; }
   }
 
   function saveProfile(profile) {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    storage.setItem(PROFILE_KEY, JSON.stringify(profile));
   }
 
   function normalizeLearningSequence(value, phaseCount, minimumItem, maximumItem) {
@@ -2026,7 +2051,7 @@ function makePowerProblem(max, mastered) {
     if (history.some((item) => item.id === session.id) || profile.weeklySessions.sessionIds.includes(session.id) ||
       profile.weeklyHistory.some((week) => week.sessionIds?.includes(session.id))) return { unlocked: [], weeklyGoalComplete: false };
     history.unshift(session);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 30)));
+    storage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 30)));
     const today = localDay(new Date());
     const previousDay = new Date();
     previousDay.setDate(previousDay.getDate() - 1);
@@ -2049,7 +2074,7 @@ function makePowerProblem(max, mastered) {
   }
 
   function getHistory() {
-    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); }
+    try { const history = storage.readJSON(HISTORY_KEY, []); return Array.isArray(history) ? history : []; }
     catch { return []; }
   }
 
@@ -2287,7 +2312,7 @@ function makePowerProblem(max, mastered) {
 
   function updateInstallHomeButton() {
     const isIosBrowser = /iphone|ipad|ipod/i.test(navigator.userAgent) && !runsStandalone();
-    const installed = runsStandalone() || (localStorage.getItem(INSTALLED_KEY) === "1" && !deferredInstallPrompt);
+    const installed = runsStandalone() || (storage.getItem(INSTALLED_KEY) === "1" && !deferredInstallPrompt);
     $("installHomeButton").classList.toggle("hidden", installed || (!deferredInstallPrompt && !isIosBrowser));
   }
 
@@ -2295,7 +2320,7 @@ function makePowerProblem(max, mastered) {
     if (runsStandalone()) return false;
     const forced = new URLSearchParams(window.location.search).get("install") === "1";
     if (forced) return true;
-    const dismissedAt = Number(localStorage.getItem(INSTALL_DISMISS_KEY) || 0);
+    const dismissedAt = Number(storage.getItem(INSTALL_DISMISS_KEY) || 0);
     return !dismissedAt || Date.now() - dismissedAt > 7 * 86400000;
   }
 
@@ -2309,7 +2334,7 @@ function makePowerProblem(max, mastered) {
 
   function dismissInstallPrompt(remember = true) {
     $("installPrompt").classList.add("hidden");
-    if (remember) localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
+    if (remember) storage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
   }
 
   async function installApp(sourceButton = $("installButton")) {
@@ -2319,7 +2344,7 @@ function makePowerProblem(max, mastered) {
       await deferredInstallPrompt.prompt();
       const choice = await deferredInstallPrompt.userChoice;
       if (choice.outcome === "accepted") {
-        localStorage.setItem(INSTALLED_KEY, "1");
+        storage.setItem(INSTALLED_KEY, "1");
         dismissInstallPrompt(false);
       }
       else dismissInstallPrompt(true);
@@ -2449,10 +2474,37 @@ function makePowerProblem(max, mastered) {
     window.location.href = `https://wa.me/4915110974353?text=${encodeURIComponent(lines.join("\n"))}`;
   }
 
+  function exportProgress() {
+    const data = { profile: getProfile(), settings: { ...appSettings }, history: getHistory() };
+    const url = URL.createObjectURL(new Blob([storage.exportBackup(data)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url; link.download = `kapi-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link); link.click(); link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function importProgress(file) {
+    if (!file) return;
+    const status = $("backupStatus");
+    if ($("gameScreen").classList.contains("active")) { status.textContent = copy.backupBusy; return; }
+    let data;
+    try {
+      if (file.size > window.KapiStorage.MAX_BYTES) throw new Error("Too large");
+      data = storage.validateBackup(await file.text(), getProfile());
+    } catch { status.textContent = copy.backupInvalid; return; }
+    if (!window.confirm(copy.backupConfirm)) return;
+    if (!storage.importBackup(data)) { status.textContent = copy.backupFailed; return; }
+    $("storageNotice").hidden = true;
+    loadSettings(); applyLanguage(); updateHomeStats();
+    $("backupStatus").textContent = copy.backupDone;
+  }
+
   function registerServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
     let waitingWorker = null;
-    let reloading = false;
+    let reloadRequested = false;
+    let controllerChanged = false;
+    const hadController = !!navigator.serviceWorker.controller;
     const offerUpdate = (worker) => {
       waitingWorker = worker;
       $("updateButton").classList.remove("hidden");
@@ -2477,12 +2529,29 @@ function makePowerProblem(max, mastered) {
         });
       } catch { /* The online app still works without installation. */ }
     });
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (reloading) return;
-      reloading = true;
-      window.location.reload();
+    navigator.serviceWorker.addEventListener("message", (event) => {
+      if (event.data?.type === "KAPI_UPDATE_CHECK") event.ports[0]?.postMessage({ protocol: 1 });
+      if (event.data?.type === "KAPI_UPDATE_BLOCKED") {
+        reloadRequested = false;
+        $("updateButton").textContent = copy.updateCloseTabs;
+        $("updateButton").classList.remove("hidden");
+        scheduleFitCheck();
+      }
     });
-    $("updateButton").addEventListener("click", () => waitingWorker?.postMessage({ type: "SKIP_WAITING" }));
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      // First installation claims the page without restarting it. Other tabs may
+      // activate an update while this tab is training: keep its JS and state alive.
+      if (!hadController && !reloadRequested) return;
+      controllerChanged = true;
+      if (reloadRequested && !$("gameScreen").classList.contains("active")) window.location.reload();
+      else $("updateButton").classList.remove("hidden");
+    });
+    $("updateButton").addEventListener("click", () => {
+      if ($("gameScreen").classList.contains("active")) return;
+      reloadRequested = true;
+      if (controllerChanged) window.location.reload();
+      else if (waitingWorker?.state === "installed") waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    });
   }
 
   function registerWebMcp() {
@@ -2626,12 +2695,20 @@ function makePowerProblem(max, mastered) {
   $("closeStatsButton").addEventListener("click", () => $("statsDialog").close());
   $("clearStatsButton").addEventListener("click", () => {
     if (!window.confirm(copy.deleteConfirm)) return;
-    localStorage.removeItem(HISTORY_KEY);
+    storage.removeItem(HISTORY_KEY);
     showStats();
   });
   $("homeButton").addEventListener("click", () => {
     if (state.index > 0 && state.index < TOTAL && !window.confirm(copy.leaveConfirm)) return;
     showScreen($("startScreen"));
+  });
+  $("settingsContent").addEventListener("click", (event) => {
+    if (event.target.closest("[data-backup-export]")) exportProgress();
+  });
+  $("settingsContent").addEventListener("change", (event) => {
+    if (event.target.matches("[data-backup-import]")) {
+      importProgress(event.target.files?.[0]); event.target.value = "";
+    }
   });
   $("settingsButton").addEventListener("click", () => {
     settingsSection = "menu";
@@ -2672,7 +2749,7 @@ function makePowerProblem(max, mastered) {
     if (new URLSearchParams(window.location.search).get("install") === "1") showInstallPrompt("android");
   });
   window.addEventListener("appinstalled", () => {
-    localStorage.setItem(INSTALLED_KEY, "1");
+    storage.setItem(INSTALLED_KEY, "1");
     dismissInstallPrompt(false);
     updateInstallHomeButton();
   });
@@ -2688,7 +2765,7 @@ function makePowerProblem(max, mastered) {
     installMotivationDemo();
   }
   updateHomeStats();
-  if (runsStandalone()) localStorage.setItem(INSTALLED_KEY, "1");
+  if (runsStandalone()) storage.setItem(INSTALLED_KEY, "1");
   updateInstallHomeButton();
   document.body.classList.add("start-active");
   if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !runsStandalone()) showInstallPrompt("ios");
