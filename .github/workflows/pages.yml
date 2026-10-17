@@ -1,0 +1,54 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run tests
+        run: node --test tests/*.test.cjs
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Set sharing URL for GitHub Pages
+        env:
+          PAGES_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          path = Path('dist/app.js')
+          source = path.read_text()
+          source = source.replace('https://schitaem-s-kapi.lsdglider.chatgpt.site', os.environ['PAGES_URL'].rstrip('/'))
+          path.write_text(source)
+          Path('dist/.nojekyll').touch()
+          PY
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Deploy site
+        id: deployment
+        uses: actions/deploy-pages@v4
