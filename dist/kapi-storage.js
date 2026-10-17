@@ -19,7 +19,7 @@
     }
     throw new Error("Invalid backup value");
   }
-  function validateBackup(text, template) {
+  function validateBackup(text, template = {}) {
     if (typeof text !== "string" || new TextEncoder().encode(text).length > MAX_BYTES) throw new Error("Backup too large");
     const backup = JSON.parse(text);
     safeTree(backup);
@@ -41,9 +41,9 @@
     if (!Number.isInteger(profile.currentStage) || profile.currentStage < 1 || profile.currentStage > 41 ||
       !Number.isFinite(profile.totalXp) || profile.totalXp < 0 || !Array.isArray(profile.errorQueue) ||
       !Number.isInteger(profile.curriculumVersion) || profile.curriculumVersion > 2) throw new Error("Invalid progress");
+    const taskSystem = new window.KapiTaskSystem();
     for (const queue of profile.errorQueue) {
-      const operand = (value) => Number.isFinite(value) || (typeof value === "string" && /^-?\d+\/[1-9]\d*$/.test(value));
-      if (!object(queue) || typeof queue.key !== "string" || !operand(queue.a) || !operand(queue.b)) throw new Error("Invalid review queue");
+      if (!taskSystem.isValidReviewProblem(queue)) throw new Error("Invalid review task");
     }
     for (const field of ["skillMastery", "subskillMastery", "operationStats", "curriculumStats", "equippedOutfit"]) {
       if (profile[field] !== undefined && !object(profile[field])) throw new Error("Invalid profile map");
@@ -126,6 +126,9 @@
       exportBackup(data) { return JSON.stringify({ format: "kapi-backup", version: 1, exportedAt: new Date().toISOString(), data }, null, 2); },
       validateBackup,
       importBackup(data) {
+        // Validate again at the persistence boundary, even for non-UI callers.
+        try { data = validateBackup(JSON.stringify({ format: "kapi-backup", version: 1, data })); }
+        catch { return false; }
         // A single durable write is the commit point. No partial three-key import.
         const next = Object.fromEntries(Object.entries(KEYS).map(([name, key]) => [key, JSON.stringify(data[name])]));
         try { access().setItem(BUNDLE, JSON.stringify(next)); }

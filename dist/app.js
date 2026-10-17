@@ -1434,14 +1434,21 @@ function makePowerProblem(max, mastered) {
   }
 
   function makeChoices(problem) {
-    const answer = problem.answer;
+    const answer = problem?.answer;
+    if (problem?.answerType === "fraction") {
+      const match = typeof answer === "string" && answer.match(/^(\d+)\/([1-9]\d*)$/);
+      if (!match || !match.slice(1).every((part) => Number.isSafeInteger(Number(part)) && Number(part) <= 1000000) ||
+        normalizeFraction(Number(match[1]), Number(match[2])) !== answer) throw new TypeError("Invalid fraction choice answer");
+      return makeFractionChoices(answer);
+    }
+    if (typeof answer !== "number" || !Number.isFinite(answer) || Math.abs(answer) > 1000000) throw new TypeError("Invalid numeric choice answer");
     if (problem.operation === "count") {
       const values = new Set([answer]);
       [answer - 1, answer + 1, answer - 2, answer + 2, 0, 5].filter((value) => value >= 0 && value <= 5).forEach((value) => values.add(value));
-      while (values.size < 4) values.add(randomInt(0, 5));
+      if (!Number.isInteger(answer) || answer < 0 || answer > 5) throw new TypeError("Invalid count choice answer");
+      for (let n = 0; values.size < 4 && n <= 5; n++) values.add(n);
       return [...values].slice(0, 4).sort(() => Math.random() - .5);
     }
-    if (problem.answerType === "fraction") return makeFractionChoices(answer);
     const values = new Set([answer]);
     const absolute = Math.abs(answer);
     const scale = problem.answerType === "decimal" ? .1 : absolute < 20 ? 1 : absolute < 100 ? 5 : absolute < 1000 ? 10 : 100;
@@ -1465,7 +1472,8 @@ function makePowerProblem(max, mastered) {
       values.add(candidate);
       attempts += 1;
     }
-    while (values.size < 4) values.add(Number((answer + values.size * scale).toFixed(2)));
+    for (let offset = 1; values.size < 4 && offset <= 8; offset++) values.add(Number((answer + offset * scale).toFixed(2)));
+    if (values.size < 4) throw new RangeError("Unable to create distinct choices");
     return [...values].sort(() => Math.random() - .5);
   }
 
@@ -1473,11 +1481,10 @@ function makePowerProblem(max, mastered) {
     const [numerator, denominator] = String(answer).split("/").map(Number);
     const values = new Set([answer]);
     [numerator + 1, Math.max(0, numerator - 1), numerator + 2, Math.max(0, numerator - 2)].forEach((value) => values.add(normalizeFraction(value, denominator)));
-    let offset = 1;
-    while (values.size < 4) {
-      values.add(normalizeFraction(numerator, denominator + offset));
-      offset += 1;
-    }
+    // Numerator offsets also work for 0/1; changing only its denominator
+    // repeatedly produced the same zero fraction forever.
+    for (let offset = 3; values.size < 4 && offset <= 8; offset++) values.add(normalizeFraction(numerator + offset, denominator));
+    if (values.size < 4) throw new RangeError("Unable to create distinct fraction choices");
     return [...values].slice(0, 4).sort(() => Math.random() - .5);
   }
 

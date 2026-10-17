@@ -164,6 +164,24 @@ async function run() {
       const accepted = offline.waitForEvent('dialog').then(dialog => dialog.accept());
       await upload(); await accepted;
       await offline.waitForFunction(() => document.querySelector('#totalXpValue').textContent === '333');
+      // Review regression: reject the executable queue before confirmation/write.
+      const rawBefore = await offline.evaluate(() => ['capy-count-data-v1', 'capy-count-profile-v1', 'capy-count-settings-v1', 'capy-count-history-v1'].map(key => localStorage.getItem(key)));
+      const malformed = JSON.parse(JSON.stringify(backup));
+      malformed.data.profile.errorQueue = [{ key: '1 + 1 = ?', a: 1, b: 1, operator: '+', operation: 'add', curriculumStage: 2, correctStreak: 0, lastShown: 0, taskType: 'equation', mode: 'choice', text: '1 + 1 = ?' }];
+      let unexpectedConfirm = 0;
+      const onUnexpectedDialog = dialog => { unexpectedConfirm++; return dialog.dismiss(); };
+      offline.on('dialog', onUnexpectedDialog);
+      await offline.locator('[data-backup-import]').setInputFiles({ name: 'missing-answer.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(malformed)) });
+      await offline.waitForFunction(() => document.querySelector('#backupStatus').textContent.includes('beschädigt'));
+      offline.off('dialog', onUnexpectedDialog);
+      assert.equal(unexpectedConfirm, 0, 'invalid task must be rejected before asking to replace data');
+      assert.deepEqual(await offline.evaluate(() => ['capy-count-data-v1', 'capy-count-profile-v1', 'capy-count-settings-v1', 'capy-count-history-v1'].map(key => localStorage.getItem(key))), rawBefore);
+      await offline.locator('#closeSettingsButton').click();
+      await offline.locator('#startButton').click();
+      assert.equal(await offline.locator('#gameScreen').isVisible(), true, 'training still starts after rejected import');
+      await offline.locator('#homeButton').click();
+      await offline.locator('#settingsButton').click();
+      await offline.locator('[data-settings-section=general]').click();
       await offline.locator('[data-backup-import]').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
       await offline.waitForFunction(() => document.querySelector('#backupStatus').textContent.includes('beschädigt'));
       assert.equal(await offline.locator('#totalXpValue').innerText(), '333');
