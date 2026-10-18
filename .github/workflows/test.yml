@@ -45,7 +45,7 @@ jobs:
         run: npm run test:guidance
         env:
           KAPI_E2E_SCREENSHOTS: artifacts/guidance
-      - name: One-second stage introduction
+      - name: Stage introduction
         run: npm run test:intro
         env:
           KAPI_E2E_SCREENSHOTS: artifacts/stage-intro

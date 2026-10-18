@@ -79,4 +79,4 @@ cases.push(...[[100,2,10],[400,2,20],[1000,3,10]].map(([a,b,answer])=>({id:`boun
    assert.deepEqual(errors,[]);console.log(`PASS ${width}×${height}: 36 guidance families + 7 boundary cases, real inputs, hints, worked solutions, replay and Next`);await context.close();
   }
  }finally{await browser.close();}
-})().catch(e=>{console.error(e);process.exitCode=1;});
+})().catch(e=>{console.error(e);console.error(`::error title=Guidance E2E::${String(e.stack || e).replace(/\r?\n/g,' | ')}`);process.exitCode=1;});
