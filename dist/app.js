@@ -87,7 +87,7 @@
       settingsCounting: "Настройки счёта", settingsGeneral: "Общие", settingsAbout: "О программе", backToSettings: "Назад к меню", settingsCountingMenu: "Количество примеров, режим, ступень и действия", settingsGeneralMenu: "Язык и звук", settingsAboutMenu: "Описание, автор и обратная связь", chooseStage: "Учебная ступень", stageInfo: "Подробно о ступени", stageBrief: (name, example) => `${name}. Пример: ${example}.`, stageDetail: (stage, name, example) => `Ступень ${stage}: ${name}. Ребёнок выполняет задания только этого типа. Типичный пример: ${example}. При автоматической сложности переход возможен только после освоения предыдущей ступени.`, aboutText: "«Считаем с Капи» — детский тренажёр арифметики от первых чисел до тем 10-го класса. В приложении принята смешанная последовательность, основанная на общих темах немецких учебных программ, но не привязанная к конкретному типу школы или федеральной земле.", feedbackTitle: "Замечания и предложения", feedbackMessage: "Сообщение", feedbackPlaceholder: "Что нужно исправить или добавить?", sendWhatsApp: "Отправить", author: "Автор программы", feedbackIntro: "После нажатия откроется WhatsApp с готовым сообщением. Проверьте его и нажмите «Отправить».",
       legacyStageInfo: "Это занятие было записано до перехода на новую шкалу. Подробное описание старой ступени недоступно.",
       multiplicationZero: "Умножение на ноль", multiplicationRow: (factor) => `Таблица на ${factor}`, multiplicationSquares: "Квадраты чисел", multiplicationMixed: "Теперь примеры вперемешку", divisionRow: (divisor) => `Деление на ${divisor}`, divisionMixed: "Теперь деление вперемешку",
-      stageNames: ["количества от 0 до 5", "+0 и +1 до 5", "сложение до 5", "состав числа до 10", "сложение до 10", "−1 и −2 до 5", "вычитание до 10", "+ и − до 10", "числа от 11 до 20", "сложение до 20 без перехода", "вычитание до 20 без перехода", "сложение через 10", "вычитание через 10", "+ и − до 20", "шаги 1, 2 и 10 до 100", "счёт до 100 без перехода", "счёт до 100 с переходом", "+ и − до 100", "одинаковые группы", "умножение на 1, 2, 5 и 10", "деление на равные группы", "точное деление", "таблица умножения", "умножение и деление", "счёт до 1 000 без перехода", "счёт до 1 000 с переходом", "счёт до 10 000 без перехода", "счёт до 10 000 с переходом", "четыре действия с большими числами", "квадраты и кубы", "понятие обыкновенной дроби", "сложение и вычитание дробей", "умножение и деление дробей", "сложение и вычитание десятичных дробей", "умножение и деление десятичных дробей", "отрицательные числа", "четыре действия с рациональными числами", "степени с натуральными показателями", "квадратные корни", "кубические корни", "степени и корни"],
+      stageNames: ["количества от 1 до 5", "+0 и +1 до 5", "сложение до 5", "состав числа до 10", "сложение до 10", "−1 и −2 до 5", "вычитание до 10", "+ и − до 10", "числа от 11 до 20", "сложение до 20 без перехода", "вычитание до 20 без перехода", "сложение через 10", "вычитание через 10", "+ и − до 20", "шаги 1, 2 и 10 до 100", "счёт до 100 без перехода", "счёт до 100 с переходом", "+ и − до 100", "одинаковые группы", "умножение на 1, 2, 5 и 10", "деление на равные группы", "точное деление", "таблица умножения", "умножение и деление", "счёт до 1 000 без перехода", "счёт до 1 000 с переходом", "счёт до 10 000 без перехода", "счёт до 10 000 с переходом", "четыре действия с большими числами", "квадраты и кубы", "понятие обыкновенной дроби", "сложение и вычитание дробей", "умножение и деление дробей", "сложение и вычитание десятичных дробей", "умножение и деление десятичных дробей", "отрицательные числа", "четыре действия с рациональными числами", "степени с натуральными показателями", "квадратные корни", "кубические корни", "степени и корни"],
       messages: {
         correct: ["Точно!", "Умница!", "Так держать!", "Супер!", "Верно!"],
         streak: ["Вот это серия!", "Три подряд!", "Капи в восторге!", "Ты разогналась!"],
@@ -141,7 +141,7 @@
       settingsCounting: "Recheneinstellungen", settingsGeneral: "Allgemein", settingsAbout: "Über die App", backToSettings: "Zurück zum Menü", settingsCountingMenu: "Aufgabenanzahl, Modus, Lernstufe und Rechenarten", settingsGeneralMenu: "Sprache und Ton", settingsAboutMenu: "Beschreibung, Entwickler und Feedback", chooseStage: "Lernstufe", stageInfo: "Details zur Lernstufe", stageBrief: (name, example) => `${name}. Beispiel: ${example}.`, stageDetail: (stage, name, example) => `Stufe ${stage}: ${name}. Das Kind übt ausschließlich Aufgaben dieses Typs. Typisches Beispiel: ${example}. Im automatischen Modus wird diese Stufe erst nach der vorherigen Stufe freigeschaltet.`, aboutText: "„Rechnen mit Kapi“ ist ein Rechentrainer von den ersten Zahlen bis zu Themen der 10. Klasse. Die App verwendet eine gemischte Reihenfolge auf Grundlage gemeinsamer Themen deutscher Lehrpläne, ist aber nicht an eine bestimmte Schulform oder ein Bundesland gebunden.", feedbackTitle: "Hinweise und Vorschläge", feedbackMessage: "Nachricht", feedbackPlaceholder: "Was sollen wir verbessern oder ergänzen?", sendWhatsApp: "Senden", author: "Über den Entwickler", feedbackIntro: "Nach dem Tippen öffnet sich WhatsApp mit einer vorbereiteten Nachricht. Prüfe sie und tippe dort auf „Senden“.",
       legacyStageInfo: "Dieses Training wurde vor der neuen Lernskala gespeichert. Eine genaue Beschreibung der früheren Stufe ist nicht verfügbar.",
       multiplicationZero: "Malnehmen mit null", multiplicationRow: (factor) => `${factor}er-Reihe`, multiplicationSquares: "Quadrataufgaben", multiplicationMixed: "Jetzt kommen gemischte Malaufgaben", divisionRow: (divisor) => `Teilen durch ${divisor}`, divisionMixed: "Jetzt kommen gemischte Geteiltaufgaben",
-      stageNames: ["Mengen von 0 bis 5", "+0 und +1 bis 5", "Addition bis 5", "Zahlzerlegung bis 10", "Addition bis 10", "−1 und −2 bis 5", "Subtraktion bis 10", "+ und − bis 10", "Zahlen von 11 bis 20", "Addition bis 20 ohne Übergang", "Subtraktion bis 20 ohne Übergang", "Addition über den Zehner", "Subtraktion über den Zehner", "+ und − bis 20", "Schritte 1, 2 und 10 bis 100", "Rechnen bis 100 ohne Übergang", "Rechnen bis 100 mit Übergang", "+ und − bis 100", "Gleiche Gruppen", "Malnehmen mit 1, 2, 5 und 10", "Teilen in gleiche Gruppen", "Division ohne Rest", "Einmaleins", "Multiplikation und Division", "Rechnen bis 1.000 ohne Übergang", "Rechnen bis 1.000 mit Übergang", "Rechnen bis 10.000 ohne Übergang", "Rechnen bis 10.000 mit Übergang", "Vier Grundrechenarten mit großen Zahlen", "Quadrate und Kubikzahlen", "Gewöhnliche Brüche verstehen", "Brüche addieren und subtrahieren", "Brüche multiplizieren und dividieren", "Dezimalzahlen addieren und subtrahieren", "Dezimalzahlen multiplizieren und dividieren", "Negative Zahlen", "Vier Grundrechenarten mit rationalen Zahlen", "Potenzen mit natürlichen Exponenten", "Quadratwurzeln", "Kubikwurzeln", "Potenzen und Wurzeln"],
+      stageNames: ["Mengen von 1 bis 5", "+0 und +1 bis 5", "Addition bis 5", "Zahlzerlegung bis 10", "Addition bis 10", "−1 und −2 bis 5", "Subtraktion bis 10", "+ und − bis 10", "Zahlen von 11 bis 20", "Addition bis 20 ohne Übergang", "Subtraktion bis 20 ohne Übergang", "Addition über den Zehner", "Subtraktion über den Zehner", "+ und − bis 20", "Schritte 1, 2 und 10 bis 100", "Rechnen bis 100 ohne Übergang", "Rechnen bis 100 mit Übergang", "+ und − bis 100", "Gleiche Gruppen", "Malnehmen mit 1, 2, 5 und 10", "Teilen in gleiche Gruppen", "Division ohne Rest", "Einmaleins", "Multiplikation und Division", "Rechnen bis 1.000 ohne Übergang", "Rechnen bis 1.000 mit Übergang", "Rechnen bis 10.000 ohne Übergang", "Rechnen bis 10.000 mit Übergang", "Vier Grundrechenarten mit großen Zahlen", "Quadrate und Kubikzahlen", "Gewöhnliche Brüche verstehen", "Brüche addieren und subtrahieren", "Brüche multiplizieren und dividieren", "Dezimalzahlen addieren und subtrahieren", "Dezimalzahlen multiplizieren und dividieren", "Negative Zahlen", "Vier Grundrechenarten mit rationalen Zahlen", "Potenzen mit natürlichen Exponenten", "Quadratwurzeln", "Kubikwurzeln", "Potenzen und Wurzeln"],
       messages: {
         correct: ["Richtig!", "Klasse!", "Weiter so!", "Super!", "Genau!"],
         streak: ["Starke Serie!", "Drei hintereinander!", "Kapi freut sich!", "Du bist im Rechenfluss!"],
@@ -277,6 +277,7 @@
   const $ = (id) => document.getElementById(id);
   const screens = [$("startScreen"), $("stageIntroScreen"), $("gameScreen"), $("resultScreen")];
   let stageIntroTimer;
+  let stageIntroSoundTimers = [];
   let kapi = null;
   let motivation = null;
   let soundManager = null;
@@ -487,6 +488,8 @@
       profile.currentStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(profile.currentStage) || 1));
       profile.curriculumCompleted = profile.curriculumCompleted === true;
       profile.errorQueue = Array.isArray(profile.errorQueue) ? profile.errorQueue : [];
+      const oldErrorCount = profile.errorQueue.length;
+      profile.errorQueue = profile.errorQueue.filter((item) => !(item?.operation === "count" && item.answer === 0));
       profile.adaptiveOperand = Math.min(9, Math.max(1, Number(profile.adaptiveOperand) || 1));
       profile.adaptiveFastStreak = Math.min(2, Math.max(0, Number(profile.adaptiveFastStreak) || 0));
       profile.adaptiveCorrectStreak = Math.min(4, Math.max(0, Number(profile.adaptiveCorrectStreak) || 0));
@@ -531,7 +534,7 @@
       const weeklyMigration = weekly.migrate(profile, getHistory());
       const masteryMigration = mastery.migrate(profile) || !Object.hasOwn(stored, "skillMastery");
       const subskillMigration = subskills.migrate(profile);
-      if (rewardMigration || weeklyMigration || masteryMigration || subskillMigration) storage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      if (rewardMigration || weeklyMigration || masteryMigration || subskillMigration || profile.errorQueue.length !== oldErrorCount) storage.setItem(PROFILE_KEY, JSON.stringify(profile));
       return profile;
     } catch { storage.markCorrupt(PROFILE_KEY); rewards.migrate(defaults); weekly.migrate(defaults); mastery.migrate(defaults); subskills.migrate(defaults); return defaults; }
   }
@@ -646,6 +649,8 @@
 
   function showScreen(target) {
     window.clearTimeout(stageIntroTimer);
+    stageIntroSoundTimers.forEach((timer) => window.clearTimeout(timer));
+    stageIntroSoundTimers = [];
     if (target !== $("gameScreen")) { window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
     if (target !== $("resultScreen")) {
       window.clearTimeout(rewardRevealTimer);
@@ -860,7 +865,7 @@
     let problem;
     let operation = pick(activeOperations(profile, current));
     if (current === 1) {
-      const answer = randomInt(0, 5);
+      const answer = randomInt(1, 5);
       return finishProblem({ a: answer, b: 0, answer, operator: "", text: copy.countQuestion, visualCount: answer }, "count", index, current);
     }
     if (current === 2) {
@@ -1263,6 +1268,11 @@ function makePowerProblem(max, mastered) {
     $("stageIntroLabel").textContent = copy.homeStage(selection.trainingStage);
     $("stageIntroTitle").textContent = copy.stageNames[selection.trainingStage - 1];
     showScreen($("stageIntroScreen"));
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      stageIntroSoundTimers = [120, 1100].map((delay, index) => window.setTimeout(() => {
+        if ($("stageIntroScreen").classList.contains("active")) soundManager?.play(index ? "introKapi" : "introBadge", { channel: "foley" });
+      }, delay));
+    }
     stageIntroTimer = window.setTimeout(() => {
       if ($("stageIntroScreen").classList.contains("active")) startTraining(options, selection);
     }, 3000);
@@ -1366,7 +1376,7 @@ function makePowerProblem(max, mastered) {
         <div class="number-pad" aria-label="${copy.numberPad}">
           ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => `<button class="number-key" type="button" data-key="${digit}">${digit}</button>`).join("")}
           <button class="number-key number-key-action" type="button" data-action="clear" aria-label="${copy.clear}">C</button>
-          <button class="number-key" type="button" data-key="0">0</button>
+          ${state.problem.operation === "count" ? '<span aria-hidden="true"></span>' : '<button class="number-key" type="button" data-key="0">0</button>'}
           <button class="number-key number-key-action" type="button" data-action="backspace" aria-label="${copy.backspace}">⌫</button>
         </div>
         ${keypadSpecialKeys(state.problem).length ? `<div class="keypad-specials">
@@ -1430,6 +1440,7 @@ function makePowerProblem(max, mastered) {
 
   function canAppendKey(current, key, answerType, problem = state.problem) {
     const allowed = keypadSpecialKeys(problem).map(([value]) => value);
+    if (problem?.operation === "count" && key === "0") return false;
     if (key === "-") return allowed.includes(key) && current === "";
     if (key === ",") return allowed.includes(key) && answerType === "decimal" && !current.includes(",") && !current.includes(".");
     if (key === "/") return allowed.includes(key) && answerType === "fraction" && current !== "" && current !== "-" && !current.includes("/");
@@ -1458,9 +1469,10 @@ function makePowerProblem(max, mastered) {
     if (typeof answer !== "number" || !Number.isFinite(answer) || Math.abs(answer) > 1000000) throw new TypeError("Invalid numeric choice answer");
     if (problem.operation === "count") {
       const values = new Set([answer]);
-      [answer - 1, answer + 1, answer - 2, answer + 2, 0, 5].filter((value) => value >= 0 && value <= 5).forEach((value) => values.add(value));
       if (!Number.isInteger(answer) || answer < 0 || answer > 5) throw new TypeError("Invalid count choice answer");
-      for (let n = 0; values.size < 4 && n <= 5; n++) values.add(n);
+      const minimum = answer === 0 ? 0 : 1;
+      [answer - 1, answer + 1, answer - 2, answer + 2, 5].filter((value) => value >= minimum && value <= 5).forEach((value) => values.add(value));
+      for (let n = minimum; values.size < 4 && n <= 5; n++) values.add(n);
       return [...values].slice(0, 4).sort(() => Math.random() - .5);
     }
     const values = new Set([answer]);
