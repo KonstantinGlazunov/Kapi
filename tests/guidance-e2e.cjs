@@ -40,7 +40,7 @@ cases.push(...[[100,2,10],[400,2,20],[1000,3,10]].map(([a,b,answer])=>({id:`boun
    const context=await browser.newContext({viewport:{width,height},serviceWorkers:'block',reducedMotion:'reduce'});
    const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
    await page.route('**/app.js',async route=>{const res=await route.fetch();const source=await res.text();await route.fulfill({response:res,body:source.replace(/\}\)\(\);\s*$/,'window.__guidanceTest = {state,tasks,guidance,renderProblem,renderAnswer,submitAnswer,startTraining,setLanguage(value){language=value;applyLanguage();},showSolution};})();')});});
-   await page.goto(base);await page.locator('#startButton').click();
+   await page.goto(base);await page.locator('#startButton').click();await page.locator('#gameScreen').waitFor({state:'visible'});
    for(const item of cases) {
     await page.evaluate(item=>{
      const api=window.__guidanceTest;api.startTraining();api.setLanguage('ru');

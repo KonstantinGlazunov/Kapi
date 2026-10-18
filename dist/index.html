@@ -19,19 +19,13 @@
     </header>
     <p id="storageNotice" class="storage-notice" role="status" hidden></p>
 
-    <section class="screen start-screen active" id="startScreen" aria-labelledby="startTitle">
+    <section class="screen start-screen active" id="startScreen" aria-label="Считаем с Капи">
       <div class="home-hero" aria-hidden="false">
         <div class="mascot-stage start-mascot">
           <button class="home-mascot-sprite kapi-host" id="homeMascot" type="button" aria-label="Kapi reagieren lassen"><canvas class="kapi-rive-canvas" id="homeMascotCanvas" aria-hidden="true"></canvas></button>
         </div>
       </div>
       <div class="start-copy">
-        <div class="home-stage-card">
-          <span class="home-topic-mark" aria-hidden="true">✦</span>
-          <div class="home-stage-copy"><span class="eyebrow" id="startEyebrow">Stufe 1</span>
-            <h1 id="startTitle">Mengen von 0 bis 5</h1>
-            <p id="startDescription">Schritt für Schritt mit Kapi.</p></div>
-        </div>
         <div class="home-progress-card">
           <div class="home-stats" id="homeStats" aria-label="Игровой прогресс">
             <div class="weekly-stat" id="weeklyStat"><small id="weeklyLabel">Diese Woche</small><strong id="weeklyValue"></strong><small id="weeklyDetail">Erstes Training wartet</small></div>
@@ -47,6 +41,17 @@
         </nav>
         <div class="home-maintenance"><button class="install-home-button hidden" id="installHomeButton" type="button">App installieren</button><button class="update-button hidden" id="updateButton" type="button">Update verfügbar</button></div>
       </div>
+    </section>
+
+    <section class="screen stage-intro-screen" id="stageIntroScreen" aria-labelledby="stageIntroLabel stageIntroTitle">
+      <p class="stage-intro-brand" id="stageIntroBrand">★ Считаем с Капи</p>
+      <div class="stage-intro-copy">
+        <span class="stage-intro-badge" aria-hidden="true">✦</span>
+        <p class="stage-intro-label" id="stageIntroLabel"></p>
+        <h1 id="stageIntroTitle"></h1>
+      </div>
+      <img class="stage-intro-kapi" src="assets/kapi-dance.webp" alt="" aria-hidden="true" width="700" height="700">
+      <span class="stage-intro-track" aria-hidden="true"><span></span></span>
     </section>
 
     <section class="screen game-screen" id="gameScreen" aria-labelledby="problemText">

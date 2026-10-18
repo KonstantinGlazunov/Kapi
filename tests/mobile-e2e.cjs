@@ -59,8 +59,7 @@ async function run() {
       assert.equal(await page.locator('#startButton').isVisible(), true);
       assert.equal(await page.locator('#speechBubble').count(), 0, 'home greeting must not obscure the castle');
       assert.equal(await page.locator('#homeMascot').isVisible(), true);
-      assert.match(await page.locator('#startEyebrow').innerText(), /Stufe/i,
-        `${width}: stage label = ${JSON.stringify(await page.locator('#startEyebrow').innerText())}; page errors = ${JSON.stringify(errors)}`);
+      assert.equal(await page.locator('.home-stage-card').count(), 0);
       assert.equal(await page.locator('.home-nav .text-button').count(), 3);
       const homeLayout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth,
         viewport: document.documentElement.clientWidth, bottom: document.querySelector('#startButton').getBoundingClientRect().bottom,
@@ -79,6 +78,7 @@ async function run() {
         homeLayout.mapBottom <= height - 2 && homeLayout.wardrobeBottom <= height - 2,
         `${width}: home actions overlap or leave viewport: ${JSON.stringify(homeLayout)}`);
       await page.locator('#startButton').click();
+      await page.locator('#gameScreen').waitFor({state:'visible'});
       assert.equal(await page.locator('#gameScreen').isVisible(), true, 'tap starts training');
       // A real first answer must pass through the visible choice/keypad and advance the app.
       const first = await page.evaluate(() => ({ answer: window.__e2e.tasks.response(window.__e2e.state.problem), mode: window.__e2e.state.problem.mode }));
@@ -197,6 +197,7 @@ async function run() {
       assert.ok(updatedHomeLayout.mapHeight > 0 && updatedHomeLayout.mapBottom <= height - 2,
         `${width}: completed curriculum home clips map entry: ${JSON.stringify(updatedHomeLayout)}`);
       await page.locator('#startButton').click();
+      await page.locator('#gameScreen').waitFor({state:'visible'});
       await page.evaluate(() => {
         const api = window.__e2e;
         api.state.results = Array.from({ length: 20 }, () => ({ firstTry: false, seconds: 5, taskType: 'equation', key: '8 + 5 = ?' }));
@@ -240,6 +241,7 @@ async function run() {
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-due-skill-history.png`) });
         await page.locator('#closeStatsButton').click();
         await page.locator('#startButton').click();
+        await page.locator('#gameScreen').waitFor({state:'visible'});
         const firstReviewSlot = await page.evaluate(() => window.__e2e.state.sessionPlan.slots.findIndex(slot => slot.type === 'spacedReview'));
         assert.ok(firstReviewSlot > 0, 'due skill must have a planned slot');
         for (let index = 0; index < firstReviewSlot; index++) {
@@ -296,6 +298,7 @@ async function run() {
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-late-skill-history.png`) });
         await page.locator('#closeStatsButton').click();
         await page.locator('#startButton').click();
+        await page.locator('#gameScreen').waitFor({state:'visible'});
         const lateReviewSlot = await page.evaluate(() => window.__e2e.state.sessionPlan.slots.findIndex(slot => slot.type === 'spacedReview'));
         assert.ok(lateReviewSlot > 0, 'late due skill must have a planned slot');
         for (let index = 0; index < lateReviewSlot; index++) {
@@ -341,6 +344,7 @@ async function run() {
         await targetButton.scrollIntoViewIfNeeded();
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-subskill-history.png`) });
         await targetButton.click();
+        await page.locator('#gameScreen').waitFor({ state: 'visible' });
         const targetStart = await page.evaluate(() => ({ target: window.__e2e.state.targeted,
           stage: window.__e2e.state.stage, total: document.querySelector('#problemTotal').textContent,
           part: window.KapiSkills.classifyProblem(window.__e2e.state.problem).subskillId,
@@ -380,6 +384,7 @@ async function run() {
           api.saveProfile(profile);
         });
         await page.locator('#startButton').click();
+        await page.locator('#gameScreen').waitFor({state:'visible'});
         const planned = await page.evaluate(() => ({ mode: window.__e2e.state.sessionMode,
           slots: window.__e2e.state.sessionPlan.slots.map(slot => slot.type),
           counts: window.__e2e.state.sessionPlan.counts }));

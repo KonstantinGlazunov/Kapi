@@ -45,6 +45,10 @@ jobs:
         run: npm run test:guidance
         env:
           KAPI_E2E_SCREENSHOTS: artifacts/guidance
+      - name: One-second stage introduction
+        run: npm run test:intro
+        env:
+          KAPI_E2E_SCREENSHOTS: artifacts/stage-intro
       - name: Real Chromium PWA lifecycle
         run: npm run test:pwa
         env:
