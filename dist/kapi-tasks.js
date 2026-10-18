@@ -303,17 +303,22 @@
           `<span class="task-cell${cell.filled ? " filled" : ""}${cell.removed ? " removed" : ""}${cell.second ? " second" : ""}" aria-label="${cell.removed ? "−" : cell.filled ? "●" : "○"}">${cell.filled ? "●" : ""}</span>`).join("")}</div>`).join("")}</div>`;
     }
     renderLine({ start, delta, end }, { revealed = false, position = start, hops = null } = {}) {
-      const upper = Math.max(10, Math.ceil(Math.max(start, end) / 5) * 5);
-      const x = (n) => 24 + n / upper * 392;
+      const first = Math.min(start, end);
+      const last = Math.max(start, end);
+      const span = Math.max(6, last - first + 2);
+      const left = Math.max(0, first - Math.max(1, Math.floor((span - (last - first)) / 2)));
+      const x = (n) => 24 + (n - left) / span * 392;
       const from = x(start), to = x(end), direction = delta < 0 ? -1 : 1;
-      const ticks = Array.from({ length: upper + 1 }, (_, n) =>
-        `<g class="task-tick${n === start ? " start" : ""}${n === end && end !== start ? " end" : ""}" transform="translate(${x(n)} 105)"><path d="M0 -5V5"/><text y="${upper > 10 && n % 2 ? 42 : 26}">${!revealed && n === end && end !== start ? "?" : n}</text></g>`).join("");
+      const ticks = Array.from({ length: span + 1 }, (_, offset) => {
+        const n = left + offset;
+        return `<g class="task-tick${n === start ? " start" : ""}${n === end && end !== start ? " end" : ""}" transform="translate(${x(n)} 105)"><path d="M0 -5V5"/><text y="${span > 8 && offset % 2 ? 42 : 26}">${!revealed && n === end && end !== start ? "?" : n}</text></g>`;
+      }).join("");
       // Arrow geometry follows the mathematical direction, independently of labels.
       const arrow = hops !== null ? Array.from({ length: hops }, (_, i) => {
         const fromStep = x(start + i * direction), toStep = x(start + (i + 1) * direction);
         return `<path class="task-jump" d="M${fromStep} 77 Q${(fromStep + toStep) / 2} 38 ${toStep} 89"/><path class="task-arrowhead" d="M${toStep - direction * 7} 79 L${toStep} 89 L${toStep + direction * 2} 77"/>`;
       }).join("") : delta === 0 ? "" : `<path class="task-jump" d="M${from} 62 Q${(from + to) / 2} 5 ${to} 89"/><path class="task-arrowhead" d="M${to - direction * 11} 78 L${to} 89 L${to + direction * 3} 73"/>`;
-      return `<div class="task-line" role="img" aria-label="${start} ${delta >= 0 ? "+" : "−"} ${Math.abs(delta)} = ${revealed ? end : "?"}"><svg viewBox="0 0 440 ${upper > 10 ? 158 : 140}" aria-hidden="true"><path class="task-line-rail" d="M24 105H416"/>${ticks}${arrow}<text class="task-step-count" x="${(from + to) / 2}" y="25">${Math.abs(delta)}</text><image class="task-line-kapi" href="assets/capybara.webp" x="${x(position) - 23}" y="43" width="46" height="60"/></svg></div>`;
+      return `<div class="task-line" role="img" aria-label="${start} ${delta >= 0 ? "+" : "−"} ${Math.abs(delta)} = ${revealed ? end : "?"}"><svg viewBox="0 0 440 ${span > 8 ? 158 : 140}" aria-hidden="true"><path class="task-line-rail" d="M24 105H416"/>${ticks}${arrow}<text class="task-step-count" x="${(from + to) / 2}" y="25">${Math.abs(delta)}</text><image class="task-line-kapi" href="assets/capybara.webp" x="${x(position) - 30}" y="28" width="60" height="75"/></svg></div>`;
     }
     renderPlaceValue({ tens, ones }) {
       return `<div class="task-place" aria-label="${tens} × 10 + ${ones}"><span class="task-ten">10</span>${this.renderDots(ones)}</div>`;
