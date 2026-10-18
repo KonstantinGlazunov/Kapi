@@ -94,6 +94,7 @@ async function run() {
       await offline.goto(origin + prefix + 'index.html');
       assert.equal(await offline.locator('#totalXpValue').innerText(), '246');
       await offline.locator('#startButton').click();
+      await offline.locator('#gameScreen').waitFor({state:'visible'});
       assert.equal(await offline.locator('#gameScreen').isVisible(), true);
       await offline.locator('#homeButton').click();
       await context.setOffline(false);
@@ -105,6 +106,7 @@ async function run() {
       const training = await context.newPage();
       await training.goto(origin + prefix + 'index.html');
       await training.locator('#startButton').click();
+      await training.locator('#gameScreen').waitFor({state:'visible'});
       const identity = await training.evaluate(() => {
         window.trainingIdentity = 'unfinished-training';
         return document.querySelector('#problemText').textContent;
@@ -178,6 +180,7 @@ async function run() {
       assert.deepEqual(await offline.evaluate(() => ['capy-count-data-v1', 'capy-count-profile-v1', 'capy-count-settings-v1', 'capy-count-history-v1'].map(key => localStorage.getItem(key))), rawBefore);
       await offline.locator('#closeSettingsButton').click();
       await offline.locator('#startButton').click();
+      await offline.locator('#gameScreen').waitFor({state:'visible'});
       assert.equal(await offline.locator('#gameScreen').isVisible(), true, 'training still starts after rejected import');
       await offline.locator('#homeButton').click();
       await offline.locator('#settingsButton').click();
@@ -213,6 +216,7 @@ async function run() {
     await page.goto(origin + '/');
     assert.equal(await page.locator('#storageNotice').isVisible(), true);
     await page.locator('#startButton').click();
+    await page.locator('#gameScreen').waitFor({state:'visible'});
     assert.equal(await page.locator('#gameScreen').isVisible(), true);
     const controlsBottom = await page.locator('#answerArea').evaluate(el => el.getBoundingClientRect().bottom);
     assert.ok(controlsBottom <= 568, `storage notice must not clip answer controls: ${controlsBottom}`);

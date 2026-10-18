@@ -1257,3 +1257,55 @@ body.force-ultra .detailed-hint.showing-solution .problem:not(.problem-wide) { f
 .guidance-root-grid { grid-template-columns: repeat(var(--side), 6px); }
 .guidance-root-grid i { width: 6px; height: 6px; }
 .play-card.detailed-hint .task-visual { max-height: none; }
+
+/* A brief stage introduction precedes the first timed question. */
+body.intro-active .topbar { visibility: hidden; }
+.stage-intro-screen.active {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: clamp(10px, 2.5dvh, 24px);
+  padding: max(24px, env(safe-area-inset-top)) 22px max(30px, env(safe-area-inset-bottom));
+  background: radial-gradient(ellipse at center, #fafff7 10%, rgba(246,255,248,.93) 45%, rgba(231,252,242,.6)), url("assets/home-world.webp") center top / cover;
+  color: #062d70;
+  text-align: center;
+  overflow: hidden;
+}
+.stage-intro-brand { margin: 0; font-size: clamp(15px, 4.3vw, 20px); font-weight: 800; }
+.stage-intro-copy { width: min(100%, 580px); }
+.stage-intro-badge {
+  display: grid;
+  place-items: center;
+  width: clamp(64px, 11dvh, 104px);
+  height: clamp(64px, 11dvh, 104px);
+  margin: 0 auto clamp(12px, 2.5dvh, 24px);
+  border: 3px solid #ffea87;
+  border-radius: 27%;
+  background: linear-gradient(145deg, #ffe972, #ffd015 60%, #ffb600);
+  box-shadow: inset 0 2px 4px #fff9bb, 0 5px 0 #d89400, 0 12px 28px #edc65233;
+  color: #fff;
+  font-size: clamp(40px, 7dvh, 64px);
+  text-shadow: 0 3px 3px #b97f0040;
+}
+.stage-intro-label { margin: 0 0 10px; color: #0870cb; font-size: clamp(13px, 3.8vw, 17px); font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.stage-intro-copy h1 { margin: 0; font-size: clamp(28px, 10vw, 44px); line-height: 1.12; text-wrap: balance; overflow-wrap: anywhere; }
+.stage-intro-kapi { width: min(100%, 390px); height: 100%; min-height: 0; object-fit: contain; filter: drop-shadow(0 9px 9px #3f805422); }
+.stage-intro-track { display: block; width: min(55vw, 220px); height: 6px; border-radius: 8px; overflow: hidden; background: #c7dff3; }
+.stage-intro-track > span { display: block; height: 100%; background: #0589f4; transform-origin: left; animation: stage-intro-progress 1s linear both; }
+@keyframes stage-intro-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (min-width: 681px) and (max-height: 500px) {
+  .stage-intro-screen.active { grid-template-columns: 1fr 1fr; grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px 20px; padding: 14px 28px; }
+  .stage-intro-brand { grid-column: 1 / -1; }
+  .stage-intro-copy { align-self: center; }
+  .stage-intro-badge { width: 60px; height: 60px; font-size: 40px; margin-bottom: 12px; }
+  .stage-intro-copy h1 { font-size: 28px; }
+  .stage-intro-kapi { grid-column: 2; grid-row: 2; }
+  .stage-intro-track { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-intro-track > span { animation: none; }
+}
+.stage-intro-copy h1::first-letter { text-transform: uppercase; }

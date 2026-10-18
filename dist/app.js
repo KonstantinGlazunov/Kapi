@@ -275,7 +275,8 @@
   };
 
   const $ = (id) => document.getElementById(id);
-  const screens = [$("startScreen"), $("gameScreen"), $("resultScreen")];
+  const screens = [$("startScreen"), $("stageIntroScreen"), $("gameScreen"), $("resultScreen")];
+  let stageIntroTimer;
   let kapi = null;
   let motivation = null;
   let soundManager = null;
@@ -293,9 +294,8 @@
     document.querySelector('meta[name="description"]').setAttribute("content", copy.description);
     $("manifestLink").setAttribute("href", `manifest-${language}.webmanifest`);
     $("brandName").textContent = copy.appName;
-    $("startEyebrow").textContent = copy.startEyebrow;
-    $("startTitle").textContent = copy.startTitle;
-    $("startDescription").textContent = copy.homeSubtitle;
+    $("startScreen").setAttribute("aria-label", copy.appName);
+    $("stageIntroBrand").textContent = `★ ${copy.appName}`;
     $("weeklyLabel").textContent = copy.thisWeek;
     $("totalXpLabel").textContent = copy.homeXp;
     $("startButton").innerHTML = `<span class="home-start-icon" aria-hidden="true">▶</span> ${copy.start}`;
@@ -566,11 +566,6 @@
       ? copy.weeklyDone : progress.count > progress.goal ? copy.weeklyExtra(progress.count) : copy.weeklyCount(progress.count, progress.goal);
     $("totalXpValue").textContent = String(profile.totalXp);
     renderRewardGoal("home", profile.totalXp);
-    const displayStage = appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
-    const stageName = copy.stageNames[displayStage - 1];
-    const completed = profile.curriculumCompleted && profile.currentStage === CURRICULUM_STAGE_COUNT && appSettings.automatic;
-    $("startEyebrow").textContent = completed ? copy.curriculumHomeComplete : copy.homeStage(displayStage);
-    $("startTitle").textContent = stageName;
     scheduleFitCheck();
   }
 
@@ -650,6 +645,7 @@
   }
 
   function showScreen(target) {
+    window.clearTimeout(stageIntroTimer);
     if (target !== $("gameScreen")) { window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
     if (target !== $("resultScreen")) {
       window.clearTimeout(rewardRevealTimer);
@@ -661,7 +657,9 @@
     $("homeButton").classList.toggle("hidden", target === $("startScreen"));
     document.body.classList.toggle("game-active", target === $("gameScreen"));
     document.body.classList.toggle("start-active", target === $("startScreen"));
+    document.body.classList.toggle("intro-active", target === $("stageIntroScreen"));
     if (target === $("startScreen")) restartHomeGreeting();
+    else if (target === $("stageIntroScreen")) kapi?.setSurface("home", "idle");
     else if (target === $("gameScreen")) kapi?.setSurface("game", "idle");
     else if (target === $("resultScreen")) {
       kapi?.setSurface("result", "idle");
@@ -1245,13 +1243,7 @@ function makePowerProblem(max, mastered) {
       } });
   }
 
-  function startTraining(options = {}) {
-    window.clearTimeout(advanceTimer);
-    window.clearTimeout(rewardRevealTimer);
-    window.clearTimeout(rewardGoalTimer);
-    soundManager?.unlock();
-    motivation?.resetSession();
-    dismissMotivation();
+  function trainingSelection(options = {}) {
     const profile = getProfile();
     const candidate = options?.targetSkillId && skills.getSkill(options.targetSkillId);
     const targetLimit = Math.min(maximumAllowedStage(), appSettings.automatic ? profile.currentStage : Math.max(profile.currentStage, appSettings.manualStage));
@@ -1259,11 +1251,38 @@ function makePowerProblem(max, mastered) {
       (appSettings.automatic || appSettings.operations.includes(skills.getSubskill(options.targetSubskillId)?.operation)) &&
       subskills.availableSubskills(candidate.id, profile).includes(options.targetSubskillId)
       ? { skillId: candidate.id, subskillId: options.targetSubskillId } : null;
+    const trainingStage = targeted?.skillId ? skills.stageForSkill(targeted.skillId)
+      : appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
+    return { profile, targeted, trainingStage };
+  }
+
+  function startTrainingWithIntro(options = {}) {
+    if ($("stageIntroScreen").classList.contains("active")) return;
+    soundManager?.unlock();
+    const selection = trainingSelection(options);
+    $("stageIntroLabel").textContent = copy.homeStage(selection.trainingStage);
+    $("stageIntroTitle").textContent = copy.stageNames[selection.trainingStage - 1];
+    showScreen($("stageIntroScreen"));
+    stageIntroTimer = window.setTimeout(() => {
+      if ($("stageIntroScreen").classList.contains("active")) startTraining(options, selection);
+    }, 1000);
+  }
+
+  function trainingInProgress() {
+    return $("gameScreen").classList.contains("active") || $("stageIntroScreen").classList.contains("active");
+  }
+
+  function startTraining(options = {}, selection = trainingSelection(options)) {
+    window.clearTimeout(advanceTimer);
+    window.clearTimeout(rewardRevealTimer);
+    window.clearTimeout(rewardGoalTimer);
+    soundManager?.unlock();
+    motivation?.resetSession();
+    dismissMotivation();
+    const { profile, targeted, trainingStage } = selection;
     TOTAL = targeted ? 10 : appSettings.problemCount;
     $("problemTotal").textContent = String(TOTAL);
     $("correctLabel").textContent = copy.correctOfTotal(TOTAL);
-    const trainingStage = targeted?.skillId ? skills.stageForSkill(targeted.skillId)
-      : appSettings.automatic ? profile.currentStage : Math.min(appSettings.manualStage, maximumAllowedStage());
     const sessionPlan = planTraining(profile, trainingStage, TOTAL, targeted);
     Object.assign(state, {
       index: 0, score: 0, correct: 0, streak: 0, stage: trainingStage,
@@ -2544,7 +2563,7 @@ function makePowerProblem(max, mastered) {
   async function importProgress(file) {
     if (!file) return;
     const status = $("backupStatus");
-    if ($("gameScreen").classList.contains("active")) { status.textContent = copy.backupBusy; return; }
+    if (trainingInProgress()) { status.textContent = copy.backupBusy; return; }
     let data;
     try {
       if (file.size > window.KapiStorage.MAX_BYTES) throw new Error("Too large");
@@ -2601,11 +2620,11 @@ function makePowerProblem(max, mastered) {
       // activate an update while this tab is training: keep its JS and state alive.
       if (!hadController && !reloadRequested) return;
       controllerChanged = true;
-      if (reloadRequested && !$("gameScreen").classList.contains("active")) window.location.reload();
+      if (reloadRequested && !trainingInProgress()) window.location.reload();
       else $("updateButton").classList.remove("hidden");
     });
     $("updateButton").addEventListener("click", () => {
-      if ($("gameScreen").classList.contains("active")) return;
+      if (trainingInProgress()) return;
       reloadRequested = true;
       if (controllerChanged) window.location.reload();
       else if (waitingWorker?.state === "installed") waitingWorker.postMessage({ type: "SKIP_WAITING" });
@@ -2622,7 +2641,7 @@ function makePowerProblem(max, mastered) {
         description: "Starts a new visible adaptive arithmetic training session.",
         inputSchema: { type: "object", properties: {}, additionalProperties: false },
         annotations: { readOnlyHint: false, untrustedContentHint: false },
-        execute() { startTraining(); return { status: "started", problemCount: TOTAL }; }
+        execute() { startTrainingWithIntro(); return { status: "started", problemCount: appSettings.problemCount }; }
       });
       context.registerTool({
         name: "read_training_history",
@@ -2713,13 +2732,13 @@ function makePowerProblem(max, mastered) {
     window.__kapiDemo = { play, reset, getOutfit: () => demoMotivation.getOutfit() };
   }
 
-  $("startButton").addEventListener("click", startTraining);
+  $("startButton").addEventListener("click", () => startTrainingWithIntro());
   $("homeMascot").addEventListener("click", playHomeReaction);
   document.querySelector(".app-shell").addEventListener("pointerdown", (event) => {
     if (!$("motivationPop").classList.contains("hidden")) dismissMotivation();
     if (kapi?.surface === "home" && !kapi.state.startsWith("idle") && !event.target.closest("#homeMascot")) clearHomeReaction();
   });
-  $("againButton").addEventListener("click", startTraining);
+  $("againButton").addEventListener("click", () => startTrainingWithIntro());
   $("shareButton").addEventListener("click", shareResult);
   $("statsButton").addEventListener("click", showStats);
   $("wardrobeButton").addEventListener("click", showWardrobe);
@@ -2748,7 +2767,7 @@ function makePowerProblem(max, mastered) {
       (!appSettings.automatic && !appSettings.operations.includes(skills.getSubskill(button.dataset.targetSubskill)?.operation)) ||
       !subskills.availableSubskills(skill.id, profile).includes(button.dataset.targetSubskill)) return;
     $("statsDialog").close();
-    startTraining({ targetSkillId: skill.id, targetSubskillId: button.dataset.targetSubskill });
+    startTrainingWithIntro({ targetSkillId: skill.id, targetSubskillId: button.dataset.targetSubskill });
   });
   $("closeStatsButton").addEventListener("click", () => $("statsDialog").close());
   $("clearStatsButton").addEventListener("click", () => {
