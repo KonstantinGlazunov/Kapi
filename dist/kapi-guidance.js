@@ -116,7 +116,7 @@
       } else if (operation === 'multiply' || operation === 'divide') {
         const multiply = operation === 'multiply';
         const groupCount = multiply ? a : b, size = multiply ? b : answer;
-        const visual = groupCount <= 10 && groupCount * size <= 30
+        const visual = groupCount > 0 && size > 0 && groupCount <= 10 && groupCount * size <= 30
           ? this.groups(Array.from({ length: groupCount }, () => size), p) : '';
         result.hint = multiply ? t.multiply : t.inverse;
         result.hintVisual = multiply ? visual || chips([`${a} × ${b} = ?`]) : chips([`${b} × ? = ${a}`]);

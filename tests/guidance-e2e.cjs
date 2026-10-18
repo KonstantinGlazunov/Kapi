@@ -31,6 +31,8 @@ const cases = [
   {id:'root-square',stage:39,a:36,b:2,answer:6,operation:'root',operator:'√'},
   {id:'root-cube',stage:40,a:27,b:3,answer:3,operation:'root',operator:'∛'}
 ];
+cases.push(...[[10,3],[3,10],[6,5],[10,0]].map(([a,b])=>({id:`boundary-${a}-${b}`,stage:23,a,b,answer:a*b,operation:'multiply',operator:'×'})));
+cases.push(...[[100,2,10],[400,2,20],[1000,3,10]].map(([a,b,answer])=>({id:`boundary-root-${a}`,stage:b===2?39:40,a,b,answer,operation:'root',operator:b===2?'√':'∛'})));
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.KAPI_CHROME?{executablePath:process.env.KAPI_CHROME}:{}),args:['--no-sandbox']});
  try {
@@ -54,6 +56,8 @@ const cases = [
     assert.equal(await page.evaluate(()=>window.__guidanceTest.state.attempt),2,item.id);
     assert.equal(await page.locator('#hint').isVisible(),true);
     assert.ok(await page.locator('#hint').innerText(),item.id+' hint');
+    const visual=await page.locator('#taskVisual').evaluate(e=>({height:e.clientHeight,scrollHeight:e.scrollHeight,width:e.clientWidth,scrollWidth:e.scrollWidth}));
+    assert.ok(visual.scrollHeight<=visual.height+1 && visual.scrollWidth<=visual.width+1,`${width} ${item.id}: illustration clipped ${JSON.stringify(visual)}`);
     const card=await page.locator('.play-card').boundingBox();const limit=Math.min(height-2,card.y+card.height-5);const first=await page.locator('#answerArea button').last().boundingBox();if(first.y+first.height>limit && shots)await page.screenshot({path:path.join(shots,`${width}-${item.id}-overflow.png`)});assert.ok(first.y+first.height<=limit,`${width} ${item.id}: first hint hides controls`);
     if(item.id==='frame-subtract'){assert.match(await page.locator('#hint').innerText(),/5 = 3 \+ 2/);assert.match(await page.locator('#taskVisual').innerText(),/13 − \(3 \+ 2\)/);}
     if(shots && ['frame-subtract','fraction-3','line','negative-1','root-cube'].includes(item.id))await page.screenshot({path:path.join(shots,`${width}-${item.id}-hint.png`)});
@@ -72,7 +76,7 @@ const cases = [
     if(shots && ['fraction-3','negative-1','root-cube'].includes(item.id))await page.screenshot({path:path.join(shots,`${width}-${item.id}-solution.png`)});
     const before=await page.evaluate(()=>window.__guidanceTest.state.index);await page.locator('.solution-next').click();assert.equal(await page.evaluate(()=>window.__guidanceTest.state.index),before+1);
    }
-   assert.deepEqual(errors,[]);console.log(`PASS ${width}×${height}: ${cases.length} guidance families, real inputs, hints, worked solutions, replay and Next`);await context.close();
+   assert.deepEqual(errors,[]);console.log(`PASS ${width}×${height}: 36 guidance families + 7 boundary cases, real inputs, hints, worked solutions, replay and Next`);await context.close();
   }
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
