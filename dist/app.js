@@ -2402,9 +2402,9 @@ function makePowerProblem(max, mastered) {
   }
 
   function updateInstallHomeButton() {
-    const isIosBrowser = /iphone|ipad|ipod/i.test(navigator.userAgent) && !runsStandalone();
+    const onIosBrowser = isIosBrowser() && !runsStandalone();
     const installed = runsStandalone() || (storage.getItem(INSTALLED_KEY) === "1" && !deferredInstallPrompt);
-    $("installHomeButton").classList.toggle("hidden", installed || (!deferredInstallPrompt && !isIosBrowser));
+    $("installHomeButton").classList.toggle("hidden", installed || (!deferredInstallPrompt && !onIosBrowser));
   }
 
   function shouldOfferInstall() {
@@ -2415,8 +2415,13 @@ function makePowerProblem(max, mastered) {
     return !dismissedAt || Date.now() - dismissedAt > 7 * 86400000;
   }
 
-  function showInstallPrompt(platform = "android") {
-    if (!shouldOfferInstall()) return;
+  function isIosBrowser() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (/macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  }
+
+  function showInstallPrompt(platform = "android", explicitRequest = false) {
+    if (!explicitRequest && !shouldOfferInstall()) return;
     installPlatform = platform;
     $("installText").textContent = platform === "ios" ? copy.iosInstallText : copy.installText;
     $("installButton").classList.toggle("hidden", platform === "ios");
@@ -2447,7 +2452,7 @@ function makePowerProblem(max, mastered) {
   }
 
   function installFromHome() {
-    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) showInstallPrompt("ios");
+    if (isIosBrowser()) showInstallPrompt("ios", true);
     else installApp($("installHomeButton"));
   }
 
@@ -2857,7 +2862,7 @@ function makePowerProblem(max, mastered) {
   if (runsStandalone()) storage.setItem(INSTALLED_KEY, "1");
   updateInstallHomeButton();
   document.body.classList.add("start-active");
-  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !runsStandalone()) showInstallPrompt("ios");
+  if (isIosBrowser() && !runsStandalone()) showInstallPrompt("ios");
   registerWebMcp();
   syncViewportSize();
   if (!window.__kapiDemo) window.setTimeout(() => {

@@ -5,6 +5,7 @@
     "test": "node --test tests/*.test.cjs",
     "test:mobile": "node tests/mobile-e2e.cjs",
     "test:intro": "node tests/stage-intro-e2e.cjs",
+    "test:install": "node tests/install-e2e.cjs",
     "test:guidance": "node tests/guidance-e2e.cjs",
     "test:pwa": "node tests/pwa-e2e.cjs"
   },

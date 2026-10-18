@@ -49,6 +49,8 @@ jobs:
         run: npm run test:intro
         env:
           KAPI_E2E_SCREENSHOTS: artifacts/stage-intro
+      - name: iPhone and iPad install instructions
+        run: KAPI_BROWSER=webkit npm run test:install
       - name: Real Chromium PWA lifecycle
         run: npm run test:pwa
         env:
