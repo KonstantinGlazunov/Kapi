@@ -1,14 +1,7 @@
-# Number line with Kapi — 2026-10-18
+# Local number line — 2026-10-18
 
-Implemented the user-approved sketch: localized “Куда попадёт Капи?” / “Wo landet Kapi?”, Kapi centered on the starting tick, a gold directional arrow labeled only with the number of steps, and a question mark instead of the destination numeral. Every integer tick is labeled. Ranges above 10 use alternating label rows to keep two-digit numbers separate. Existing answer entry and task/backup contracts remain unchanged. The existing precached capybara asset is reused; no external requests or new assets are required.
+Actual Chromium screenshots of the real game card at 320×568 and 390×844: [forward 320](320-forward.png), [backward 320](320-backward.png), [forward 390](390-forward.png), [backward 390](390-backward.png). The page uses a controlled number-line problem so both movement directions can be compared at fixed values; the actual task renderer and answer keypad are used.
 
-Inspected real Chromium screenshots:
-- [4 − 2, 320×568](4--2-320.png)
-- [5 + 4, 390×844](5-4-390.png)
-- [19 − 8, 320×568](19--8-320.png)
-- [0 + 5, 320×568](0-5-320.png)
-- [10 − 10, 390×844](10--10-390.png)
+For 13 + 2, the visible ticks are 11–17. For 15 − 2, they are 11–17 with the arrow pointing toward 13. At 320 px, the line fits within x=27–293; at 390 px, x=27–363. The start, destination, Kapi and question mark remain legible without clipping. Fit to request **9/10**, visual quality **9/10**, contemporary design **9/10**: the relevant part of the line now fills the width and preserves a little context on each side. Very long jumps necessarily include more ticks and will appear denser; the existing two-row labels handle these.
 
-Fit: 9/10 — approved question and arrow, exact start placement, no left/right wording. Visual quality: 9/10 — separate thin ticks, visible destination, no clipped content or controls, labels remain distinct at 20. Contemporary design: 9/10 — existing mascot, palette and rounded layout preserved. The 0–20 diagram is denser than 0–10, especially at 320px; real-device readability has not been checked. Screenshots select a Russian problem through test-only injection while the surrounding UI remains German.
-
-Verification: 144 unit tests passed, including numeric tick count, start placement, arrow endpoint/direction and hidden destination regression. Full mobile Chromium E2E passed at 320×568, 360×640, 390×844 and 430×932. After the final label-row adjustment, the five browser cases above passed visual/viewport assertions and accepted the correct answer through the real keypad and submit button. Initial new failures (compact clipping and an obsolete CSS-string assertion) were fixed. No CI run, merge or publication for these local changes.
+The earlier full-range screenshots ([4 − 2](4--2-320.png), [5 + 4](5-4-390.png), [19 − 8](19--8-320.png), [0 + 5](0-5-320.png), [10 − 10](10--10-390.png)) document the previous implementation. That version kept every integer label from zero to the range ceiling, used the same localized question, directional gold arrow and hidden destination, and reused the offline Kapi asset. The 0–20 range was visibly dense at 320 px, which motivated the current local window. Earlier checks: 144 unit tests and four mobile Chromium sizes; the five screenshot fixtures accepted correct answers via the real keypad. Those historical screenshots are retained for comparison.

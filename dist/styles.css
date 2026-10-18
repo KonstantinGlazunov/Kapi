@@ -724,9 +724,9 @@ body.force-ultra .submit-button { min-height: 42px; }
 .task-line svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .task-line-rail { fill: none; stroke: #438c80; stroke-width: 3; }
 .task-tick path { stroke: #438c80; stroke-width: 2; }
-.task-tick text { fill: #285b54; text-anchor: middle; font-size: 17px; font-weight: 800; }
+.task-tick text { fill: #285b54; text-anchor: middle; font-size: 22px; font-weight: 800; }
 .task-tick.start text { fill: #006d65; font-weight: 900; }
-.task-tick.end text { fill: #855014; font-size: 22px; }
+.task-tick.end text { fill: #855014; font-size: 26px; }
 .task-jump, .task-arrowhead { fill: none; stroke: #d99918; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
 .task-step-count { fill: #77500a; text-anchor: middle; font-size: 23px; font-weight: 900; }
 .task-line.hint-highlight .task-jump { stroke-width: 6; }
@@ -1294,7 +1294,7 @@ body.intro-active .topbar { visibility: hidden; }
 .stage-intro-copy h1 { margin: 0; font-size: clamp(28px, 10vw, 44px); line-height: 1.12; text-wrap: balance; overflow-wrap: anywhere; }
 .stage-intro-kapi { width: min(100%, 390px); height: 100%; min-height: 0; object-fit: contain; filter: drop-shadow(0 9px 9px #3f805422); }
 .stage-intro-track { display: block; width: min(55vw, 220px); height: 6px; border-radius: 8px; overflow: hidden; background: #c7dff3; }
-.stage-intro-track > span { display: block; height: 100%; background: #0589f4; transform-origin: left; animation: stage-intro-progress 1s linear both; }
+.stage-intro-track > span { display: block; height: 100%; background: #0589f4; transform-origin: left; animation: stage-intro-progress .8s linear both; }
 @keyframes stage-intro-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (min-width: 681px) and (max-height: 500px) {
   .stage-intro-screen.active { grid-template-columns: 1fr 1fr; grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px 20px; padding: 14px 28px; }

@@ -17,6 +17,26 @@ function configure(app, stage) {
   return profile;
 }
 
+test('number line zooms around the movement in both directions and keeps hint steps on the same scale', () => {
+  const { tasks } = context();
+  for (const [start, delta, end, expectedFirst, expectedLast] of [
+    [13, 2, 15, 11, 17], [15, -2, 13, 11, 17], [2, -2, 0, 0, 6], [0, 5, 5, 0, 7]
+  ]) {
+    const data = { start, delta, end };
+    for (const options of [{}, { revealed: true, position: end, hops: Math.abs(delta) }]) {
+      const html = tasks.renderLine(data, options);
+      const labels = [...html.matchAll(/class="task-tick[^\"]*"[^>]*><path[^>]*><text[^>]*>([^<]+)<\/text>/g)].map(match => match[1]);
+      assert.equal(labels.length, expectedLast - expectedFirst + 1);
+      assert.equal(labels[0], !options.revealed && end === expectedFirst && end !== start ? '?' : String(expectedFirst));
+      assert.equal(labels.at(-1), String(expectedLast));
+      assert.equal(labels.includes('0'), expectedFirst === 0 && (options.revealed || end !== 0 || start === 0));
+      assert.ok(labels.includes(String(start)));
+      assert.ok(labels.includes(options.revealed ? String(end) : '?'));
+      assert.match(html, /task-line-kapi/);
+    }
+  }
+});
+
 test('14,000 decorated problems retain the exact stage contracts and balanced format weights', () => {
   const { app, tasks } = context();
   let totalEquation = 0, totalAlt = 0;
@@ -308,11 +328,14 @@ test('number line labels every step, anchors Kapi at start, and directs the arro
   const { tasks } = context();
   for (const [start, delta] of [[4, -2], [5, 4], [0, 5], [10, -10], [19, -8], [8, 0]]) {
     const end = start + delta;
-    const upper = Math.max(10, Math.ceil(Math.max(start, end) / 5) * 5);
-    const x = n => 24 + n / upper * 392;
+    const first = Math.min(start, end), last = Math.max(start, end);
+    const span = Math.max(6, last - first + 2);
+    const left = Math.max(0, first - Math.max(1, Math.floor((span - (last - first)) / 2)));
+    const x = n => 24 + (n - left) / span * 392;
     const html = tasks.renderLine({start, delta, end});
-    assert.equal((html.match(/class="task-tick/g) || []).length, upper + 1);
-    assert.ok(html.includes(`x="${x(start) - 23}" y="43" width="46" height="60"`));
+    assert.equal((html.match(/class="task-tick/g) || []).length, span + 1);
+    if (start >= 10 && end >= 10) assert.ok(left > 0);
+    assert.ok(html.includes(`x="${x(start) - 30}" y="28" width="60" height="75"`));
     if (delta) {
       assert.ok(html.includes(`Q${(x(start) + x(end)) / 2} 5 ${x(end)} 89`));
       assert.match(html, /<text y="(?:26|42)">\?<\/text>/);

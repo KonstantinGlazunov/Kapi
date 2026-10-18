@@ -8,7 +8,7 @@ function setup() {
   return { env, app: env.sandbox.__app, active: id => env.elements.get(id).classList.contains('active') };
 }
 
-test('stage intro lasts one second and the question timer excludes it', () => {
+test('stage intro lasts 800 ms and the question timer excludes it', () => {
   const { env, app, active } = setup();
   app.appSettings.automatic = false;
   app.appSettings.manualStage = 12;
@@ -22,7 +22,7 @@ test('stage intro lasts one second and the question timer excludes it', () => {
   assert.equal(env.elements.get('stageIntroLabel').textContent, 'Stufe 12');
   assert.equal(env.elements.get('stageIntroTitle').textContent, 'Addition über den Zehner');
   assert.equal(JSON.stringify(app.getProfile()), before, 'intro awards no XP or progression');
-  env.advance(999);
+  env.advance(799);
   assert.equal(active('stageIntroScreen'), true);
   env.advance(1);
   assert.equal(active('gameScreen'), true);
@@ -47,7 +47,7 @@ test('leaving the intro cancels its pending start and repeated taps do not resta
   app.startTrainingWithIntro();
   env.advance(400);
   app.startTrainingWithIntro();
-  env.advance(600);
+  env.advance(400);
   assert.equal(active('gameScreen'), true);
   const sessionId = app.state.sessionId;
   env.advance(1000);
@@ -63,7 +63,7 @@ test('all 41 stage intros name the stage actually used by the session', () => {
     app.startTrainingWithIntro();
     assert.equal(env.elements.get('stageIntroLabel').textContent, `Stufe ${stage}`);
     assert.ok(env.elements.get('stageIntroTitle').textContent.length > 0);
-    env.advance(1000);
+    env.advance(800);
     assert.equal(app.state.stage, stage);
   }
 });
