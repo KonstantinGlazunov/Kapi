@@ -106,3 +106,13 @@ test('a second error records once, waits indefinitely for Next, and cancels repl
   assert.equal(app.state.solutionShown,false);
   assert.equal(app.state.score,0);
 });
+
+test('counting and small arithmetic demonstrate one object at a time', () => {
+  const {guidance}=fixture();
+  const count=guidance.build({a:5,b:0,answer:5,operation:'count',operator:''},'ru');
+  assert.deepEqual(Array.from(count.steps.slice(0,5),step=>step.text),['Всего: 1','Всего: 2','Всего: 3','Всего: 4','Всего: 5']);
+  for(let i=0;i<5;i++) assert.equal((count.steps[i].visual.match(/guidance-object counted/g)||[]).length,i+1);
+  const sub=guidance.build({a:5,b:2,answer:3,operation:'subtract',operator:'−'},'ru');
+  assert.deepEqual(Array.from(sub.steps.slice(0,2),s=>s.text),['5 − 1 = 4','5 − 2 = 3']);
+  assert.equal((sub.steps[1].visual.match(/guidance-object counted taken/g)||[]).length,2);
+});

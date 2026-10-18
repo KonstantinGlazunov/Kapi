@@ -1248,3 +1248,4 @@ body.force-ultra .detailed-hint:not(.showing-solution) .feedback { position: abs
 body .detailed-hint .task-visual:has(.guidance-subtraction) { max-height: none; }
 .guidance-layers { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 6px; }
 body.force-ultra .detailed-hint.showing-solution .problem:not(.problem-wide) { font-size: 2rem; }
+.guidance-objects.counting .guidance-object:not(.counted) { opacity: .32; }

@@ -14,7 +14,8 @@
     objects(n, p, removed = 0, numbered = false) {
       if (!Number.isInteger(n) || n < 0 || n > 30) return chips([number(n)]);
       if (!n) return '<div class="guidance-zero">0</div>';
-      return `<div class="guidance-objects">${Array.from({ length: n }, (_, i) => `<span class="guidance-object${i >= n - removed ? ' taken' : ''}">${this.tasks.renderProduce(1, p)}${numbered && i < n - removed ? `<small>${i + 1}</small>` : ''}</span>`).join('')}</div>`;
+      const counted = typeof numbered === 'number' ? numbered : numbered ? n : 0;
+      return `<div class="guidance-objects${counted ? ' counting' : ''}">${Array.from({ length: n }, (_, i) => `<span class="guidance-object${i < counted ? ' counted' : ''}${i >= n - removed ? ' taken' : ''}">${this.tasks.renderProduce(1, p)}${i < counted && i < n - removed ? `<small>${i + 1}</small>` : ''}</span>`).join('')}</div>`;
     }
     groups(ns, p) { return `<div class="guidance-groups">${ns.map(n => `<div>${this.objects(n, p)}</div>`).join('')}</div>`; }
     frame(n, removed = 0) { return this.tasks.renderFrame(this.tasks.makeTenFrame(n, removed)); }
@@ -39,7 +40,8 @@
       if (operation === 'count') {
         result.hint = a ? this.tasks.countCopy(p, language).hint : t.zero;
         result.hintVisual = this.objects(answer, p);
-        add(answer ? Array.from({ length: answer }, (_, i) => i + 1).join(' → ') : t.zero, this.objects(answer, p, 0, true));
+        if (answer) for (let count = 1; count <= answer; count++) add(`${t.equal}: ${count}`, this.objects(answer, p, 0, count));
+        else add(t.zero, this.objects(0, p));
         final = `${t.equal}: ${number(answer)}`;
       } else if (operation === 'fraction') {
         const [an, ad] = a.split('/').map(Number), [bn, bd] = b.split('/').map(Number);
@@ -166,7 +168,12 @@
           add(eq(a, '+', first, a + first), this.frame(a + first));
           add(eq(a + first, '+', rest, answer), this.frame(answer));
         } else if (a <= 20 && b <= 20 && answer <= 20) {
-          add(final, subtract ? this.objects(a, p, b, true) : this.objects(answer, p, 0, true));
+          if (subtract) {
+            for (let taken = 1; taken <= b; taken++) add(eq(a, '−', taken, a - taken), type === 'tenFrame' ? this.frame(a, taken) : this.objects(a, p, taken, true));
+          } else {
+            add(`${a}`, type === 'tenFrame' ? this.frame(a) : this.objects(answer, p, 0, a));
+            for (let count = a + 1; count <= answer; count++) add(eq(count - 1, '+', 1, count), type === 'tenFrame' ? this.frame(count) : this.objects(answer, p, 0, count));
+          }
         } else {
           result.hint = t.parts;
           const chunks = String(b).split('').map((d, i, ds) => Number(d) * 10 ** (ds.length - i - 1)).filter(Boolean);
