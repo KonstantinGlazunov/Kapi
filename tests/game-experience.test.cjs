@@ -16,26 +16,30 @@ function training(stage = 5, count = 10) {
   return { env, app };
 }
 
-test('first error gives only a small hint; second error shows model and answer', () => {
+test('first error gives a detailed model; second error demonstrates and waits for Next', () => {
   const { env, app } = training();
   const original = { ...app.state.problem };
   app.state.streak = 2;
   app.submitAnswer(original.answer + 1);
   assert.equal(app.state.attempt, 2);
-  assert.equal(app.state.hintLevel, 1);
+  assert.equal(app.state.hintLevel, 2);
   assert.equal(app.state.streak, 0);
-  assert.equal(env.elements.get('hint').textContent, 'Schau noch einmal genau hin.');
+  assert.match(env.elements.get('hint').textContent, /Verbinde|zerlegen/);
+  assert.match(env.elements.get('taskVisual').innerHTML, /guidance-/);
   assert.ok(!env.elements.get('hint').innerHTML.includes('counter'));
   assert.ok(!env.elements.get('feedback').textContent.includes(String(original.answer)));
   assert.equal(app.getProfile().errorQueue.find(item => item.key === original.key).correctStreak, 0);
 
   app.submitAnswer(original.answer + 1);
   assert.equal(app.state.hintLevel, 2);
-  assert.ok(env.elements.get('hint').innerHTML.includes('addend-dots'));
+  assert.equal(app.state.solutionShown, true);
+  assert.match(env.elements.get('taskVisual').innerHTML, /guidance-/);
   assert.ok(env.elements.get('feedback').textContent.includes(String(original.answer)));
   assert.equal(app.state.results[0].firstTry, false);
   assert.equal(app.state.score, 0);
-  env.advance(2300);
+  env.advance(30000);
+  assert.equal(app.state.problem.key, original.key, "demonstration never auto-advances");
+  app.continueAfterSolution();
   assert.equal(app.state.problem.isReview, false);
   app.startTraining();
   const recoverySlot = app.state.sessionPlan.slots.findIndex(item => item.type === 'errorReview');
@@ -80,13 +84,15 @@ test('correct retry earns one XP and cannot produce a perfect session or speed r
   assert.equal(app.getProfile().errorQueue.some(item => item.key === original.key), false);
 });
 
-test('subtraction gets a minimal prompt before a visual model', () => {
+test('subtraction gets a detailed model immediately and removes items in the demonstration', () => {
   const { env, app } = training(7);
   app.submitAnswer(app.state.problem.answer + 1);
-  assert.equal(env.elements.get('hint').textContent, 'Was bleibt übrig?');
+  assert.match(env.elements.get('hint').textContent, /Nimm|zerlegen/);
+  assert.match(env.elements.get('taskVisual').innerHTML, /guidance-/);
   assert.ok(!env.elements.get('hint').innerHTML.includes('counter'));
   app.submitAnswer(app.state.problem.answer + 1);
-  assert.ok(env.elements.get('hint').innerHTML.includes('counter removed'));
+  env.advance(15000);
+  assert.match(env.elements.get('taskVisual').innerHTML, /taken|task-cell.*removed/);
 });
 
 test('keypad markup and input validation follow the current problem', () => {

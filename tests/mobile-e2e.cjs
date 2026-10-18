@@ -53,6 +53,7 @@ async function run() {
       });
       await page.goto(baseUrl, { waitUntil: 'load' });
       if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-home.png`) });
+      await page.locator('#weeklyStat').waitFor({ state: 'visible' });
       assert.equal(await page.locator('#weeklyStat').isVisible(), true, `${width}: weekly progress missing`);
       assert.equal(await page.locator('#weeklyLabel').innerText(), 'Diese Woche');
       assert.equal(await page.locator('#startButton').isVisible(), true);
@@ -141,7 +142,7 @@ async function run() {
       await page.locator('#answerArea [data-key="8"]').click();
       await page.locator('#answerArea [data-action="submit"]').click();
       await page.waitForTimeout(150);
-      assert.equal(await page.evaluate(() => window.__e2e.state.hintLevel), 1);
+      assert.equal(await page.evaluate(() => window.__e2e.state.hintLevel), 2);
       const hintLayout = await page.evaluate(() => ({
         bottom: document.querySelector('#answerArea .submit-button').getBoundingClientRect().bottom,
         hintVisible: !document.querySelector('#hint').classList.contains('hidden')
