@@ -82,3 +82,9 @@
 ## Подготовка публикации — 2026-10-18
 
 Получен актуальный Kapi main `56de23d` (merge PR №2), web_designer main `e5ed836` (merge PR №17). Последние изменения перенесены через stash без потерь в `feat/clear-counting-and-number-line` от актуального main. Пользователь явно разрешил публикацию. В выпуск входят фрукты/овощи, новая прямая, запуск через приветствие, сокращённый текст хранения, отзыв без имени с кнопкой «Отправить», правило работы с блокерами. Worker cache повышен до v71 для доставки нового выпуска. Далее: свежие проверки, новый PR, CI, merge, штатный Pages deploy и проверка обоих публичных адресов.
+
+## Выпуск v71: PR и свежие проверки — 2026-10-18
+
+Создан [PR №3](https://github.com/KonstantinGlazunov/Kapi/pull/3), реализация `087682b`, ветка `feat/clear-counting-and-number-line` от `56de23d`. Свежие 144 unit-теста и полный Chromium PWA прошли: корень и `/kapi/`, cold offline, явное обновление, вкладки, импорт/экспорт, отказ quota. CI [39095548321](https://github.com/KonstantinGlazunov/Kapi/actions/runs/39095548321) запущен; его текущий статус проверять по ссылке, прежний зелёный CI не заменяет его. Пользователь разрешил merge и штатную публикацию этого выпуска.
+
+Прежний Vercel identity-блокер больше не актуален: status для web_designer main `e5ed836` — success, «Deployment has completed», [deployment](https://vercel.com/konstantinglazunovs-projects/erstellen-websiten/E2Vtsd9ctmBb4n8KPkfPx9JqiYJr). Web PR №17 уже слит, новых изменений прокси для этого выпуска нет. Дальнейший шаг: дождаться CI PR №3, merge, main tests/deploy, проверить содержимое v71 на Pages и основном `/kapi/`.
