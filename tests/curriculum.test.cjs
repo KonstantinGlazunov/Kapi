@@ -50,6 +50,32 @@ test('carry and borrow helpers classify decimal transitions deterministically', 
   assert.equal(app.hasBorrow(18, 4), false);
 });
 
+test('first stage shows one to five objects and never offers zero, including old review data', () => {
+  const env = environment({ app: true, seed: 0x10105 });
+  const app = env.sandbox.__app;
+  const profile = configureStage(app, 1, true);
+  for (let index = 0; index < 200; index++) {
+    const problem = app.makeCurriculumProblem(1, index, profile);
+    assert.ok(problem.answer >= 1 && problem.answer <= 5);
+    assert.ok(app.makeChoices(problem).every(value => value >= 1 && value <= 5));
+  }
+  const oldZero = { ...app.makeCurriculumProblem(1, 0, profile), a: 0, answer: 0, visualCount: 0, key: 'count:0:0:0:old', correctStreak: 0, lastShown: 0 };
+  const otherError = { ...app.makeCurriculumProblem(1, 1, profile), correctStreak: 0, lastShown: 0 };
+  profile.errorQueue = [oldZero, otherError];
+  profile.totalXp = 17;
+  app.saveProfile(profile);
+  const migrated = app.getProfile();
+  assert.equal(migrated.errorQueue.length, 1);
+  assert.equal(migrated.errorQueue[0].key, otherError.key);
+  assert.equal(migrated.totalXp, 17);
+  assert.deepEqual(JSON.parse(env.storage.get('capy-count-profile-v1')).errorQueue.map(item => item.key), [otherError.key]);
+  app.startTraining();
+  app.state.problem = app.makeCurriculumProblem(1, 1, migrated);
+  app.renderAnswer();
+  assert.doesNotMatch(env.elements.get('answerArea').children.at(-1).innerHTML, /data-key="0"/);
+  assert.equal(app.canAppendKey('', '0', undefined, app.state.problem), false);
+});
+
 test('Auto and Manual each generate 2,000 validated problems per stage across four seeds', async t => {
   for (const automatic of [true, false]) {
     const mode = automatic ? 'Auto' : 'Manual';
@@ -111,7 +137,7 @@ test('explicit boundary and critical-form cases are classified by exact contract
     a, b, answer, operation, operator: OPERATOR[operation], curriculumStage: stage,
     visualCount: operation === 'count' ? answer : undefined
   });
-  for (const [stage, value] of [[1, 0], [1, 5]]) validateStageProblem(app, stage, problem(stage, 'count', value, 0, value), `count boundary ${value}`);
+  for (const [stage, value] of [[1, 1], [1, 5]]) validateStageProblem(app, stage, problem(stage, 'count', value, 0, value), `count boundary ${value}`);
   validateStageProblem(app, 4, problem(4, 'add', 5, 5, 10), 'boundary 10');
   validateStageProblem(app, 9, problem(9, 'add', 10, 1, 11), 'boundary 11');
   validateStageProblem(app, 9, problem(9, 'add', 10, 9, 19), 'boundary 19 and 10 + 9');

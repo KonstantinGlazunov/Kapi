@@ -14,7 +14,7 @@ function isIntegerBetween(value, minimum, maximum) {
 }
 
 const stageMatchers = {
-  1: (_app, p) => p.operation === 'count' && isIntegerBetween(p.answer, 0, 5) && p.a === p.answer && p.b === 0 && p.visualCount === p.answer,
+  1: (_app, p) => p.operation === 'count' && isIntegerBetween(p.answer, 1, 5) && p.a === p.answer && p.b === 0 && p.visualCount === p.answer,
   2: (_app, p) => p.operation === 'add' && isIntegerBetween(p.a, 0, 5) && isIntegerBetween(p.b, 0, 1) && p.answer <= 5,
   3: (_app, p) => p.operation === 'add' && isIntegerBetween(p.a, 1, 4) && isIntegerBetween(p.b, 1, 4) && p.answer <= 5,
   4: (_app, p) => p.operation === 'add' && isIntegerBetween(p.a, 1, 9) && isIntegerBetween(p.b, 1, 9) && p.answer <= 10 && (p.a === p.b || p.answer === 5 || p.answer === 10),

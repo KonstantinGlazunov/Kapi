@@ -19,7 +19,9 @@
     complete30: [[392, 0, .12], [523, .14, .12], [659, .28, .12], [784, .44, .12], [1047, .6, .3]],
     perfect: [[523, 0, .10], [784, .13, .10], [1047, .27, .14], [659, .46, .32], [784, .46, .32], [1047, .46, .32]],
     tap: [[360, 0, .035]],
-    highFive: [[290, 0, .045], [420, .025, .045]]
+    highFive: [[290, 0, .045], [420, .025, .045]],
+    introBadge: [[523, 0, .075], [659, .095, .1]],
+    introKapi: [[659, 0, .08], [784, .11, .12]]
   };
   const PRIORITY = { start: 1, correct: 10, wrong: 20, recovered: 30, mastered: 35, flag: 40, speedImproved: 45, party: 50, dance: 60, personalRecord: 70, levelUp: 80, complete10: 90, complete20: 90, complete30: 90, perfect: 95, rewardUnlock: 96 };
   const ALIASES = { streak: "flag", handshake: "levelUp", complete: "complete20" };
