@@ -25,7 +25,7 @@
     de: { choose: (n) => `Welche Rechnung ergibt ${n}?`, place: (t, o) => `${t} Zehner + ${o} Einer = ?`,
       placeChoose: (n) => `Wie setzt sich ${n} zusammen?`, placeBlocks: "Wie viele sind es?",
       placeOption: (t, o) => `${t} Zehner · ${o} Einer`,
-      line: "Wohin kommst du?", missing: "Welche Zahl fehlt?", count: "Wie viele Punkte?",
+      line: "Wo landet Kapi?", missing: "Welche Zahl fehlt?", count: "Wie viele Punkte?",
       storyAdd: (a, b) => `Kapi hat ${a} Äpfel und bekommt ${b} dazu. Wie viele jetzt?`,
       storySubtract: (a, b) => `Kapi hat ${a} Äpfel und gibt ${b} ab. Wie viele bleiben?`,
       hintExpression: "Rechne die Ausdrücke nacheinander.", hintLine: (n) => `Starte bei ${n}.`,
@@ -34,7 +34,7 @@
     ru: { choose: (n) => `Какое выражение равно ${n}?`, place: (t, o) => `${t} десяток + ${o} единиц = ?`,
       placeChoose: (n) => `Из чего состоит ${n}?`, placeBlocks: "Сколько всего?",
       placeOption: (t, o) => `${t} десяток · ${o} единиц`,
-      line: "Куда попадёшь?", missing: "Какого числа не хватает?", count: "Сколько точек?",
+      line: "Куда попадёт Капи?", missing: "Какого числа не хватает?", count: "Сколько точек?",
       storyAdd: (a, b) => `У Капи ${a} ${russianApples(a)}, он получил ещё ${b}. Сколько теперь?`,
       storySubtract: (a, b) => `У Капи ${a} ${russianApples(a)}, он отдал ${b}. Сколько осталось?`,
       hintExpression: "Посчитай выражения по очереди.", hintLine: (n) => `Начни с ${n}.`,
@@ -261,6 +261,8 @@
     display(problem, language = "de") {
       const t = TEXT[language] || TEXT.de;
       const type = problem.taskType || "equation";
+      if (problem.operation === "count") return { text: this.countCopy(problem, language).question,
+        html: type === "visualCount" ? this.renderProduce(problem.answer, problem) : "" };
       if (type === "missingOperand") return { text: problem.displayText, html: "" };
       if (type === "chooseExpression") return { text: t.choose(problem.answer), html: "" };
       if (type === "microStory") return { text: t[problem.operation === "subtract" ? "storySubtract" : "storyAdd"](problem.a, problem.b), html: "" };
@@ -272,8 +274,21 @@
       }
       if (type === "tenFrame") return { text: problem.text, html: this.renderFrame(problem.visualData) };
       if (type === "visualCount") return { text: problem.operation === "count" ? t.count : problem.text, html: problem.visualData.operands
-        ? this.renderOperandGroups(problem.visualData.operands, (n) => this.renderDots(n)) : this.renderDots(problem.visualData.quantity) };
+        ? this.renderOperandGroups(problem.visualData.operands, (n) => this.renderProduce(n, problem)) : this.renderProduce(problem.visualData.quantity, problem) };
       return { text: problem.text, html: "" };
+    }
+    countCopy(problem, language = "de") {
+      const carrot = problem.a % 2 === 0;
+      return language === "ru"
+        ? { question: carrot ? "Сколько морковок?" : "Сколько яблок?", hint: carrot ? "Посчитай морковки." : "Посчитай яблоки." }
+        : { question: carrot ? "Wie viele Karotten?" : "Wie viele Äpfel?", hint: carrot ? "Zähle die Karotten." : "Zähle die Äpfel." };
+    }
+    renderProduce(n, problem) {
+      const carrot = problem.a % 2 === 0;
+      const shape = carrot
+        ? '<path d="M14 10 7 29Q5 31 6 26L9 12Z" fill="#ed8936"/><path d="m12 11 1-7m0 6 6-5m-7 5-4-5" stroke="#39834c" stroke-width="3" stroke-linecap="round"/>'
+        : '<path d="M16 10C3 3 1 18 9 28Q12 31 16 28Q20 31 24 26C31 13 25 4 16 10Z" fill="#df534a"/><path d="M16 10V4" stroke="#775339" stroke-width="2.5"/><path d="M17 7Q18 0 26 3Q24 9 17 7" fill="#39834c"/>';
+      return `<div class="task-dots task-produce${n === 0 ? " empty" : ""}" role="group">${Array.from({ length: n }, () => `<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">${shape}</svg>`).join("")}</div>`;
     }
     renderDots(n) { return `<div class="task-dots${n === 0 ? " empty" : ""}" role="group">${Array.from({ length: n }, () => '<span aria-label="●">●</span>').join("")}</div>`; }
     renderOperandGroups(operands, render) {
@@ -289,9 +304,13 @@
     }
     renderLine({ start, delta, end }) {
       const upper = Math.max(10, Math.ceil(Math.max(start, end) / 5) * 5);
-      const ticks = [...new Set([0, 5, 10, 15, 20, start, end].filter((n) => n <= upper))].sort((a, b) => a - b);
-      return `<div class="task-line" role="img" aria-label="${start} ${delta >= 0 ? "+" : "−"} ${Math.abs(delta)} = ?"><div class="task-line-rail"></div>${ticks.map((n) =>
-        `<span class="task-tick${n === start ? " start" : ""}${n === end ? " end" : ""}" style="left:${n / upper * 100}%">${n === end && n !== start ? "?" : n === start || n % 5 === 0 ? n : ""}</span>`).join("")}<span class="task-jump" style="left:${Math.min(start, end) / upper * 100}%;width:${Math.abs(delta) / upper * 100}%">${delta >= 0 ? "→" : "←"} ${Math.abs(delta)}</span></div>`;
+      const x = (n) => 24 + n / upper * 392;
+      const from = x(start), to = x(end), direction = delta < 0 ? -1 : 1;
+      const ticks = Array.from({ length: upper + 1 }, (_, n) =>
+        `<g class="task-tick${n === start ? " start" : ""}${n === end && end !== start ? " end" : ""}" transform="translate(${x(n)} 105)"><path d="M0 -5V5"/><text y="${upper > 10 && n % 2 ? 42 : 26}">${n === end && end !== start ? "?" : n}</text></g>`).join("");
+      // Arrow geometry follows the mathematical direction, independently of labels.
+      const arrow = delta === 0 ? "" : `<path class="task-jump" d="M${from} 62 Q${(from + to) / 2} 5 ${to} 89"/><path class="task-arrowhead" d="M${to - direction * 11} 78 L${to} 89 L${to + direction * 3} 73"/>`;
+      return `<div class="task-line" role="img" aria-label="${start} ${delta >= 0 ? "+" : "−"} ${Math.abs(delta)} = ?"><svg viewBox="0 0 440 ${upper > 10 ? 158 : 140}" aria-hidden="true"><path class="task-line-rail" d="M24 105H416"/>${ticks}${arrow}<text class="task-step-count" x="${(from + to) / 2}" y="25">${Math.abs(delta)}</text><image class="task-line-kapi" href="assets/capybara.webp" x="${from - 23}" y="43" width="46" height="60"/></svg></div>`;
     }
     renderPlaceValue({ tens, ones }) {
       return `<div class="task-place" aria-label="${tens} × 10 + ${ones}"><span class="task-ten">10</span>${this.renderDots(ones)}</div>`;
@@ -302,7 +321,7 @@
       if (type === "equation") return null;
       if (level === 1) {
         const key = { missingOperand: "hintMissing", chooseExpression: "hintExpression", numberLine: "hintLine", placeValue: "hintTens", microStory: "hintStory", visualCount: "hintCount", tenFrame: "hintFrame" }[type];
-        return { text: key === "hintLine" ? t[key](problem.a) : t[key], html: "" };
+        return { text: type === "visualCount" ? this.countCopy(problem, language).hint : key === "hintLine" ? t[key](problem.a) : t[key], html: "" };
       }
       if (type === "numberLine") return { text: t.hintLine(problem.a), html: this.renderLine(problem.visualData).replace('class="task-line"', 'class="task-line hint-highlight"') };
       if (type === "placeValue") return { text: t.hintTens, html: this.renderPlaceValue(problem.placeValue) };
@@ -313,7 +332,7 @@
       if (type === "chooseExpression") return { text: t.choose(problem.answer), html: this.renderDots(problem.answer) };
       if (type === "microStory") return { text: problem.text, html: this.renderFrame(problem.operation === "subtract" ? frame(problem.a, problem.b) : frame(problem.answer, 0, problem.a)) };
       if (type === "tenFrame") return { text: t.hintFrame, html: this.renderFrame(problem.visualData) };
-      return { text: t.hintCount, html: this.renderDots(problem.visualData.quantity) };
+      return { text: this.countCopy(problem, language).hint, html: this.renderProduce(problem.visualData.quantity, problem) };
     }
   }
   window.KapiTaskSystem = KapiTaskSystem;
