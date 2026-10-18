@@ -1,57 +1,79 @@
-name: test
+name: Kapi checks and Pages
 
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kapi-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: Unit, mobile and PWA
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Use Node.js 24 LTS
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Run test suite
-        run: node --test tests/*.test.cjs
-
-  mobile-e2e:
-    runs-on: ubuntu-latest
-    env:
-      KAPI_BASE_URL: http://127.0.0.1:8765/
-      KAPI_E2E_SCREENSHOTS: artifacts/mobile-e2e
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Use Node.js 24 LTS
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - name: Install Playwright
-        run: npm install --no-save playwright
-      - name: Install Chromium and system dependencies
-        run: npx playwright install --with-deps chromium
-      - name: Start HTTP server
-        run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 --directory dist > /tmp/kapi-http.log 2>&1 &
-          echo $! > /tmp/kapi-http.pid
-      - name: Wait for HTTP server
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Unit tests
+        run: npm test
+      - name: Start static app
+        run: python3 -m http.server 8765 --bind 127.0.0.1 --directory dist > /tmp/kapi-http.log 2>&1 &
+      - name: Wait for app
         run: |
           for attempt in {1..30}; do
-            if curl --fail --silent --show-error "$KAPI_BASE_URL" > /dev/null; then
-              exit 0
-            fi
+            if curl --fail --silent http://127.0.0.1:8765/ > /dev/null; then exit 0; fi
             sleep 1
           done
           cat /tmp/kapi-http.log
           exit 1
-      - name: Run mobile E2E in Chromium
-        run: node tests/mobile-e2e.cjs
-      - name: Upload mobile screenshots
+      - name: Mobile layout and interactions
+        run: npm run test:mobile
+        env:
+          KAPI_E2E_SCREENSHOTS: artifacts/mobile
+      - name: Real Chromium PWA lifecycle
+        run: npm run test:pwa
+        env:
+          KAPI_E2E_SCREENSHOTS: artifacts/pwa
+      - name: WebKit worker updates and backups (offline simulation unsupported)
+        run: npm run test:pwa
+        env:
+          KAPI_BROWSER: webkit
+          KAPI_WEBKIT_ONLINE: 1
+      - name: Screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mobile-e2e-screenshots
-          path: artifacts/mobile-e2e
+          name: kapi-mobile-and-pwa
+          path: artifacts/
+      - name: Pages artifact from the tested checkout
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy the artifact that passed every check in this run
+        id: deployment
+        uses: actions/deploy-pages@v4
