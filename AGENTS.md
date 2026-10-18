@@ -17,6 +17,12 @@ During and after work:
 - When work overlaps, inspect and preserve other changes before updating shared files. Different sessions do not automatically share chat history or a working tree.
 - In the final handoff, report what changed, what was tested, remaining limitations, and the branch/PR. Do not invent a commit or PR identifier that is not yet available.
 
+## Handling blockers
+
+- Before escalating a blocker, state the problem, make a concrete plan, and attempt fixes within the authorized scope. If unresolved, search the web for analogous problems and try applicable solutions. Verify the result and continue the task when resolved.
+- If user involvement is still required, report what was tried, the results, and the exact action needed from the user. Continue independent work where possible.
+- When authorization is required, promptly provide a direct, verified authorization or account-settings link and the required steps. Do not invent links or request secrets in chat.
+
 ## Project boundaries
 
 - Preserve independent Kapi publication: Kapi dist -> GitHub Pages -> the web_designer /kapi proxy. Changes to this architecture require an explicit task or accepted decision.

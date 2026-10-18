@@ -138,7 +138,7 @@ test('visual counting and ten frames separate addition operands in distinct grou
       assert.ok(html.includes('task-operand-1') && html.includes('task-operand-2'), `${type} has separate operands`);
       assert.equal((html.match(/class="task-operator"/g) || []).length, 1);
       assert.ok(html.includes(`aria-label="${a}"`) && html.includes(`aria-label="${b}"`));
-      assert.equal((html.match(/class="task-cell filled"/g) || []).length || (html.match(/aria-label="●"/g) || []).length, a + b);
+      assert.equal((html.match(/class="task-cell filled"/g) || []).length || (html.match(/<svg /g) || []).length, a + b);
     }
   }
   const count = tasks.decorate({ a: 5, b: 0, answer: 5, operation: 'count', operator: '', text: 'Wie viele?', curriculumStage: 1 }, null, 'visualCount');
@@ -281,7 +281,43 @@ test('PWA cache contains the new modules; compact styles keep the visuals respon
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
   for (const module of ['kapi-tasks.js', 'kapi-map.js']) assert.ok(sw.includes(module));
-  assert.ok(css.includes('width: calc(100% - 26px)'));
   assert.ok(css.includes('grid-template-columns: repeat(5, 22px)'));
   assert.ok(css.includes('prefers-reduced-motion: reduce'));
+});
+
+test('counting pictures and localized prompts agree, including legacy review tasks', () => {
+  const { tasks } = context();
+  for (let n = 0; n <= 5; n++) {
+    for (const type of ['equation', 'visualCount']) {
+      const problem = tasks.decorate({ a: n, b: 0, answer: n, operation: 'count', operator: '', text: 'Сколько крестиков?', curriculumStage: 1 }, null, type);
+      for (const language of ['ru', 'de']) {
+        const display = tasks.display(problem, language);
+        assert.equal(display.text, tasks.countCopy(problem, language).question);
+        assert.doesNotMatch(display.text, /крест|точк|Punkte|Kreise/);
+        const html = type === 'visualCount' ? display.html : tasks.renderProduce(n, problem);
+        assert.equal((html.match(/<svg /g) || []).length, n);
+        assert.equal(html.includes('#ed8936'), n > 0 && n % 2 === 0);
+        assert.equal(html.includes('#df534a'), n % 2 === 1);
+        if (type === 'visualCount') assert.equal(tasks.hint(problem, 2, language).html, html);
+      }
+    }
+  }
+});
+
+test('number line labels every step, anchors Kapi at start, and directs the arrow to the hidden result', () => {
+  const { tasks } = context();
+  for (const [start, delta] of [[4, -2], [5, 4], [0, 5], [10, -10], [19, -8], [8, 0]]) {
+    const end = start + delta;
+    const upper = Math.max(10, Math.ceil(Math.max(start, end) / 5) * 5);
+    const x = n => 24 + n / upper * 392;
+    const html = tasks.renderLine({start, delta, end});
+    assert.equal((html.match(/class="task-tick/g) || []).length, upper + 1);
+    assert.ok(html.includes(`x="${x(start) - 23}" y="43" width="46" height="60"`));
+    if (delta) {
+      assert.ok(html.includes(`Q${(x(start) + x(end)) / 2} 5 ${x(end)} 89`));
+      assert.match(html, /<text y="(?:26|42)">\?<\/text>/);
+    }
+    assert.ok(html.includes(`>${Math.abs(delta)}</text>`));
+    assert.doesNotMatch(html, /влево|вправо|links|rechts/);
+  }
 });

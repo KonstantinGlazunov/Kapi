@@ -229,6 +229,8 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
 .home-mascot-sprite.kapi-state-levelUp { animation: home-handshake-reaction .62s ease-in-out 3 alternate both; }
 
 .speech-bubble {
+  border: 0;
+  cursor: pointer;
   display: inline-block;
   position: relative;
   margin: 0 0 20px;
@@ -241,6 +243,7 @@ h1 { margin: 10px 0 14px; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: .9
   animation: pop-in .55s .25s both;
 }
 .speech-bubble.is-reacting { animation: home-bubble-pop .42s cubic-bezier(.2,1.45,.4,1) both; }
+.speech-bubble:focus-visible { outline: 3px solid #07549c; outline-offset: 4px; }
 .spark { position: absolute; color: #e4a500; font-size: 2rem; animation: twinkle 1.6s ease-in-out infinite; }
 .spark-one { right: 5%; top: 7%; }
 .spark-two { left: 5%; bottom: 22%; animation-delay: .7s; }
@@ -716,13 +719,17 @@ body.force-ultra .submit-button { min-height: 42px; }
 .task-cell.filled { background: #d0f2e9; }
 .task-cell.second { background: #ffe5a2; color: #765612; }
 .task-cell.removed { text-decoration: line-through; background: repeating-linear-gradient(45deg,#e4ece7,#e4ece7 4px,#f5b4a5 4px,#f5b4a5 8px); }
-.task-line { position: relative; width: calc(100% - 26px); height: 78px; margin: 0 auto; }
-.task-line-rail { position: absolute; left: 0; right: 0; bottom: 24px; height: 3px; background: #438c80; }
-.task-tick { position: absolute; bottom: 2px; transform: translateX(-50%); min-width: 20px; border-top: 10px solid #438c80; padding-top: 2px; font-size: .75rem; font-weight: 800; }
-.task-tick.start { color: #006d65; font-size: 1rem; }
-.task-tick.end { color: #855014; font-size: 1rem; }
-.task-jump { position: absolute; top: 6px; border-top: 3px solid #df9b1c; border-radius: 50% 50% 0 0; color: #77500a; font-size: .85rem; font-weight: 900; white-space: nowrap; }
-.task-line.hint-highlight .task-jump { border-top-width: 6px; }
+.task-visual:has(.task-line) { max-height: none; }
+.task-line { width: 100%; height: 108px; margin: 0 auto; }
+.task-line svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.task-line-rail { fill: none; stroke: #438c80; stroke-width: 3; }
+.task-tick path { stroke: #438c80; stroke-width: 2; }
+.task-tick text { fill: #285b54; text-anchor: middle; font-size: 17px; font-weight: 800; }
+.task-tick.start text { fill: #006d65; font-weight: 900; }
+.task-tick.end text { fill: #855014; font-size: 22px; }
+.task-jump, .task-arrowhead { fill: none; stroke: #d99918; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.task-step-count { fill: #77500a; text-anchor: middle; font-size: 23px; font-weight: 900; }
+.task-line.hint-highlight .task-jump { stroke-width: 6; }
 .task-relation { display: flex; align-items: center; justify-content: center; gap: 6px; }
 .task-relation .task-dots { max-width: 110px; font-size: 1rem; gap: 2px; }
 .task-place { display: flex; align-items: center; justify-content: center; gap: 12px; }
@@ -757,7 +764,7 @@ body.force-compact .problem.problem-story, body.force-ultra .problem.problem-sto
 body.force-compact .task-visual, body.force-ultra .task-visual { max-height: 75px; margin: 0 auto 3px; }
 body.force-compact .task-operand, body.force-ultra .task-operand { padding: 2px; }
 body.force-compact .task-frame, body.force-ultra .task-frame { grid-template-columns: repeat(5, 22px); padding: 2px; }
-body.force-compact .task-line, body.force-ultra .task-line { height: 65px; }
+body.force-compact .task-line, body.force-ultra .task-line { height: 98px; }
 body.force-ultra .mini-mascot { display: block; width: 32px; height: 32px; margin-top: 0; }
 body.force-ultra .play-card.has-task-visual .mini-mascot { position: absolute; top: 4px; right: 7px; }
 body.force-ultra .task-visual { max-height: 72px; }
@@ -1198,3 +1205,6 @@ body.start-active #settingsButton:focus-visible { outline-color: #003e93; }
 @media (max-width: 380px) {
   .settings-dialog .dialog-head h2 { font-size: 1.45rem; overflow-wrap: normal; word-break: normal; }
 }
+
+/* Keep the complete number line visible in compact training layouts. */
+body.force-compact .task-visual:has(.task-line), body.force-ultra .task-visual:has(.task-line) { max-height: none; }
