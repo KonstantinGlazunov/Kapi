@@ -309,8 +309,6 @@
     $("wardrobeIntro").textContent = copy.wardrobeIntro;
     $("closeWardrobeButton").setAttribute("aria-label", copy.close);
     currentHomeGreeting = copy.homeGreetings[0];
-    $("speechBubble").textContent = currentHomeGreeting;
-    $("speechBubble").setAttribute("aria-label", copy.start);
     $("homeMascot").setAttribute("aria-label", copy.homeMascotAction);
     $("homeStats").setAttribute("aria-label", copy.gameProgress);
     $("homeButton").setAttribute("aria-label", copy.home);
@@ -678,17 +676,13 @@
   const HOME_REACTION_COOLDOWN = 5000;
   const homeReactionScenes = ["flag", "horn", "dance", "levelUp"];
 
-  function clearHomeReaction(restoreSpeech = true) {
-    $("speechBubble").classList.remove("is-reacting");
-    if (restoreSpeech) $("speechBubble").textContent = currentHomeGreeting;
+  function clearHomeReaction() {
     if (kapi?.surface === "home") kapi.trigger("idle", { surface: "home" });
   }
 
   function restartHomeGreeting() {
     if (!kapi) return;
     currentHomeGreeting = copy.homeGreetings[homeGreetingIndex++ % copy.homeGreetings.length];
-    $("speechBubble").textContent = currentHomeGreeting;
-    $("speechBubble").classList.remove("is-reacting");
     kapi.setSurface("home", "idle");
     kapi.trigger("hey", { surface: "home" });
   }
@@ -700,10 +694,6 @@
     const scene = pick(candidates);
     lastHomeReaction = scene;
     homeReactionLockedUntil = Date.now() + HOME_REACTION_COOLDOWN;
-    const phraseKey = scene === "horn" ? "party" : scene === "levelUp" ? "handshake" : scene;
-    const phrases = copy.homeReactions[phraseKey];
-    $("speechBubble").textContent = pick(phrases);
-    $("speechBubble").classList.add("is-reacting");
     kapi.trigger(scene, { surface: "home", onComplete: () => clearHomeReaction() });
   }
 
@@ -2724,7 +2714,6 @@ function makePowerProblem(max, mastered) {
   }
 
   $("startButton").addEventListener("click", startTraining);
-  $("speechBubble").addEventListener("click", startTraining);
   $("homeMascot").addEventListener("click", playHomeReaction);
   document.querySelector(".app-shell").addEventListener("pointerdown", (event) => {
     if (!$("motivationPop").classList.contains("hidden")) dismissMotivation();

@@ -1,0 +1,9 @@
+# Braunfels home background — 2026-10-18
+
+The user supplied the selected exterior photograph after the earlier Google-link blocker. Both offline WebP backgrounds now depict its recognizable Braunfels silhouette: tall cylindrical keep left of centre, connected stone wings and large square tower to the right, with slate roofs. The painting remains a stylized illustration; small windows and masonry are not an architectural survey. The private reference screenshot and its phone chrome are not committed.
+
+Actual Chromium screenshots inspected: [320×568](home-320x568.png), [390×844](home-390x844.png), [Russian 390×844](home-390x844-ru.png), [844×390](home-844x390.png), [1280×800](home-1280x800.png). Existing Kapi and live interface remain separate from the artwork. Top alignment fixes the clipped keep roof on short portrait screens. The home speech bubble was removed entirely following the user’s latest instruction, so it no longer obscures either tower on mobile or wide layouts. Kapi’s animations and the primary training button remain. The wide view shows both major towers and connected wings.
+
+Visual review: request fit **9/10** (reference silhouette and arrangement retained; painterly details simplified), visual quality **9/10** (consistent sunny palette, integrated wooded hill, preserved path/bridge/flowers), contemporary design **9/10** (readable live controls, responsive composition, offline compressed art). No visible clipping of controls or character anatomy changes in the inspected views.
+
+Validation: 151 unit tests passed. Existing mobile E2E passed at 320×568, 360×640, 390×844 and 430×932, including interactions and six visual task formats. Worker cache is v73 to deliver new backgrounds to installed applications through the existing safe update flow. CI and deployment outcome are recorded in PROJECT_STATE.md; real phones are not tested here.

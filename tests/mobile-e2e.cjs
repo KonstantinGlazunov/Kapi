@@ -57,7 +57,7 @@ async function run() {
       assert.equal(await page.locator('#weeklyStat').isVisible(), true, `${width}: weekly progress missing`);
       assert.equal(await page.locator('#weeklyLabel').innerText(), 'Diese Woche');
       assert.equal(await page.locator('#startButton').isVisible(), true);
-      assert.equal(await page.locator('#speechBubble').isVisible(), true);
+      assert.equal(await page.locator('#speechBubble').count(), 0, 'home greeting must not obscure the castle');
       assert.equal(await page.locator('#homeMascot').isVisible(), true);
       assert.match(await page.locator('#startEyebrow').innerText(), /Stufe/i,
         `${width}: stage label = ${JSON.stringify(await page.locator('#startEyebrow').innerText())}; page errors = ${JSON.stringify(errors)}`);

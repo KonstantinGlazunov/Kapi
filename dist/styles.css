@@ -972,7 +972,7 @@ body.start-active .home-maintenance .update-button, body.start-active .home-main
 
 /* Approved Home artwork: the live UI and animated Kapi sit over one continuous world. */
 body.start-active {
-  background: #9ed5a4 url("assets/home-world.webp") center center / cover no-repeat;
+  background: #9ed5a4 url("assets/home-world.webp") center top / cover no-repeat;
 }
 body.start-active .app-shell {
   background: transparent;
