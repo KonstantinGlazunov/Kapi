@@ -19,6 +19,7 @@
   const PERSONAL_RECORD_MIN_RATIO = .10;
   const rewards = new window.KapiRewardSystem();
   const tasks = new window.KapiTaskSystem();
+  const guidance = new window.KapiGuidance(tasks);
   const curriculumMap = new window.KapiCurriculumMap();
   const weekly = window.KapiWeeklyProgress;
   const skills = window.KapiSkills;
@@ -279,6 +280,7 @@
   let motivation = null;
   let soundManager = null;
   let advanceTimer = 0;
+  let solutionTimer = 0;
   let rewardRevealTimer = 0;
   let rewardGoalTimer = 0;
   let sessionSequence = 0;
@@ -650,7 +652,7 @@
   }
 
   function showScreen(target) {
-    if (target !== $("gameScreen")) window.clearTimeout(advanceTimer);
+    if (target !== $("gameScreen")) { window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
     if (target !== $("resultScreen")) {
       window.clearTimeout(rewardRevealTimer);
       window.clearTimeout(rewardGoalTimer);
@@ -1289,6 +1291,9 @@ function makePowerProblem(max, mastered) {
   }
 
   function nextProblem() {
+    window.clearTimeout(solutionTimer);
+    state.solutionShown = false;
+    document.querySelector(".play-card").classList.remove("showing-solution", "detailed-hint");
     if (state.index >= TOTAL) return finishTraining();
     state.attempt = 1;
     state.hintLevel = 0;
@@ -1549,11 +1554,11 @@ function makePowerProblem(max, mastered) {
     if (state.attempt === 1) {
       registerProblemError(state.problem);
       state.attempt = 2;
-      state.hintLevel = 1;
+      state.hintLevel = 2;
       state.enteredAnswer = "";
       $("feedback").textContent = pick(messages.tryAgain);
       if (adaptiveMessage) showMotivation(adaptiveMessage, copy.adaptiveAdjusted, null, "wrong");
-      showHint(1);
+      showDetailedHint();
       renderAnswer();
       return;
     }
@@ -1561,9 +1566,68 @@ function makePowerProblem(max, mastered) {
     state.locked = true;
     state.hintLevel = 2;
     recordResult(false, elapsed, 2);
-    showHint(2);
     $("feedback").textContent = copy.finalAnswer(displayProblemResponse(state.problem));
-    scheduleAdvance(2300);
+    showSolution();
+  }
+
+  function showDetailedHint() {
+    const plan = guidance.build(state.problem, language);
+    const card = document.querySelector(".play-card");
+    card.classList.add("detailed-hint", "has-task-visual");
+    if (state.problem.taskType === "microStory") $("problemText").textContent = `${formatProblemNumber(state.problem.a)} ${state.problem.operator} ${formatProblemNumber(state.problem.b)} = ?`;
+    $("hint").textContent = plan.hint;
+    $("hint").classList.remove("hidden");
+    // One illustration replaces the task visual instead of adding another large
+    // picture above the keypad on small screens.
+    $("taskVisual").innerHTML = plan.hintVisual;
+    $("taskVisual").classList.toggle("hidden", !plan.hintVisual);
+    scheduleFitCheck();
+  }
+
+  function showSolution() {
+    window.clearTimeout(advanceTimer);
+    window.clearTimeout(solutionTimer);
+    state.solutionShown = true;
+    const problem = state.problem;
+    const plan = guidance.build(problem, language);
+    document.querySelector(".play-card").classList.add("showing-solution");
+    $("problemText").textContent = plan.final;
+    $("problemText").classList.toggle("problem-wide", plan.final.length > 12);
+    $("hint").classList.remove("hidden");
+    const next = document.createElement("button");
+    next.type = "button"; next.className = "submit-button solution-next";
+    next.textContent = language === "ru" ? "Дальше" : "Weiter";
+    next.addEventListener("click", continueAfterSolution);
+    const replay = document.createElement("button");
+    replay.type = "button"; replay.className = "text-button solution-replay";
+    replay.textContent = language === "ru" ? "Показать ещё раз" : "Noch einmal zeigen";
+    $("answerArea").innerHTML = "";
+    $("answerArea").append(replay, next);
+    const play = () => {
+      window.clearTimeout(solutionTimer);
+      let index = 0;
+      const step = () => {
+        if (state.problem !== problem || !state.solutionShown || !$("gameScreen").classList.contains("active")) return;
+        const current = plan.steps[index];
+        $("hint").textContent = `${plan.context ? `${plan.context} · ` : ""}${language === "ru" ? `Шаг ${index + 1} из ${plan.steps.length}` : `Schritt ${index + 1} von ${plan.steps.length}`} · ${current.text}`;
+        $("taskVisual").innerHTML = current.visual || plan.hintVisual;
+        $("taskVisual").classList.toggle("hidden", !$("taskVisual").innerHTML);
+        scheduleFitCheck();
+        index += 1;
+        if (index < plan.steps.length) solutionTimer = window.setTimeout(step, 1300);
+      };
+      step();
+    };
+    replay.addEventListener("click", play);
+    play();
+    next.focus({ preventScroll: true });
+  }
+
+  function continueAfterSolution() {
+    if (!state.locked || !state.solutionShown) return;
+    window.clearTimeout(solutionTimer);
+    state.solutionShown = false;
+    advance();
   }
 
   function recordResult(success, elapsed, attempt) {
@@ -1929,7 +1993,7 @@ function makePowerProblem(max, mastered) {
       return;
     }
     if (!$("gameScreen").classList.contains("active")) return;
-    const viewportBottom = visibleHeight() - 6;
+    const viewportBottom = Math.min(visibleHeight() - 6, document.querySelector(".play-card").getBoundingClientRect().bottom - 8);
     const target = $("answerArea").querySelector(".submit-button") || $("answerArea");
     if (target.getBoundingClientRect().bottom > viewportBottom) {
       document.body.classList.add("force-compact");

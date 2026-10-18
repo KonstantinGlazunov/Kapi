@@ -159,7 +159,7 @@ test('each alternative repeats with the same form and preserves firstTry and mas
     app.renderProblem(original);
     app.renderAnswer();
     app.submitAnswer(tasks.response(original) + 100);
-    assert.equal(app.state.hintLevel, 1);
+    assert.equal(app.state.hintLevel, 2);
     assert.equal(app.getProfile().errorQueue[0].taskType, type);
     app.startTraining();
     const recoverySlot = app.state.sessionPlan.slots.findIndex(item => item.type === 'errorReview');
@@ -228,12 +228,12 @@ test('expression choice and missing operand use the shared answer and progressiv
   app.renderProblem(missing);
   app.renderAnswer();
   app.submitAnswer(tasks.response(missing) + 50);
-  assert.equal(app.state.hintLevel, 1);
-  assert.ok(env.elements.get('hint').textContent.includes('Welche Zahl fehlt'));
+  assert.equal(app.state.hintLevel, 2);
+  assert.match(env.elements.get('hint').textContent, /fehlende Zahl/);
   assert.ok(!env.elements.get('hint').innerHTML.includes('task-dots'));
   app.submitAnswer(tasks.response(missing) + 50);
   assert.equal(app.state.hintLevel, 2);
-  assert.ok(env.elements.get('hint').innerHTML.includes('task-dots'));
+  assert.match(env.elements.get('taskVisual').innerHTML, /guidance-chips/);
   assert.ok(env.elements.get('feedback').textContent.includes(String(tasks.response(missing))));
   assert.equal(app.state.results[1].firstTry, false);
 });
@@ -270,7 +270,7 @@ test('second error reveals an expression label rather than an internal choice in
   app.state.problem = expression;
   const wrongIndex = (expression.correctExpressionIndex + 1) % 4;
   app.submitAnswer(wrongIndex);
-  assert.equal(app.state.hintLevel, 1);
+  assert.equal(app.state.hintLevel, 2);
   app.submitAnswer(wrongIndex);
   assert.equal(app.state.hintLevel, 2);
   assert.ok(env.elements.get('feedback').textContent.includes(expression.expressionChoices[expression.correctExpressionIndex].label));

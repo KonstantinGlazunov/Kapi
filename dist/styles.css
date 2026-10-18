@@ -1208,3 +1208,52 @@ body.start-active #settingsButton:focus-visible { outline-color: #003e93; }
 
 /* Keep the complete number line visible in compact training layouts. */
 body.force-compact .task-visual:has(.task-line), body.force-ultra .task-visual:has(.task-line) { max-height: none; }
+
+/* Error support replaces the original visual, keeping room for answer controls. */
+.guidance-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; padding: 4px; }
+.guidance-chips span { background: #e7f5ed; color: #21574c; border-radius: 8px; padding: 5px 9px; font-weight: 800; }
+.guidance-objects, .guidance-groups { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.guidance-object { position: relative; display: flex; flex-direction: column; align-items: center; }
+.guidance-object .task-produce svg { width: 24px; height: 24px; }
+.guidance-object small { font-size: .7rem; line-height: 1; font-weight: 800; }
+.guidance-groups > div { border: 1px solid #adcdba; border-radius: 10px; padding: 4px; }
+.guidance-zero { font-size: 2rem; font-weight: 900; color: #267768; }
+.guidance-fraction { display: flex; justify-content: center; gap: 2px; margin: 4px; }
+.guidance-fraction span { position: relative; width: 16px; height: 22px; border: 1px solid #85ac9b; background: #f3f8f2; }
+.guidance-fraction .filled { background: #64b795; }
+.guidance-signs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.guidance-signs span { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: .78rem; font-weight: 800; }
+.guidance-signs .minus { background: #ffdfbd; }.guidance-signs .plus { background: #c9ebd6; }
+.taken { opacity: .42; position: relative; }
+.taken::after { content: ""; position: absolute; top: 48%; left: 0; right: 0; height: 2px; background: #925d3b; transform: rotate(-35deg); }
+.guidance-root-grid { display: grid; grid-template-columns: repeat(var(--side), 7px); gap: 1px; justify-content: center; }
+.guidance-root-grid i { width: 7px; height: 7px; background: #73bb9a; }
+.play-card.detailed-hint .task-visual { margin-top: 0; }
+.play-card.showing-solution .task-visual { max-height: none; min-height: 90px; margin: 12px 0; }
+.play-card.showing-solution .hint { margin: 10px 0; font-size: 1rem; }
+.play-card.showing-solution .answer-area { margin-top: auto; }
+.solution-replay { display: block; margin: 8px auto 14px; min-height: 44px; }
+body.force-ultra .detailed-hint .problem { font-size: 1.25rem; }
+@media (prefers-reduced-motion: no-preference) { .showing-solution .task-visual > * { animation: pop-in .3s ease-out; } }
+.guidance-column { font: 800 1rem/1.2 ui-monospace, monospace; text-align: right; letter-spacing: 2px; margin: 3px auto; width: max-content; }
+.guidance-column hr { border: 0; border-top: 2px solid #438c80; margin: 3px 0; }
+.play-card.detailed-hint .mini-mascot { display: none; }
+body.force-ultra .detailed-hint .task-line { height: 78px; }
+body.force-ultra .detailed-hint .hint { font-size: .8rem; line-height: 1.15; padding: 4px 6px; }
+body.force-ultra .detailed-hint .number-key-special { min-height: 32px; }
+body.force-ultra .detailed-hint:not(.showing-solution) .feedback { position: absolute; width: 1px; height: 1px; min-height: 0; overflow: hidden; clip-path: inset(50%); }
+.guidance-groups .guidance-object .task-produce svg { width: 17px; height: 17px; }
+.guidance-subtraction .task-frame { grid-template-columns: repeat(5, 18px); gap: 2px; padding: 2px; }
+.guidance-subtraction .task-cell { width: 18px; height: 18px; font-size: .85rem; }
+body .detailed-hint .task-visual:has(.guidance-subtraction) { max-height: none; }
+.guidance-layers { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 6px; }
+body.force-ultra .detailed-hint.showing-solution .problem:not(.problem-wide) { font-size: 2rem; }
+.guidance-objects.counting .guidance-object:not(.counted) { opacity: .32; }
+/* Ten equal groups must fit the compact hint without losing any objects. */
+.guidance-groups { gap: 2px; }
+.guidance-groups > div { padding: 3px; max-width: 83px; }
+.guidance-groups .guidance-objects { gap: 2px; }
+.guidance-groups .guidance-object .task-produce svg { width: 13px; height: 13px; }
+.guidance-root-grid { grid-template-columns: repeat(var(--side), 6px); }
+.guidance-root-grid i { width: 6px; height: 6px; }
+.play-card.detailed-hint .task-visual { max-height: none; }

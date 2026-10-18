@@ -41,6 +41,10 @@ jobs:
         run: npm run test:mobile
         env:
           KAPI_E2E_SCREENSHOTS: artifacts/mobile
+      - name: Detailed hints and worked solutions
+        run: npm run test:guidance
+        env:
+          KAPI_E2E_SCREENSHOTS: artifacts/guidance
       - name: Real Chromium PWA lifecycle
         run: npm run test:pwa
         env:
