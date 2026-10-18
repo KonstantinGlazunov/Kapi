@@ -88,3 +88,11 @@
 Создан [PR №3](https://github.com/KonstantinGlazunov/Kapi/pull/3), реализация `087682b`, ветка `feat/clear-counting-and-number-line` от `56de23d`. Свежие 144 unit-теста и полный Chromium PWA прошли: корень и `/kapi/`, cold offline, явное обновление, вкладки, импорт/экспорт, отказ quota. CI [39095548321](https://github.com/KonstantinGlazunov/Kapi/actions/runs/39095548321) запущен; его текущий статус проверять по ссылке, прежний зелёный CI не заменяет его. Пользователь разрешил merge и штатную публикацию этого выпуска.
 
 Прежний Vercel identity-блокер больше не актуален: status для web_designer main `e5ed836` — success, «Deployment has completed», [deployment](https://vercel.com/konstantinglazunovs-projects/erstellen-websiten/E2Vtsd9ctmBb4n8KPkfPx9JqiYJr). Web PR №17 уже слит, новых изменений прокси для этого выпуска нет. Дальнейший шаг: дождаться CI PR №3, merge, main tests/deploy, проверить содержимое v71 на Pages и основном `/kapi/`.
+
+## Публикация завершена — 2026-10-18
+
+[PR №3](https://github.com/KonstantinGlazunov/Kapi/pull/3) MERGED; реализация `087682b`, предрелизная память `999cfc6`, опубликованный merge `efa05fcd4dfbc88bc4586129aea2df8921a464a9`. [CI PR 39095577785](https://github.com/KonstantinGlazunov/Kapi/actions/runs/39095577785) — success; [main CI и Pages deploy 39095842892](https://github.com/KonstantinGlazunov/Kapi/actions/runs/39095842892) — оба job success. Все проверки выполнялись для нужных коммитов; deploy публикует проверенный артефакт main. Выпуск worker v71.
+
+После deploy HTTPS-проверка подтвердила: `sw.js`, `app.js`, `kapi-tasks.js`, `styles.css` побайтово совпадают с выпуском на обоих адресах — https://konstantinglazunov.github.io/Kapi/ и https://erstellen-websiten.de/kapi/. HTML Pages также совпадает; HTML основного сайта отличается только штатным `<base href="/kapi/">`, что проверено отдельно по коду proxy. Обновление кнопки приветствия, новой прямой, картинок, текста и формы отзыва доставлено. В HTTPS curl проверка TLS включена. Живой браузер и реальные iOS/Android после deploy не проверялись; ограничения WebKit offline прежние.
+
+Итоговая запись сохранена в ветке выпуска после слияния (отдельный docs-коммит); код сайта уже опубликован. Следующий шаг: проверить обновление установленной PWA на реальном телефоне; при открытой старой вкладке закрыть её и воспользоваться штатной кнопкой обновления.
