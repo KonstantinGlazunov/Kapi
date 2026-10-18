@@ -1,4 +1,4 @@
-// Real UI transition with a controlled browser clock: 799 ms intro, first task at 800 ms.
+// Real UI transition with a controlled browser clock: 2999 ms intro, first task at 3000 ms.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -42,21 +42,21 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
    }
    const mascot=await page.locator('.stage-intro-kapi').boundingBox();
    assert.ok(mascot.height>=140 && mascot.y+mascot.height<=height, `${name}: mascot clipped or tiny`);
-   await page.clock.runFor(120);
-   if(shots) await page.screenshot({path:path.join(shots,`${name}-intro-120.png`)});
-   await page.clock.runFor(480);
-   if(shots) await page.screenshot({path:path.join(shots,`${name}-intro-600.png`)});
-   await page.clock.runFor(199);
-   assert.equal(await page.locator('#stageIntroScreen').isVisible(), true, 'still visible at 799 ms');
+   await page.clock.runFor(300);
+   if(shots) await page.screenshot({path:path.join(shots,`${name}-intro-300.png`)});
+   await page.clock.runFor(1200);
+   if(shots) await page.screenshot({path:path.join(shots,`${name}-intro-1500.png`)});
+   await page.clock.runFor(1499);
+   assert.equal(await page.locator('#stageIntroScreen').isVisible(), true, 'still visible at 2999 ms');
    await page.clock.runFor(1);
    assert.equal(await page.locator('#stageIntroScreen').isVisible(), false);
-   assert.equal(await page.locator('#gameScreen').isVisible(), true, 'first question at 800 ms');
+   assert.equal(await page.locator('#gameScreen').isVisible(), true, 'first question at 3000 ms');
    assert.equal(await page.evaluate(()=>window.__introTest.state.stage), stage);
    assert.equal(await page.locator('#problemNumber').innerText(),'1');
    assert.equal(await page.evaluate(()=>window.__introTest.state.startedAt===performance.now()),true, 'answer timing begins after the intro');
    if(shots) await page.screenshot({path:path.join(shots,`${name}-game.png`)});
    assert.deepEqual(errors,[]);
-   console.log(`PASS ${name}: no home plaque, intro 799/800ms, correct stage, no layout/runtime errors`);
+   console.log(`PASS ${name}: no home plaque, intro 2999/3000ms, correct stage, no layout/runtime errors`);
    await context.close();
   }
  } finally {await browser.close();}

@@ -1265,7 +1265,7 @@ function makePowerProblem(max, mastered) {
     showScreen($("stageIntroScreen"));
     stageIntroTimer = window.setTimeout(() => {
       if ($("stageIntroScreen").classList.contains("active")) startTraining(options, selection);
-    }, 800);
+    }, 3000);
   }
 
   function trainingInProgress() {

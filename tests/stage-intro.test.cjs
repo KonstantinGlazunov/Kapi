@@ -8,7 +8,7 @@ function setup() {
   return { env, app: env.sandbox.__app, active: id => env.elements.get(id).classList.contains('active') };
 }
 
-test('stage intro lasts 800 ms and the question timer excludes it', () => {
+test('stage intro lasts three seconds and the question timer excludes it', () => {
   const { env, app, active } = setup();
   app.appSettings.automatic = false;
   app.appSettings.manualStage = 12;
@@ -22,7 +22,7 @@ test('stage intro lasts 800 ms and the question timer excludes it', () => {
   assert.equal(env.elements.get('stageIntroLabel').textContent, 'Stufe 12');
   assert.equal(env.elements.get('stageIntroTitle').textContent, 'Addition über den Zehner');
   assert.equal(JSON.stringify(app.getProfile()), before, 'intro awards no XP or progression');
-  env.advance(799);
+  env.advance(2999);
   assert.equal(active('stageIntroScreen'), true);
   env.advance(1);
   assert.equal(active('gameScreen'), true);
@@ -39,13 +39,13 @@ test('leaving the intro cancels its pending start and repeated taps do not resta
   app.startTrainingWithIntro();
   env.advance(400);
   app.showScreen(env.elements.get('startScreen'));
-  env.advance(1200);
+  env.advance(3200);
   assert.equal(active('startScreen'), true);
   assert.equal(active('gameScreen'), false);
   assert.equal(app.trainingInProgress(), false);
   assert.equal(app.state.problem, null);
   app.startTrainingWithIntro();
-  env.advance(400);
+  env.advance(2600);
   app.startTrainingWithIntro();
   env.advance(400);
   assert.equal(active('gameScreen'), true);
@@ -63,7 +63,7 @@ test('all 41 stage intros name the stage actually used by the session', () => {
     app.startTrainingWithIntro();
     assert.equal(env.elements.get('stageIntroLabel').textContent, `Stufe ${stage}`);
     assert.ok(env.elements.get('stageIntroTitle').textContent.length > 0);
-    env.advance(800);
+    env.advance(3000);
     assert.equal(app.state.stage, stage);
   }
 });
