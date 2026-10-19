@@ -184,6 +184,11 @@
       this.sessionOutfit = { ...session };
     }
 
+    introReady() {
+      const required = ["head", "torso", "armLeftUpper", "armRightUpper", "armLeftForearm", "armRightForearm", "pawLeft", "pawRight", "legLeft", "legRight", "footLeft", "footRight"];
+      return required.every((name) => this.loadImage(RIG_PARTS[name]).ready);
+    }
+
     effectiveOutfit(scene) {
       this.rewardSystem ||= new window.KapiRewardSystem();
       return this.rewardSystem.getEffectiveOutfit({ equippedOutfit: this.permanentOutfit }, this.sessionOutfit, scene);
