@@ -1274,7 +1274,9 @@ function makePowerProblem(max, mastered) {
     const drawIntro = () => {
       if (!$("stageIntroScreen").classList.contains("active")) return;
       const introCanvas = $("stageIntroKapi");
-      if (introCanvas) kapi?.animator?.drawIntroFrame(introCanvas, performance.now() - introStartedAt);
+      if (introCanvas && kapi?.animator?.introReady?.()) {
+        kapi.animator.drawIntroFrame(introCanvas, performance.now() - introStartedAt);
+      }
       stageIntroFrame = window.requestAnimationFrame(drawIntro);
     };
     drawIntro();
