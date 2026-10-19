@@ -765,9 +765,9 @@ body.force-compact .task-visual, body.force-ultra .task-visual { max-height: 75p
 body.force-compact .task-operand, body.force-ultra .task-operand { padding: 2px; }
 body.force-compact .task-frame, body.force-ultra .task-frame { grid-template-columns: repeat(5, 22px); padding: 2px; }
 body.force-compact .task-line, body.force-ultra .task-line { height: 98px; }
-body.force-ultra .mini-mascot { display: block; width: 32px; height: 32px; margin-top: 0; }
+body.force-ultra .mini-mascot { display: block; width: 64px; height: 64px; margin-top: 0; }
 body.force-ultra .play-card.has-task-visual .mini-mascot { position: absolute; top: 4px; right: 7px; }
-body.force-ultra .task-visual { max-height: 72px; }
+body.force-ultra .task-visual { max-height: 108px; margin: 4px auto 6px; }
 body.force-ultra .task-operands { gap: 3px; }
 body.force-ultra .task-operator { font-size: 1rem; }
 body.force-ultra .task-operand { padding: 1px; }
@@ -1296,7 +1296,6 @@ body.intro-active .topbar { visibility: hidden; }
 .stage-intro-screen.active .stage-intro-badge { animation: stage-intro-appear .52s .08s cubic-bezier(.2,1.4,.4,1) both; }
 .stage-intro-screen.active .stage-intro-label { animation: stage-intro-appear .48s .43s ease-out both; }
 .stage-intro-screen.active .stage-intro-copy h1 { animation: stage-intro-appear .58s .72s ease-out both; }
-.stage-intro-screen.active .stage-intro-kapi { animation: stage-intro-appear .7s 1.08s cubic-bezier(.2,1.3,.4,1) both; }
 @keyframes stage-intro-appear { from { opacity: 0; transform: translateY(18px) scale(.88); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .stage-intro-track { display: block; width: min(55vw, 220px); height: 6px; border-radius: 8px; overflow: hidden; background: #c7dff3; }
 .stage-intro-track > span { display: block; height: 100%; background: #0589f4; transform-origin: left; animation: stage-intro-progress 3s linear both; }
@@ -1313,6 +1312,6 @@ body.intro-active .topbar { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .stage-intro-track > span { animation: none; }
   .stage-intro-screen.active .stage-intro-badge, .stage-intro-screen.active .stage-intro-label,
-  .stage-intro-screen.active .stage-intro-copy h1, .stage-intro-screen.active .stage-intro-kapi { animation: none; }
+  .stage-intro-screen.active .stage-intro-copy h1 { animation: none; }
 }
 .stage-intro-copy h1::first-letter { text-transform: uppercase; }
