@@ -701,6 +701,61 @@
       this.drawRigPose(record, this.pose(state, elapsed, record.variant), this.limbPose(state, elapsed, record.variant), opacity, { headAsset: this.headAsset(state, record.variant), state, elapsed });
     }
 
+    drawIntroFrame(canvas, elapsed) {
+      if (!canvas || typeof canvas.getContext !== "function") return;
+      const context = canvas.getContext("2d");
+      if (!context) return;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      const limbs = this.limbPose("idle", 0, "hop");
+      const pose = this.pose("idle", 0, "hop");
+      const outfit = this.effectiveOutfit("idle");
+      // The intro uses Kapi's familiar scarf and backpack until the child equips alternatives.
+      outfit.neck ||= "neck-scarf";
+      outfit.back ||= "backpack";
+      const fade = (start) => this.reducedMotion ? 1 : Math.max(0, Math.min(1, (elapsed - start) / 170));
+      const layer = (start, draw) => {
+        const alpha = fade(start);
+        if (!alpha) return;
+        context.save();
+        context.globalAlpha = alpha;
+        draw();
+        context.restore();
+      };
+      const unit = Math.min(canvas.width, canvas.height) / 700;
+      context.save();
+      context.translate(canvas.width / 2 + pose.x * unit, canvas.height / 2 + pose.y * unit);
+      context.rotate(pose.rotation);
+      context.scale(unit * pose.scaleX, unit * pose.scaleY);
+      context.translate(-350, -350);
+      // Draw in depth order; fade each anatomical group at its own time.
+      layer(2050, () => this.drawCosmetic(context, "back", outfit.back, pose, limbs));
+      layer(1750, () => {
+        this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "leg");
+        this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "leg");
+      });
+      layer(1450, () => this.drawPart(context, "torso", 350, 389, .69, 0, 280.5, 229));
+      layer(2050, () => {
+        this.drawCosmetic(context, "neck", outfit.neck, pose, limbs);
+        this.drawCosmetic(context, "badge", outfit.badge, pose, limbs);
+      });
+      layer(1150, () => {
+        this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "upper");
+        this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
+        this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
+        this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
+      });
+      layer(1750, () => {
+        this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "foot");
+        this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "foot");
+      });
+      layer(850, () => this.drawPart(context, "head", 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215, limbs.headScaleX, limbs.headScaleY));
+      layer(2050, () => {
+        this.drawCosmetic(context, "hat", outfit.hat, pose, limbs);
+        this.drawCosmetic(context, "glasses", outfit.glasses, pose, limbs);
+      });
+      context.restore();
+    }
+
     drawEffects(record, state, elapsed, variant) {
       const context = record.context;
       const unit = Math.min(record.canvas.width, record.canvas.height) / 700;

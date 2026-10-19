@@ -316,7 +316,7 @@ test('counting pictures and localized prompts agree, including legacy review tas
         assert.doesNotMatch(display.text, /крест|точк|Punkte|Kreise/);
         const html = type === 'visualCount' ? display.html : tasks.renderProduce(n, problem);
         assert.equal((html.match(/<svg /g) || []).length, n);
-        assert.equal(html.includes('#ed8936'), n > 0 && n % 2 === 0);
+        assert.equal(html.includes('#f28a27'), n > 0 && n % 2 === 0);
         assert.equal(html.includes('#df534a'), n % 2 === 1);
         if (type === 'visualCount') assert.equal(tasks.hint(problem, 2, language).html, html);
       }

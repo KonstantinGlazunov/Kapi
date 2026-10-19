@@ -278,6 +278,7 @@
   const screens = [$("startScreen"), $("stageIntroScreen"), $("gameScreen"), $("resultScreen")];
   let stageIntroTimer;
   let stageIntroSoundTimers = [];
+  let stageIntroFrame = 0;
   let kapi = null;
   let motivation = null;
   let soundManager = null;
@@ -651,6 +652,7 @@
     window.clearTimeout(stageIntroTimer);
     stageIntroSoundTimers.forEach((timer) => window.clearTimeout(timer));
     stageIntroSoundTimers = [];
+    window.cancelAnimationFrame(stageIntroFrame);
     if (target !== $("gameScreen")) { window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
     if (target !== $("resultScreen")) {
       window.clearTimeout(rewardRevealTimer);
@@ -1268,8 +1270,16 @@ function makePowerProblem(max, mastered) {
     $("stageIntroLabel").textContent = copy.homeStage(selection.trainingStage);
     $("stageIntroTitle").textContent = copy.stageNames[selection.trainingStage - 1];
     showScreen($("stageIntroScreen"));
+    const introStartedAt = performance.now();
+    const drawIntro = () => {
+      if (!$("stageIntroScreen").classList.contains("active")) return;
+      const introCanvas = $("stageIntroKapi");
+      if (introCanvas) kapi?.animator?.drawIntroFrame(introCanvas, performance.now() - introStartedAt);
+      stageIntroFrame = window.requestAnimationFrame(drawIntro);
+    };
+    drawIntro();
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      stageIntroSoundTimers = [120, 1100].map((delay, index) => window.setTimeout(() => {
+      stageIntroSoundTimers = [900, 2100].map((delay, index) => window.setTimeout(() => {
         if ($("stageIntroScreen").classList.contains("active")) soundManager?.play(index ? "introKapi" : "introBadge", { channel: "foley" });
       }, delay));
     }

@@ -286,7 +286,7 @@
     renderProduce(n, problem) {
       const carrot = problem.a % 2 === 0;
       const shape = carrot
-        ? '<path d="M14 10 7 29Q5 31 6 26L9 12Z" fill="#ed8936"/><path d="m12 11 1-7m0 6 6-5m-7 5-4-5" stroke="#39834c" stroke-width="3" stroke-linecap="round"/>'
+        ? '<path d="M8 10Q16 7 24 10L21 27Q20 31 16 31T11 27Z" fill="#f28a27" stroke="#633b2c" stroke-width="2"/><path d="M10 13h12M10 19h10M11 25h8" stroke="#d86620" stroke-width="1.8" stroke-linecap="round"/><path d="M16 9V3M15 8 9 4M17 8l6-4M16 8l1-6" stroke="#4d8d3d" stroke-width="2.6" stroke-linecap="round"/>'
         : '<path d="M16 10C3 3 1 18 9 28Q12 31 16 28Q20 31 24 26C31 13 25 4 16 10Z" fill="#df534a"/><path d="M16 10V4" stroke="#775339" stroke-width="2.5"/><path d="M17 7Q18 0 26 3Q24 9 17 7" fill="#39834c"/>';
       return `<div class="task-dots task-produce${n === 0 ? " empty" : ""}" role="group">${Array.from({ length: n }, () => `<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">${shape}</svg>`).join("")}</div>`;
     }
