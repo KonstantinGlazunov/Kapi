@@ -775,16 +775,18 @@ body.force-ultra .task-operand { padding: 1px; }
 body.force-ultra .task-frame { grid-template-columns: repeat(5, 20px); gap: 1px; padding: 0; }
 
 /* Use spare vertical space for the learning content on tall phones. */
-body.game-active .play-card:not(.has-task-visual) .mini-mascot {
-  width: clamp(112px, 31vw, 154px);
-  height: clamp(112px, 31vw, 154px);
-  margin-top: -2px;
+@media (min-height: 700px) {
+  body.game-active .play-card:not(.has-task-visual) .mini-mascot {
+    width: clamp(112px, 31vw, 154px);
+    height: clamp(112px, 31vw, 154px);
+    margin-top: -2px;
+  }
+  body.game-active .play-card:not(.has-task-visual) .problem {
+    font-size: clamp(3.45rem, 14vw, 5.25rem);
+    margin: 5px 0 12px;
+  }
+  body.game-active .play-card:not(.has-task-visual) .answer-area { margin-top: 18px; }
 }
-body.game-active .play-card:not(.has-task-visual) .problem {
-  font-size: clamp(3.45rem, 14vw, 5.25rem);
-  margin: 5px 0 12px;
-}
-body.game-active .play-card:not(.has-task-visual) .answer-area { margin-top: 18px; }
 
 /* Home is a small Kapi scene; gameplay and dialogs keep their own layouts. */
 body.start-active .brand { font-size: clamp(.9rem, 2.4vw, 1.08rem); }
