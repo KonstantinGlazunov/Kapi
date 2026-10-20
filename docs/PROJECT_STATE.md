@@ -219,3 +219,9 @@ PR №13 [слит](https://github.com/KonstantinGlazunov/Kapi/pull/13) по п�
 Chromium PWA E2E — PASS в `/` и `/kapi/`: установка, cold offline, явное обновление, защита тренировки в другой вкладке, backup UI; quota-denied сценарий также PASS. Тест использует синтетические суффиксы выпусков текущего worker; обновление реальной установленной v77 после deploy v78 ещё не проверено.
 
 Публикация разрешена пользователем. Создан [PR №14](https://github.com/KonstantinGlazunov/Kapi/pull/14), реализация `0a1829b`, ветка `fix/home-nav-alignment`; CI запущен, итог проверять на последнем head. После зелёного CI — merge, Pages deploy и сверка v78 на обоих публичных адресах.
+
+## v78 опубликован — 2026-10-20
+
+[PR №14](https://github.com/KonstantinGlazunov/Kapi/pull/14) MERGED по проверенному head `1f46cf5`, merge main `c46eba7a89be3e96a4ecbe47be0043d2cccd154c`. [PR CI 39372549825](https://github.com/KonstantinGlazunov/Kapi/actions/runs/39372549825) и [main CI/Pages deploy 39373213070](https://github.com/KonstantinGlazunov/Kapi/actions/runs/39373213070) — success. После deploy sw.js (v78), styles.css и kapi.js побайтово совпали с выпуском и на Pages, и на основном /kapi/ адресе. Дополнительный локальный Chromium PWA прогон с исходными файлами `a7dbac8` как первым выпуском и текущими файлами как вторым прошёл в `/` и `/kapi/` (тест сохраняет синтетические суффиксы worker и метку выпуска HTML). Реальный телефон не проверялся.
+
+Эта итоговая запись сохранена отдельным post-release docs-коммитом в ветке `fix/home-nav-alignment`; включить её в следующую интеграцию памяти, без повторной публикации неизменённого приложения.
