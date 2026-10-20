@@ -186,7 +186,14 @@
 
     introReady() {
       const required = ["head", "torso", "armLeftUpper", "armRightUpper", "armLeftForearm", "armRightForearm", "pawLeft", "pawRight", "legLeft", "legRight", "footLeft", "footRight"];
-      return required.every((name) => this.loadImage(RIG_PARTS[name]).ready);
+      const outfit = this.effectiveOutfit("idle");
+      outfit.neck ||= "neck-scarf";
+      outfit.back ||= "backpack";
+      const cosmetics = Object.values(outfit).map((id) =>
+        id === "session-star" ? "star-badge" : window.KAPI_REWARDS.find((item) => item.id === id)?.asset
+      ).filter(Boolean);
+      return required.every((name) => this.loadImage(RIG_PARTS[name]).ready) &&
+        cosmetics.every((asset) => this.loadImage(`assets/cosmetics/${asset}.svg`).ready);
     }
 
     effectiveOutfit(scene) {
