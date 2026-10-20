@@ -776,16 +776,16 @@ body.force-ultra .task-frame { grid-template-columns: repeat(5, 20px); gap: 1px;
 
 /* Use spare vertical space for the learning content on tall phones. */
 @media (min-height: 700px) {
-  body.game-active .play-card:not(.has-task-visual):not(:has(.problem-story)) .mini-mascot {
+  body.game-active .play-card:has(.task-visual.hidden):not(:has(.problem-story)) .mini-mascot {
     width: clamp(112px, 31vw, 154px);
     height: clamp(112px, 31vw, 154px);
     margin-top: -2px;
   }
-  body.game-active .play-card:not(.has-task-visual) .problem:not(.problem-story) {
+  body.game-active .play-card:has(.task-visual.hidden) .problem:not(.problem-story) {
     font-size: clamp(3.45rem, 14vw, 5.25rem);
     margin: 5px 0 12px;
   }
-  body.game-active .play-card:not(.has-task-visual):not(:has(.problem-story)) .answer-area { margin-top: 18px; }
+  body.game-active .play-card:has(.task-visual.hidden):not(:has(.problem-story)) .answer-area { margin-top: 18px; }
 }
 
 /* Home is a small Kapi scene; gameplay and dialogs keep their own layouts. */
@@ -1166,6 +1166,7 @@ body.start-active .home-start-icon { display: inline-block; margin-right: 9px; f
 body.start-active .home-nav { gap: 7px; }
 body.start-active .home-nav .text-button {
   min-height: 47px;
+  height: 57px;
   border: 1px solid rgba(255,255,255,.95);
   border-radius: 16px;
   background: rgba(255,255,255,.95);
