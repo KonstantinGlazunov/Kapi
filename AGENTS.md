@@ -31,6 +31,13 @@ During and after work:
 - Run checks appropriate to the change. Documentation-only changes require review of facts, paths, and links; visual checks below apply when appearance changes.
 - Work within the user's authorized task. Creating a review branch/PR does not authorize merging or deploying it.
 
+## Release and installed PWA updates
+
+- Whenever a release changes a precached file (HTML, CSS, JavaScript, images, sounds or manifests), increment the cache version in `dist/sw.js` in the same branch/PR. Compare the release diff with the previously published version; never publish changed cached assets with unchanged worker bytes.
+- Before merging, verify that the updated worker installs successfully and that an existing installation can discover and apply the update through the safe update flow, preserving learning data. A fresh browser visit or successful HTTP fetch alone does not validate an installed PWA update.
+- After deployment, verify the served worker version and changed assets on both Pages and the primary `/kapi/` address. Record the version and actual verification results in PROJECT_STATE.md.
+- If users still see an older release, first inspect the worker version, waiting worker and cache behavior. Do not recommend clearing site data as a routine update fix: this can erase local learning progress.
+
 # Kapi: visual changes
 
 When changing graphics, layout, animation, or visual design:

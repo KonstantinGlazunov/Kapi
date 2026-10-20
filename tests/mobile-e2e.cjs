@@ -61,6 +61,10 @@ async function run() {
       assert.equal(await page.locator('#homeMascot').isVisible(), true);
       assert.equal(await page.locator('.home-stage-card').count(), 0);
       assert.equal(await page.locator('.home-nav .text-button').count(), 3);
+      const navBounds = await page.locator('.home-nav .text-button').evaluateAll(buttons =>
+        buttons.map(button => { const { top, bottom } = button.getBoundingClientRect(); return { top, bottom }; }));
+      assert.ok(navBounds.every(box => Math.abs(box.top - navBounds[0].top) < 1 && Math.abs(box.bottom - navBounds[0].bottom) < 1),
+        `${width}: home navigation buttons must share top and bottom edges: ${JSON.stringify(navBounds)}`);
       const homeLayout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth,
         viewport: document.documentElement.clientWidth, bottom: document.querySelector('#startButton').getBoundingClientRect().bottom,
         historyTop: document.querySelector('#statsButton').getBoundingClientRect().top,
