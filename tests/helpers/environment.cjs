@@ -5,7 +5,7 @@ const vm = require('node:vm');
 
 const root = path.join(__dirname, '..', '..', 'dist');
 
-function environment({ app = false, query = '', seed = 0x4b415049 } = {}) {
+function environment({ app = false, query = '', seed = 0x4b415049, browserLanguage = 'de-DE', browserLanguages, savedSettings } = {}) {
   let now = 0, sequence = 0;
   let randomState = seed >>> 0;
   const seededMath = Object.create(Math);
@@ -14,6 +14,7 @@ function environment({ app = false, query = '', seed = 0x4b415049 } = {}) {
     return randomState / 0x100000000;
   };
   const timers = new Map(), elements = new Map(), storage = new Map();
+  if (savedSettings) storage.set("capy-count-settings-v1", JSON.stringify(savedSettings));
   class Element {
     constructor() {
       const names = new Set();
@@ -41,7 +42,7 @@ function environment({ app = false, query = '', seed = 0x4b415049 } = {}) {
   const sandbox = {
     console, document, URL, URLSearchParams, TextEncoder, Intl, Math: seededMath,
     performance: { now: () => now },
-    navigator: { userAgent: 'test', language: 'ru-RU' },
+    navigator: { userAgent: 'test', language: browserLanguage, languages: browserLanguages },
     location: { search: query, origin: 'https://example.test', href: 'https://example.test/' },
     localStorage: { getItem: k => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, String(v)), removeItem: k => storage.delete(k) },
     matchMedia: () => ({ matches: false, addEventListener() {} }),
