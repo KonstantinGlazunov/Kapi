@@ -1,6 +1,6 @@
 /* kapi-runtime:v1 — scope-derived URLs and private caches; consumed by /kapi proxy. */
 const CACHE_PREFIX = `kapi:${self.registration.scope}:`;
-const CACHE = `${CACHE_PREFIX}v78`;
+const CACHE = `${CACHE_PREFIX}v79`;
 const SCOPE = new URL(self.registration.scope);
 const LEGACY_PREFIX = SCOPE.pathname === "/kapi/" ? "vibe-kapi-capy-count-" : "capy-count-";
 const ASSETS = ["./", "index.html", "styles.css", "kapi.js", "app.js", "manifest.webmanifest", "manifest-ru.webmanifest", "manifest-de.webmanifest", "favicon.svg", "icon-192.png", "icon-512.png", "assets/capybara.webp", "assets/kapi-welcome-sprite.webp", "assets/kapi-flag.webp", "assets/kapi-party.webp", "assets/kapi-dance.webp", "assets/kapi-handshake.webp", "assets/kapi-rig-v2/head.png", "assets/kapi-rig-v2/torso.png", "assets/kapi-rig-v4/arm-left-upper.png", "assets/kapi-rig-v4/arm-left-forearm.png", "assets/kapi-rig-v3/paw-left.png", "assets/kapi-rig-v4/arm-right-upper.png", "assets/kapi-rig-v4/arm-right-forearm.png", "assets/kapi-rig-v3/paw-right.png", "assets/kapi-rig-v3/leg-left.png", "assets/kapi-rig-v3/leg-right.png", "assets/kapi-rig-v3/foot-left.png", "assets/kapi-rig-v3/foot-right.png"];

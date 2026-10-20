@@ -673,7 +673,7 @@
       const drawHead = options.drawHead !== false;
       const requestedHead = options.headAsset || "head";
       const headAsset = this.loadImage(RIG_PARTS[requestedHead]).ready ? requestedHead : "head";
-      const outfit = this.effectiveOutfit(drawHead && headAsset === "headHorn" ? "horn" : options.state === "horn" ? "idle" : options.state || "idle");
+      const outfit = options.outfit || this.effectiveOutfit(drawHead && headAsset === "headHorn" ? "horn" : options.state === "horn" ? "idle" : options.state || "idle");
       const context = record.context;
       const canvas = record.canvas;
       const unit = Math.min(canvas.width, canvas.height) / 700;
@@ -724,40 +724,9 @@
       // The intro uses Kapi's familiar scarf and backpack until the child equips alternatives.
       outfit.neck ||= "neck-scarf";
       outfit.back ||= "backpack";
-      // Keep the assembly order in the draw sequence, but render every part
-      // immediately. Slow devices must never expose an artificial partial pose.
-      const layer = (draw) => draw();
-      const unit = Math.min(canvas.width, canvas.height) / 700;
-      context.save();
-      context.translate(canvas.width / 2 + pose.x * unit, canvas.height / 2 + pose.y * unit);
-      context.rotate(pose.rotation);
-      context.scale(unit * pose.scaleX, unit * pose.scaleY);
-      context.translate(-350, -350);
-      // The order is intentional: head, arms, torso, legs, then equipment.
-      layer(() => this.drawPart(context, "head", 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215, limbs.headScaleX, limbs.headScaleY));
-      layer(() => {
-        this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "upper");
-        this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
-        this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
-        this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
-      });
-      layer(() => this.drawPart(context, "torso", 350, 389, .69, 0, 280.5, 229));
-      layer(() => {
-        this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "leg");
-        this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "leg");
-      });
-      layer(() => {
-        this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "foot");
-        this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "foot");
-      });
-      layer(() => {
-        this.drawCosmetic(context, "back", outfit.back, pose, limbs);
-        this.drawCosmetic(context, "neck", outfit.neck, pose, limbs);
-        this.drawCosmetic(context, "badge", outfit.badge, pose, limbs);
-        this.drawCosmetic(context, "hat", outfit.hat, pose, limbs);
-        this.drawCosmetic(context, "glasses", outfit.glasses, pose, limbs);
-      });
-      context.restore();
+      // Reuse the normal depth order; loading order must not change occlusion.
+      // Readiness is checked before painting, so this remains one complete frame.
+      this.drawRigPose({ canvas, context }, pose, limbs, 1, { state: "idle", outfit });
     }
 
     drawEffects(record, state, elapsed, variant) {
