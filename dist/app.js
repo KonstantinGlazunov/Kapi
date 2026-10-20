@@ -349,9 +349,12 @@
   }
 
   function loadSettings() {
+    const browserLanguage = navigator.languages?.[0] || navigator.language || "de";
+    const defaultLanguage = /^ru(?:-|_|$)/i.test(browserLanguage) ? "ru" : "de";
+    appSettings.language = defaultLanguage;
     try {
       const value = storage.readJSON(SETTINGS_KEY, {});
-      appSettings.language = value.language === "ru" ? "ru" : "de";
+      appSettings.language = ["ru", "de"].includes(value.language) ? value.language : defaultLanguage;
       appSettings.problemCount = [10, 20, 30].includes(Number(value.problemCount)) ? Number(value.problemCount) : 20;
       const currentCurriculum = value.curriculumVersion === CURRICULUM_VERSION;
       appSettings.automatic = value.automatic !== false;

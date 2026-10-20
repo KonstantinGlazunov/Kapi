@@ -1329,3 +1329,22 @@ body.intro-active .topbar { visibility: hidden; }
   .stage-intro-screen.active .stage-intro-copy h1 { animation: none; }
 }
 .stage-intro-copy h1::first-letter { text-transform: uppercase; }
+
+/* Reserve the controls first; Kapi receives the remaining vertical space. */
+body.game-active .game-screen { padding-bottom: 5px; }
+body.game-active .play-card { padding-bottom: 8px; }
+body.game-active .play-card > :not(.mini-mascot) { flex-shrink: 0; }
+body.game-active .play-card .answer-area { margin-top: 8px; }
+body.game-active .play-card #gameMascot {
+  display: block;
+  position: relative;
+  inset: auto;
+  flex: 1 1 0px;
+  width: 100%;
+  height: auto;
+  min-height: 44px;
+  margin: 0;
+  overflow: hidden;
+}
+body.game-active .app-shell { padding-bottom: max(6px, env(safe-area-inset-bottom)); }
+body.game-active.force-ultra .play-card #gameMascot { min-height: 0; }
