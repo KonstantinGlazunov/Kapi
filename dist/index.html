@@ -83,6 +83,7 @@
         <div class="result-mascot kapi-host" id="resultMascot" aria-hidden="true"><canvas class="kapi-rive-canvas" id="resultMascotCanvas"></canvas></div>
         <span class="eyebrow" id="resultEyebrow">Тренировка завершена</span>
         <h1 id="resultTitle">Отличная работа!</h1>
+        <p id="resultMotivation" class="feedback hidden" role="status" aria-live="polite"></p>
         <div class="result-grid">
           <div><strong id="correctValue">18</strong><span id="correctLabel">верно из 20</span></div>
           <div><strong id="averageValue">6,2 c</strong><span id="averageLabel">в среднем</span></div>
@@ -126,19 +127,6 @@
     <p class="settings-hint" id="settingsHint"></p>
     <div class="settings-content" id="settingsContent"></div>
   </dialog>
-
-  <div class="motivation-pop hidden" id="motivationPop" role="status" aria-live="polite">
-    <div class="motivation-card" data-kapi-state="flag">
-      <div class="motivation-art" aria-hidden="true">
-        <canvas class="kapi-rive-canvas" id="motivationMascot" aria-hidden="true"></canvas>
-        <div class="motivation-burst" id="motivationBurst"></div>
-      </div>
-      <div class="motivation-copy">
-        <strong id="motivationText">Супер!</strong>
-        <span id="motivationSubtext">3 верных подряд</span>
-      </div>
-    </div>
-  </div>
 
   <div class="install-prompt hidden" id="installPrompt" role="dialog" aria-modal="true" aria-labelledby="installTitle">
     <div class="install-card">

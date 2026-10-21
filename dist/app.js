@@ -1349,9 +1349,11 @@ function makePowerProblem(max, mastered) {
     renderProblem(state.problem);
     $("hint").classList.add("hidden");
     $("hint").innerHTML = "";
-    $("feedback").textContent = state.index === 0 && state.targeted
+    const nextFeedback = state.index === 0 && state.targeted
       ? copy.targetedIntro(skills.subskillLabel(state.targeted.subskillId, language))
       : state.index === 0 ? copy.careful : copy.next;
+    if (motivationLabel && !motivationLabel.result) motivationLabel.previous = nextFeedback;
+    $("feedback").textContent = motivationLabel && !motivationLabel.result ? motivationLabel.text : nextFeedback;
     renderAnswer();
     if ((state.problem.operation === "count" && state.problem.taskType !== "visualCount") || state.problem.conceptVisual) showHint(2);
   }
@@ -1531,6 +1533,7 @@ function makePowerProblem(max, mastered) {
 
   function submitAnswer(value) {
     if (state.locked) return;
+    dismissMotivation();
     state.paceUpdate = null;
     const elapsed = Math.max(.2, (performance.now() - state.startedAt) / 1000);
     const isCorrect = answersEqual(value, tasks.response(state.problem), state.problem.answerType);
@@ -2285,30 +2288,37 @@ function makePowerProblem(max, mastered) {
       levelUp: context.notice || copy.rewardHandshake,
       trainingComplete: copy.completedCount(reaction.total), perfectTraining: copy.perfectNote
     };
-    if (reaction.banner) showMotivation(titles[reaction.type], subtitles[reaction.type], null, reaction.scene, reaction);
+    if (reaction.announcement) showMotivation(titles[reaction.type], subtitles[reaction.type], null, reaction.scene, reaction);
     else if (context.notice) showMotivation(context.notice, copy.adaptiveAdjusted, null, reaction.scene, reaction);
   }
 
+  let motivationLabel = null;
   function showMotivation(title, subtitle, action = null, scene = "flag", options = {}) {
-    dismissMotivation(false);
-    const pop = $("motivationPop");
-    const card = pop.querySelector(".motivation-card");
-    kapi.renderBanner(scene, options);
-    $("motivationText").textContent = title;
-    $("motivationSubtext").textContent = subtitle;
-    pop.classList.remove("hidden");
-    card.style.animation = "none";
-    void card.offsetWidth;
-    card.style.animation = "";
-    motivationTimer = window.setTimeout(() => dismissMotivation(false), 5000);
+    dismissMotivation();
+    // The motivation controller already animates the current screen's Kapi.
+    // Keep the caption on that screen too, without a duplicate banner character.
+    const result = (options.surface || kapi?.surface) === "result";
+    const label = result ? $("resultMotivation") : $("feedback");
+    const previous = label.textContent;
+    const text = result ? (subtitle || title) : [title, subtitle].filter(Boolean).join(" · ");
+    label.textContent = text;
+    if (result) label.classList.remove("hidden");
+    motivationLabel = { label, previous, text, result };
+    scheduleFitCheck();
+    motivationTimer = window.setTimeout(dismissMotivation, 5000);
     if (action) window.setTimeout(action, 0);
   }
 
   function dismissMotivation() {
     if (motivationTimer) window.clearTimeout(motivationTimer);
     motivationTimer = 0;
-    $("motivationPop").classList.add("hidden");
-    kapi?.clearBanner();
+    if (motivationLabel) {
+      const { label, previous, text, result } = motivationLabel;
+      if (label.textContent === text) label.textContent = previous;
+      if (result) label.classList.add("hidden");
+      motivationLabel = null;
+      scheduleFitCheck();
+    }
   }
 
   function sound(type) {
@@ -2321,10 +2331,7 @@ function makePowerProblem(max, mastered) {
       homeHost: $("homeMascot"),
       gameHost: $("gameMascot"),
       resultHost: $("resultMascot"),
-      wardrobeHost: $("wardrobeMascot"),
-      bannerCard: $("motivationPop").querySelector(".motivation-card"),
-      bannerImage: $("motivationMascot"),
-      bannerBurst: $("motivationBurst")
+      wardrobeHost: $("wardrobeMascot")
     });
     return new window.KapiStateMachine(animator, {
       soundPlayer(type, animationState) {
@@ -2767,7 +2774,6 @@ function makePowerProblem(max, mastered) {
   $("startButton").addEventListener("click", () => startTrainingWithIntro());
   $("homeMascot").addEventListener("click", playHomeReaction);
   document.querySelector(".app-shell").addEventListener("pointerdown", (event) => {
-    if (!$("motivationPop").classList.contains("hidden")) dismissMotivation();
     if (kapi?.surface === "home" && !kapi.state.startsWith("idle") && !event.target.closest("#homeMascot")) clearHomeReaction();
   });
   $("againButton").addEventListener("click", () => startTrainingWithIntro());
