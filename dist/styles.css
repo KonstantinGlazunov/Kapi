@@ -1354,3 +1354,12 @@ body.game-active.force-ultra .play-card.detailed-hint .answer-area { margin-top:
 /* Training focuses on the task and Kapi; totals remain on the result screen.
    Keep the status nodes for session/localization updates, without reserving space. */
 body.game-active .game-status { display: none; }
+
+/* Frame width must fit narrow phones even when extra height avoids ultra mode. */
+@media (max-width: 360px) {
+  body.game-active .task-operand .task-frame {
+    grid-template-columns: repeat(5, 20px);
+    gap: 1px;
+    padding: 0;
+  }
+}
