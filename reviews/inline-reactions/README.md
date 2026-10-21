@@ -9,3 +9,5 @@ Unit suite: 166/166 including regression for caption expiry after advancement an
 Mobile E2E PASS on 320×568, 360×640, 390×844, 430×932 after replacing two obsolete popup-close waits with assertions that no popup exists.
 
 Updated screenshots after hiding the game status row: freed vertical space grows Kapi through existing flex layout; progress bar stays visible. Inspected 390 and 320 flag frames: controls stay at the bottom, no clipping. Fit/visual/contemporary scores remain 9/9/9. Browser measured answer bottom 548 at 320×568 and 824 at 390×844. Unit/mobile suite results above predate this CSS-only follow-up.
+
+Release follow-up: 320-narrow-frames.png verifies the narrow-phone frame fix after hiding status exposed an existing dependency on ultra-height mode. Both 5-cell rows and all controls fit; inspected fit/visual/contemporary scores 9/9/9. PWA lifecycle passed root and /kapi, preserving data across explicit update, plus quota fallback.
