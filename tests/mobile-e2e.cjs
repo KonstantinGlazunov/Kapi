@@ -265,7 +265,7 @@ async function run() {
         assert.equal(review.skillId, 'add:cross-ten');
         assert.equal(review.stage, 12);
         assert.ok(review.currentStage >= 13, 'current curriculum may advance during the longer lead-in');
-        await page.waitForFunction(() => document.querySelector('#motivationPop').classList.contains('hidden'), null, { timeout: 5000 });
+        assert.equal(await page.locator('#motivationPop').count(), 0, 'celebration must not overlay the task');
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-spaced-review.png`) });
         await answerCurrent(page);
         const outcome = await page.evaluate(() => ({
@@ -318,7 +318,7 @@ async function run() {
         assert.equal(late.problem.reviewSkillId, 'multiply:einmaleins-sequence');
         assert.equal(late.problem.curriculumStage, 23);
         assert.equal(late.problem.operation, 'multiply');
-        await page.waitForFunction(() => document.querySelector('#motivationPop').classList.contains('hidden'), null, { timeout: 5000 });
+        assert.equal(await page.locator('#motivationPop').count(), 0, 'celebration must not overlay the task');
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-late-spaced-review.png`) });
         await answerCurrent(page);
         const lateResult = await page.evaluate(() => ({ mastery: window.__e2e.getProfile().skillMastery['multiply:einmaleins-sequence'],

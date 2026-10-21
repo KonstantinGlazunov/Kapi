@@ -1350,3 +1350,7 @@ body.game-active .app-shell { padding-bottom: max(6px, env(safe-area-inset-botto
 body.game-active.force-ultra .play-card #gameMascot { min-height: 0; }
 /* Dense decimal/fraction hints need the space above the input on short screens. */
 body.game-active.force-ultra .play-card.detailed-hint .answer-area { margin-top: 0; }
+
+/* Training focuses on the task and Kapi; totals remain on the result screen.
+   Keep the status nodes for session/localization updates, without reserving space. */
+body.game-active .game-status { display: none; }

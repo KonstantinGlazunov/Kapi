@@ -225,3 +225,25 @@ test('minor pace improvement and later record emit mutually exclusive events wit
   assert.equal(batches.filter(events => events.includes('personalRecord')).length, 1);
   assert.ok(batches.every(events => !(events.includes('speedImproved') && events.includes('personalRecord'))));
 });
+
+test('inline celebration survives advancement but never restores stale answer feedback', () => {
+  const { env, app } = training();
+  app.motivation.handle([{ type: 'streak3' }], { surface: 'game' });
+  const announcement = env.elements.get('feedback').textContent;
+  assert.ok(announcement.length > 0);
+  env.advance(5100);
+  const normal = env.elements.get('feedback').textContent;
+  assert.notEqual(normal, announcement);
+  app.state.streak = 2;
+  app.submitAnswer(response(app.state.problem));
+  const milestone = env.elements.get('feedback').textContent;
+  env.advance(400);
+  assert.equal(env.elements.get('feedback').textContent, milestone);
+  env.advance(5000);
+  assert.equal(env.elements.get('feedback').textContent, 'Nächste Aufgabe');
+  app.motivation.handle([{ type: 'streak10' }], { surface: 'game' });
+  app.submitAnswer(response(app.state.problem) + 100);
+  const error = env.elements.get('feedback').textContent;
+  env.advance(6000);
+  assert.equal(env.elements.get('feedback').textContent, error);
+});
