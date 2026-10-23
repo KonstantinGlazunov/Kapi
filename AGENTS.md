@@ -48,3 +48,11 @@ When changing graphics, layout, animation, or visual design:
 4. Do not claim a 9/10 result without inspecting the final screenshots. If the target cannot be met, report the actual score, remaining defects, and blocker. Keep functional, accessibility, and mobile layout checks in addition to the visual review.
 
 This review is required before considering a visual change complete. Store or link representative final screenshots so the result can be reviewed.
+
+## Beta preview for manual review
+
+- Kapi-beta (https://github.com/KonstantinGlazunov/Kapi-beta) is the fast manual-preview repository authorized by the user on 2026-10-23. Its Pages site is a cloud preview, not a local server.
+- Publish candidate application files to Kapi-beta/site/ for quick user review when requested. Its existing pages.yml deploys site/ from main without automated tests; do not add test gates there unless requested.
+- Preserve the beta deployment workflow and explicitly track the source Kapi branch/commit used for each preview. Beta approval does not itself authorize merging or publishing the production Kapi release.
+- Keep production checks and safe PWA update rules in Kapi. Kapi-beta does not replace them. When preview assets change, update the worker/cache version as needed so installed beta clients can receive the preview safely.
+- Current task scope is Kapi and Kapi-beta only. Changes to web_designer require a separate user instruction.
