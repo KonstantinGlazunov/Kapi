@@ -2122,6 +2122,9 @@ function makePowerProblem(max, mastered) {
     $("rewardReveal").innerHTML = "";
     $("progressFill").style.width = "100%";
     showScreen($("resultScreen"));
+    soundManager.playPresentationMusic({ onEnded: () => {
+      if (kapi.surface === "result" && ["dance", "trainingFinished"].includes(kapi.state)) kapi.reset("result", "idle");
+    } }).catch(() => {});
     const events = [...(state.finalMotivationEvents || []), { type: "trainingComplete", total: TOTAL }];
     if (perfect) events.push({ type: "perfectTraining", total: TOTAL });
     motivation.handle(events, { batchId: "completion", surface: "result" });
@@ -2335,9 +2338,7 @@ function makePowerProblem(max, mastered) {
     });
     return new window.KapiStateMachine(animator, {
       onStateChange(animationState, surface) {
-        if (surface === "result" && ["dance", "trainingFinished"].includes(animationState)) {
-          soundManager.playDanceMusic().catch(() => {});
-        } else soundManager.stopChannel("music");
+        if (surface !== "result") soundManager.stopChannel("music");
       },
       soundPlayer(type, animationState) {
         if (animationState === "hey") {
