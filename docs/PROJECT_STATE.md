@@ -282,4 +282,20 @@ Kevin MacLeod, с немедленным слиянием и публикаци�
 версиях декодировал WAV 6.667 с (RMS 0.076), запустил loop и проверил mute,
 повторный запуск и выход без ошибок страницы. Evidence:
 `/workspace/artifacts/beta-result/music-browser.cjs` и `music-*-dance.png`.
-Публикация и публичные worker/файлы проверяются после слияния; результат ниже.
+Публикация и публичные worker/файлы проверены после слияния; результат ниже.
+
+PR публикации: https://github.com/KonstantinGlazunov/Kapi/pull/19 — MERGED,
+коммит `b8c01c7`; workflow production 40269788263. Beta `7c3e6ba`,
+workflow 40269759975 success; опубликованные app/audio/worker/WAV совпали
+с локальными проверенными файлами. Production CI и deploy завершены успешно.
+
+
+Фактическая публикация проверена 2026-10-26: workflow 40269788263 — success,
+включая Chromium/WebKit, mobile, guidance, intro, install и deploy. На GitHub
+Pages и https://erstellen-websiten.de/kapi/ worker v82, app.js, kapi-sound.js и
+`assets/sounds/dance-music.wav` совпадают побайтно с проверенными файлами;
+HTML обоих адресов содержит атрибуцию Kevin MacLeod / CC BY 4.0.
+PR №19 слит, production `b8c01c7`; beta DEMO 9 `7c3e6ba` опубликована и
+проверена. Проверка публичных файлов выполнена с проверкой HTTPS; браузерные
+аудиопроверки выполнены локально, доступ к TLS Chromium на публичном адресе
+в этой среде по-прежнему ограничен доверием сертификату прокси.
