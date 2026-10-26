@@ -113,7 +113,7 @@
 
     stopAll() { this.channels.forEach((_, channel) => this.stopChannel(channel)); }
 
-    async playDanceMusic() {
+    async playPresentationMusic({ onEnded } = {}) {
       if (!this.isEnabled() || !this.unlocked) return false;
       this.stopChannel("music");
       const request = this.musicRequest;
@@ -126,15 +126,16 @@
       const gain = this.context.createGain();
       const now = this.context.currentTime;
       source.buffer = buffer;
-      source.loop = true;
+      source.loop = false;
       gain.gain.setValueAtTime(.0001, now);
       gain.gain.exponentialRampToValueAtTime(.22, now + .16);
       source.connect(gain).connect(this.context.destination);
-      const entry = { priority: 60, until: Infinity, nodes: [{ source, gain }] };
+      const entry = { priority: 60, until: now + buffer.duration, nodes: [{ source, gain }] };
       this.channels.get("music").add(entry);
       source.onended = () => {
         source.disconnect(); gain.disconnect();
         this.channels.get("music").delete(entry);
+        if (request === this.musicRequest) onEnded?.();
       };
       source.start(now);
       return true;

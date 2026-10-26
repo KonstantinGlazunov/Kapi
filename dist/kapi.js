@@ -68,10 +68,8 @@
     armRightForearm: "assets/kapi-rig-v4/arm-right-forearm.png",
     pawLeft: "assets/kapi-rig-v3/paw-left.png",
     pawRight: "assets/kapi-rig-v3/paw-right.png",
-    legLeft: "assets/kapi-rig-v3/leg-left.png",
-    legRight: "assets/kapi-rig-v3/leg-right.png",
-    footLeft: "assets/kapi-rig-v3/foot-left.png",
-    footRight: "assets/kapi-rig-v3/foot-right.png"
+    legLeft: "assets/kapi-rig-v5/leg-and-paw.png",
+    legRight: "assets/kapi-rig-v5/leg-and-paw.png"
   };
 
   const ARM_JOINTS = {
@@ -80,8 +78,8 @@
   };
 
   const LEG_JOINTS = {
-    left: { leg: "legLeft", foot: "footLeft", hip: [229, 48], ankle: [211, 288], footAnkle: [238, 24] },
-    right: { leg: "legRight", foot: "footRight", hip: [41, 48], ankle: [59, 286], footAnkle: [52, 24] }
+    left: { asset: "legLeft", hip: [600, 150], mirror: 1 },
+    right: { asset: "legRight", hip: [600, 150], mirror: -1 }
   };
 
   class KapiAnimator {
@@ -185,7 +183,7 @@
     }
 
     introReady() {
-      const required = ["head", "torso", "armLeftUpper", "armRightUpper", "armLeftForearm", "armRightForearm", "pawLeft", "pawRight", "legLeft", "legRight", "footLeft", "footRight"];
+      const required = ["head", "torso", "armLeftUpper", "armRightUpper", "armLeftForearm", "armRightForearm", "pawLeft", "pawRight", "legLeft", "legRight"];
       const outfit = this.effectiveOutfit("idle");
       outfit.neck ||= "neck-scarf";
       outfit.back ||= "backpack";
@@ -436,9 +434,7 @@
         rightElbow: 1.22 - idle * .018,
         rightWrist: -.10 + idle * .015,
         leftHip: .02,
-        rightHip: -.02,
-        leftAnkle: -.03,
-        rightAnkle: .03
+        rightHip: -.02
       };
       if (this.reducedMotion) {
         if (state === "wrong") result.head = -.035;
@@ -485,8 +481,6 @@
           result.rightElbow = 1.22 - flight * .26;
           result.leftHip = .02 + flight * .13;
           result.rightHip = -.02 - flight * .13;
-          result.leftAnkle = -.03 - flight * .28 + anticipation * .12;
-          result.rightAnkle = .03 + flight * .28 - anticipation * .12;
         } else {
           const strength = { cheer: 1, recovered: .88, mastered: 1 }[variant] ?? 1;
           result.head = Math.sin(p * Math.PI * 2) * .018 * strength;
@@ -581,8 +575,6 @@
         result.rightWrist = -.10 + upRight * .12;
         result.leftHip = .02 - beat * .10;
         result.rightHip = -.02 - beat * .10;
-        result.leftAnkle = -.03 + beat * .14;
-        result.rightAnkle = .03 + beat * .14;
       } else if (state === "levelUp") {
         const p = Math.sin(Math.min(1, elapsed / 1500) * Math.PI);
         result.rightShoulder = -.04 - p * 1.25;
@@ -627,22 +619,16 @@
       context.restore();
     }
 
-    drawLegLayer(context, side, hipX, hipY, scale, hipRotation, ankleRotation, layer) {
+    drawLeg(context, side, hipX, hipY, hipRotation) {
       const joint = LEG_JOINTS[side];
-      const leg = this.loadImage(RIG_PARTS[joint.leg]);
-      const foot = this.loadImage(RIG_PARTS[joint.foot]);
-      if (!leg.ready || !foot.ready) return;
+      const leg = this.loadImage(RIG_PARTS[joint.asset]);
+      if (!leg.ready) return;
       context.save();
       context.translate(hipX, hipY);
       context.rotate(hipRotation);
-      context.scale(scale, scale);
-      if (layer === "leg") {
-        context.drawImage(leg.image, -joint.hip[0], -joint.hip[1]);
-      } else {
-        context.translate(joint.ankle[0] - joint.hip[0], joint.ankle[1] - joint.hip[1]);
-        context.rotate(ankleRotation);
-        context.drawImage(foot.image, -joint.footAnkle[0], -joint.footAnkle[1]);
-      }
+      // One continuous hip-to-toes sprite; no independently moving ankle or foot.
+      context.scale(.18 * joint.mirror, .10);
+      context.drawImage(leg.image, -joint.hip[0], -joint.hip[1]);
       context.restore();
     }
 
@@ -688,16 +674,14 @@
         this.drawCosmetic(context, "back", outfit.back, pose, limbs);
         const flagArm = options.state === "flag" && this.loadImage(RIG_PARTS.armRightFlag).ready;
         const flagWave = Math.sin((options.elapsed || 0) / 1000 * 5.6);
-        this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "leg");
-        this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "leg");
+        this.drawLeg(context, "left", 319, 470, limbs.leftHip);
+        this.drawLeg(context, "right", 381, 470, limbs.rightHip);
         this.drawPart(context, "torso", 350, 389, .69, 0, 280.5, 229);
         this.drawCosmetic(context, "neck", outfit.neck, pose, limbs);
         this.drawCosmetic(context, "badge", outfit.badge, pose, limbs);
         this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "upper");
         if (flagArm) this.drawPart(context, "armRightFlag", 440, 345, .58, flagWave * .035, 150, 570);
         else this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "upper");
-        this.drawLegLayer(context, "left", 319, 470, .37, limbs.leftHip, limbs.leftAnkle, "foot");
-        this.drawLegLayer(context, "right", 381, 470, .37, limbs.rightHip, limbs.rightAnkle, "foot");
         this.drawArmLayer(context, "left", 275, 304, .365, limbs.leftShoulder, limbs.leftElbow, limbs.leftWrist, "lower");
         if (!flagArm) this.drawArmLayer(context, "right", 425, 304, .365, limbs.rightShoulder, limbs.rightElbow, limbs.rightWrist, "lower");
       }
