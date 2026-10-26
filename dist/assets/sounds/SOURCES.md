@@ -1,6 +1,6 @@
 # Sound sources
 
-All bundled sounds are ready-made stock assets released under Creative Commons Zero (CC0). Attribution is not required. The files were converted to mono PCM WAV and volume-adjusted for consistent in-app playback.
+Bundled sound effects below are stock assets released under Creative Commons Zero (CC0). The dance music excerpt is separately licensed CC BY 4.0 with attribution. The files were converted to mono PCM WAV and volume-adjusted for consistent in-app playback.
 
 ## Kenney — Interface Sounds
 
@@ -23,3 +23,17 @@ All bundled sounds are ready-made stock assets released under Creative Commons Z
 - License: CC0 / public domain equivalent
 - Used for: `party.wav`
 - Processing: shortened fade-out and volume adjustment only
+
+
+## Kevin MacLeod — Monkeys Spinning Monkeys (dance music)
+
+- Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400011
+- Original audio: https://incompetech.com/music/royalty-free/mp3-royaltyfree/Monkeys%20Spinning%20Monkeys.mp3
+- Author: Kevin MacLeod (incompetech.com)
+- License: Creative Commons Attribution 4.0, https://creativecommons.org/licenses/by/4.0/
+- Attribution: “Monkeys Spinning Monkeys” Kevin MacLeod (incompetech.com), licensed under CC BY 4.0.
+- File: `dance-music.wav`. Changes: 0–6.666667 second excerpt, 80ms fade-in,
+  166.667ms fade-out, mono 32kHz PCM WAV. Runtime volume .22 with short fades.
+- Source MP3 SHA-256: `a5bb345c23849ad0786aa0bc5157a9f2d4039660fe00282e55754d475f36dc14`.
+- In-app attribution is available in Settings. Playback starts with the final
+  result dance, loops while dancing, and stops on leaving, mute or tab hiding.

@@ -2334,6 +2334,11 @@ function makePowerProblem(max, mastered) {
       wardrobeHost: $("wardrobeMascot")
     });
     return new window.KapiStateMachine(animator, {
+      onStateChange(animationState, surface) {
+        if (surface === "result" && ["dance", "trainingFinished"].includes(animationState)) {
+          soundManager.playDanceMusic().catch(() => {});
+        } else soundManager.stopChannel("music");
+      },
       soundPlayer(type, animationState) {
         if (animationState === "hey") {
           window.clearTimeout(greetingTimer);
