@@ -144,6 +144,9 @@ async function run() {
       await training.locator('#homeButton').click();
       await training.locator('#updateButton').click();
       await training.waitForFunction(() => !window.trainingIdentity);
+      // The old window disappears before deferred app.js restores the profile.
+      // Assert the restored XP after the new document has finished loading.
+      await training.waitForLoadState('load');
       assert.equal(await training.locator('#totalXpValue').innerText(), '246');
       if (offlineSupported) await context.setOffline(true);
       await offline.reload();

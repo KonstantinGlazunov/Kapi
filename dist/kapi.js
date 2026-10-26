@@ -688,7 +688,9 @@
       if (drawHead) {
         this.drawPart(context, headAsset, 350 + limbs.headX, 190 + limbs.headY, .70, limbs.head, 244, 215, limbs.headScaleX, limbs.headScaleY);
         this.drawCosmetic(context, "hat", outfit.hat, pose, limbs);
-        this.drawCosmetic(context, "glasses", outfit.glasses, pose, limbs);
+        // This head artwork already includes star glasses. Check the actual
+        // resolved head so ordinary/continuation/fallback heads keep eyewear.
+        if (headAsset !== "headDance") this.drawCosmetic(context, "glasses", outfit.glasses, pose, limbs);
       }
       context.restore();
     }
