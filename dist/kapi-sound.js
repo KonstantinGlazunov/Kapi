@@ -26,6 +26,7 @@
   const PRIORITY = { start: 1, correct: 10, wrong: 20, recovered: 30, mastered: 35, flag: 40, speedImproved: 45, party: 50, dance: 60, personalRecord: 70, levelUp: 80, complete10: 90, complete20: 90, complete30: 90, perfect: 95, rewardUnlock: 96 };
   const ALIASES = { streak: "flag", handshake: "levelUp", complete: "complete20" };
   const SAMPLE_SOURCES = {
+    danceMusic: "assets/sounds/dance-music.wav",
     start: "assets/sounds/start.wav",
     correct: "assets/sounds/correct.wav",
     wrong: "assets/sounds/wrong.wav",
@@ -48,9 +49,11 @@
       this.contextFactory = options.contextFactory || (() => new (window.AudioContext || window.webkitAudioContext)());
       this.context = null;
       this.unlocked = false;
-      this.channels = new Map(["feedback", "achievement", "voice", "foley"].map((name) => [name, new Set()]));
+      this.channels = new Map(["feedback", "achievement", "voice", "foley", "music"].map((name) => [name, new Set()]));
       this.lastCorrect = -1;
       this.samples = new Map();
+      this.sampleLoads = new Map();
+      this.musicRequest = 0;
       this.preloadStarted = false;
     }
 
@@ -68,11 +71,12 @@
       if (this.preloadStarted || !this.context?.decodeAudioData || typeof window.fetch !== "function") return;
       this.preloadStarted = true;
       Object.entries(SAMPLE_SOURCES).forEach(([type, source]) => {
-        window.fetch(source)
+        const load = window.fetch(source)
           .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error("audio unavailable")))
           .then((buffer) => this.context.decodeAudioData(buffer))
-          .then((buffer) => this.samples.set(type, buffer))
-          .catch(() => {});
+          .then((buffer) => { this.samples.set(type, buffer); return buffer; })
+          .catch(() => null);
+        this.sampleLoads.set(type, load);
       });
     }
 
@@ -82,6 +86,18 @@
     }
 
     stopChannel(channel) {
+      if (channel === "music") {
+        this.musicRequest++;
+        const active = this.channels.get(channel);
+        const now = this.context?.currentTime || 0;
+        active?.forEach((entry) => entry.nodes.forEach(({ source, gain }) => {
+          gain.gain.cancelScheduledValues(now);
+          gain.gain.setTargetAtTime(.0001, now, .035);
+          try { source.stop(now + .16); } catch { /* Already stopped. */ }
+        }));
+        active?.clear();
+        return;
+      }
       const active = this.channels.get(channel);
       active?.forEach((entry) => {
         entry.nodes.forEach(({ oscillator, source, gain }) => {
@@ -96,6 +112,33 @@
     }
 
     stopAll() { this.channels.forEach((_, channel) => this.stopChannel(channel)); }
+
+    async playDanceMusic() {
+      if (!this.isEnabled() || !this.unlocked) return false;
+      this.stopChannel("music");
+      const request = this.musicRequest;
+      this.unlock();
+      if (!this.context) return false;
+      const buffer = this.samples.get("danceMusic") || await this.sampleLoads.get("danceMusic");
+      // Leaving the scene or muting while decoding must not start late music.
+      if (!buffer || request !== this.musicRequest || !this.isEnabled()) return false;
+      const source = this.context.createBufferSource();
+      const gain = this.context.createGain();
+      const now = this.context.currentTime;
+      source.buffer = buffer;
+      source.loop = true;
+      gain.gain.setValueAtTime(.0001, now);
+      gain.gain.exponentialRampToValueAtTime(.22, now + .16);
+      source.connect(gain).connect(this.context.destination);
+      const entry = { priority: 60, until: Infinity, nodes: [{ source, gain }] };
+      this.channels.get("music").add(entry);
+      source.onended = () => {
+        source.disconnect(); gain.disconnect();
+        this.channels.get("music").delete(entry);
+      };
+      source.start(now);
+      return true;
+    }
 
     play(rawType, options = {}) {
       const type = ALIASES[rawType] || rawType;
