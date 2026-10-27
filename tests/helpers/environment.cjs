@@ -27,6 +27,8 @@ function environment({ app = false, query = '', seed = 0x4b415049, browserLangua
     addEventListener(k, fn) { this.listeners[k] = fn; }
     querySelector(k) { if (!this.queries.has(k)) this.queries.set(k, new Element()); return this.queries.get(k); }
     querySelectorAll() { return []; }
+    replaceChildren(...es) { this.children = es; }
+    animate() { return { cancel() {} }; }
     appendChild(e) { this.children.push(e); }
     append(...es) { this.children.push(...es); }
     getBoundingClientRect() { return { top: 0, bottom: 100, left: 0, right: 100, width: 100, height: 100 }; }

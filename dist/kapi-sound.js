@@ -126,11 +126,11 @@
       const gain = this.context.createGain();
       const now = this.context.currentTime;
       source.buffer = buffer;
-      source.loop = false;
+      source.loop = true;
       gain.gain.setValueAtTime(.0001, now);
       gain.gain.exponentialRampToValueAtTime(.22, now + .16);
       source.connect(gain).connect(this.context.destination);
-      const entry = { priority: 60, until: now + buffer.duration, nodes: [{ source, gain }] };
+      const entry = { priority: 60, until: Infinity, nodes: [{ source, gain }] };
       this.channels.get("music").add(entry);
       source.onended = () => {
         source.disconnect(); gain.disconnect();

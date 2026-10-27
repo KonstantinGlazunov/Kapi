@@ -271,8 +271,8 @@ test('application completes 10/20/30 answers once, with only one final cue', () 
     assert.equal(app.getHistory().length, 1);
     assert.equal(app.getHistory()[0].perfect, true);
     assert.equal(app.getHistory()[0].total, total);
-    assert.equal(app.machine.state, 'perfectTraining');
-    assert.equal(sounds.filter(x => x === 'perfect').length, 1);
+    assert.equal(app.machine.state, 'trainingFinished');
+    assert.equal(sounds.filter(x => x === 'perfect').length, 0);
     assert.equal(sounds.filter(x => x.startsWith('complete')).length, 0);
     env.advance(10000);
     assert.equal(app.getHistory().length, 1);
@@ -296,7 +296,7 @@ test('error recovery comes from two actual first-try repeats; retry is not perfe
   env.advance(350);
   for (let i = 1; i < 10; i++) { app.submitAnswer(response(app.state.problem)); env.advance(350); }
   assert.equal(app.getHistory()[0].perfect, false);
-  assert.equal(app.machine.state, 'completion');
+  assert.equal(app.machine.state, 'trainingFinished');
 });
 
 test('leaving or restarting cancels delayed advancement', () => {

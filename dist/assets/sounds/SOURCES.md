@@ -1,6 +1,6 @@
 # Sound sources
 
-Bundled sound effects below are stock assets released under Creative Commons Zero (CC0). The dance music excerpt is separately licensed CC BY 4.0 with attribution. The files were converted to mono PCM WAV and volume-adjusted for consistent in-app playback.
+Bundled sound effects below are stock assets released under Creative Commons Zero (CC0). The presentation music is separately licensed CC BY 4.0 with attribution. The files were converted to mono PCM WAV and volume-adjusted for consistent in-app playback.
 
 ## Kenney — Interface Sounds
 
@@ -32,9 +32,7 @@ Bundled sound effects below are stock assets released under Creative Commons Zer
 - Author: Kevin MacLeod (incompetech.com)
 - License: Creative Commons Attribution 4.0, https://creativecommons.org/licenses/by/4.0/
 - Attribution: “Monkeys Spinning Monkeys” Kevin MacLeod (incompetech.com), licensed under CC BY 4.0.
-- File: `dance-music.wav`. Changes: 0–6.666667 second excerpt, 80ms fade-in,
-  166.667ms fade-out, mono 32kHz PCM WAV. Runtime volume .22 with short fades.
-- Source MP3 SHA-256: `a5bb345c23849ad0786aa0bc5157a9f2d4039660fe00282e55754d475f36dc14`.
-- In-app attribution is available in Settings. Playback starts with the result presentation and plays once to the end of
-  four bars (16 beats at 144 BPM, 6.666667 s). Scene changes within the
-  presentation do not cut the music. Leaving, mute or tab hiding still stop it.
+- File: `dance-music.wav`. Full track, mono 32kHz PCM WAV, decoded from
+  the beta licensed MP3. Runtime volume .22 with short entry/exit fades.
+- Playback: starts with the dance, continues through discoveries and results,
+  loops until user interaction, scene exit, mute or tab hiding.

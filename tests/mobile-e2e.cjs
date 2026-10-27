@@ -209,8 +209,9 @@ async function run() {
         api.state.score = 0;
         api.finishTraining();
       });
-      await page.waitForTimeout(2200);
-      assert.ok((await page.locator('#rewardReveal').innerText()).includes('Wochenziel geschafft'));
+      await page.waitForFunction(() => document.querySelector("#resultScreen").dataset.showPhase === "summary");
+      await page.locator("#weeklyResult").waitFor({ state: "visible" });
+      assert.ok((await page.locator('#weeklyResult').innerText()).includes('Wochenziel geschafft'));
       if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-weekly-reveal.png`) });
       const resultLayout = await page.evaluate(() => ({ nextBottom: document.querySelector('#againButton').getBoundingClientRect().bottom,
         historyBottom: document.querySelector('#resultStatsButton').getBoundingClientRect().bottom,
