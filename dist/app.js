@@ -274,6 +274,7 @@
     stageAdvancedDuringSession: false
   };
 
+  const reduceResultMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const $ = (id) => document.getElementById(id);
   const screens = [$("startScreen"), $("stageIntroScreen"), $("gameScreen"), $("resultScreen")];
   let stageIntroTimer;
@@ -286,6 +287,28 @@
   let solutionTimer = 0;
   let rewardRevealTimer = 0;
   let rewardGoalTimer = 0;
+  let resultShowTimer = 0;
+  let resultPhaseTimer = 0;
+  let resultGiftAnimations = [];
+  let revealResultReward = null;
+
+  function endResultShow(keepMusic = false) {
+    resultGiftAnimations.forEach((animation) => animation.cancel());
+    resultGiftAnimations = [];
+    window.clearTimeout(resultShowTimer);
+    window.clearTimeout(resultPhaseTimer);
+    window.clearTimeout(rewardRevealTimer);
+    window.clearTimeout(rewardGoalTimer);
+    revealResultReward?.(false);
+    revealResultReward = null;
+    dismissMotivation();
+    $("resultScreen").dataset.showPhase = "summary";
+    $("skipResultShow").classList.add("hidden");
+    $("resultRewardProgress").classList.remove("hidden");
+    $("confetti").innerHTML = "";
+    if (!keepMusic) soundManager?.stopAll();
+    kapi?.reset("result", $("resultScreen").classList.contains("active") && !reduceResultMotion() ? "trainingFinished" : "idle");
+  }
   let sessionSequence = 0;
 
   function applyLanguage() {
@@ -658,6 +681,11 @@
     window.cancelAnimationFrame(stageIntroFrame);
     if (target !== $("gameScreen")) { window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
     if (target !== $("resultScreen")) {
+      window.clearTimeout(resultPhaseTimer);
+      window.clearTimeout(resultShowTimer);
+      resultGiftAnimations.forEach((animation) => animation.cancel());
+      resultGiftAnimations = [];
+      revealResultReward = null;
       window.clearTimeout(rewardRevealTimer);
       window.clearTimeout(rewardGoalTimer);
     }
@@ -2122,14 +2150,13 @@ function makePowerProblem(max, mastered) {
     $("rewardReveal").innerHTML = "";
     $("progressFill").style.width = "100%";
     showScreen($("resultScreen"));
-    soundManager.playPresentationMusic({ onEnded: () => {
-      if (kapi.surface === "result" && ["dance", "trainingFinished"].includes(kapi.state)) kapi.reset("result", "idle");
-    } }).catch(() => {});
-    const events = [...(state.finalMotivationEvents || []), { type: "trainingComplete", total: TOTAL }];
-    if (perfect) events.push({ type: "perfectTraining", total: TOTAL });
-    motivation.handle(events, { batchId: "completion", surface: "result" });
+    dismissMotivation();
+    kapi.reset("result", "idle");
+    let rewardRevealed = false;
     if (unlocked.length || weeklyGoalComplete) {
-      rewardRevealTimer = window.setTimeout(() => {
+      revealResultReward = (animate = true) => {
+        if (rewardRevealed) return;
+        rewardRevealed = true;
         if (!$("resultScreen").classList.contains("active")) return;
         dismissMotivation();
         const earned = unlocked.map((event) => rewards.getRewards().find((reward) => reward.id === event.rewardId));
@@ -2142,7 +2169,7 @@ function makePowerProblem(max, mastered) {
         $("rewardReveal").innerHTML = `<strong>${weeklyGoalComplete && earned.length ? copy.weeklyAndReward : earned.length ? copy.newThings(earned.length) : copy.weeklyDone}</strong>${earned.length ? `<div>${earned.map((reward) =>
           `<img src="assets/cosmetics/${reward.asset}.svg" alt="">${rewardName(reward)} ${copy.rewardUnlocked}`).join(" · ")}</div>` : ""}${weeklyGoalComplete && earned.length ? `<div>${copy.weeklyDone}</div>` : ""}`;
         $("rewardReveal").classList.remove("hidden");
-        kapi.trigger("rewardReveal", { surface: "result", rewardAsset: earned[0]?.asset });
+        if (animate) kapi.trigger("rewardReveal", { surface: "result", rewardAsset: earned[0]?.asset });
         rewardGoalTimer = window.setTimeout(() => {
           $("resultRewardProgress").classList.remove("hidden");
           if (weeklyGoalComplete) {
@@ -2150,10 +2177,50 @@ function makePowerProblem(max, mastered) {
             $("weeklyResult").classList.remove("hidden");
           }
         }, 1600);
-      }, perfect ? 2500 : TOTAL === 30 ? 2400 : 2000);
+      };
     }
     state.finalMotivationEvents = [];
-    makeConfetti(perfect ? 36 : TOTAL === 10 ? 16 : 28);
+    const ru = language === "ru";
+    const hasGift = unlocked.length > 0;
+    $("skipResultShow").textContent = ru ? "Пропустить" : "Überspringen";
+    $("skipResultShow").classList.remove("hidden");
+    $("resultShowProgress").textContent = `${ru ? "Шаг вперёд" : "Ein Schritt weiter"} · ${copy.homeStage(state.stage)}`;
+    $("resultScreen").dataset.hasGift = String(hasGift);
+    const earnedItems = unlocked.map((event) => rewards.getRewards().find((item) => item.id === event.rewardId));
+    const showItems = (index = 0) => {
+      if (index >= earnedItems.length) { endResultShow(true); return; }
+      $("resultScreen").dataset.showPhase = "gift";
+      $("resultShowTitle").textContent = ru ? "Новое для Капи!" : "Neu für Kapi!";
+      $("resultGiftName").textContent = rewardName(earnedItems[index]);
+      playGiftPresentation(earnedItems[index]);
+      resultPhaseTimer = window.setTimeout(() => showItems(index + 1), 2600);
+    };
+    $("resultScreen").dataset.showPhase = "celebrate";
+    $("resultShowTitle").textContent = ru ? "Тренировка окончена!" : "Training beendet!";
+    soundManager.playPresentationMusic().catch(() => {});
+    if (reduceResultMotion()) {
+      endResultShow(true);
+      return;
+    }
+    kapi.reset("result", "trainingFinished");
+    makeConfetti(perfect ? 36 : 28);
+    resultPhaseTimer = window.setTimeout(() => {
+      $("confetti").innerHTML = "";
+      kapi.reset("result", "idle");
+      showItems();
+    }, 4000);
+  }
+
+  function playGiftPresentation(reward) {
+    resultGiftAnimations.forEach((animation) => animation.cancel());
+    resultGiftAnimations = [];
+    const item = $("resultGiftItem");
+    item.src = `assets/cosmetics/${reward.asset}.svg`;
+    resultGiftAnimations.push(item.animate([
+      { opacity: 0, transform: "translateY(60px) scale(.35) rotate(-18deg)" },
+      { opacity: 1, transform: "translateY(-12px) scale(1.12) rotate(5deg)", offset: .65 },
+      { opacity: 1, transform: "translateY(0) scale(1) rotate(0deg)" }
+    ], { duration: 900, easing: "cubic-bezier(.2,.7,.3,1)", fill: "both" }));
   }
 
   function saveSession(session) {
@@ -2266,14 +2333,38 @@ function makePowerProblem(max, mastered) {
   }
 
   function makeConfetti(count = 28) {
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+    if (reduceResultMotion()) {
       $("confetti").innerHTML = "";
       return;
     }
-    const colors = ["#0f766e", "#f8c438", "#e76555", "#46b8aa", "#ffffff"];
-    $("confetti").innerHTML = Array.from({ length: count }, (_, i) =>
-      `<i class="confetti-piece" style="left:${randomInt(2, 98)}%;background:${colors[i % colors.length]};animation-delay:${(Math.random() * 1.8).toFixed(2)}s;animation-duration:${(2.1 + Math.random() * 1.7).toFixed(2)}s"></i>`
-    ).join("");
+    const colors = ["#0f766e", "#f8c438", "#e76555", "#46b8aa", "#ffc857"];
+    const container = $("confetti");
+    container.replaceChildren();
+    const origins = [[18, 48], [82, 40], [30, 32], [70, 27]];
+    const radius = Math.min(container.clientWidth * .48, 190);
+    // Each burst fans out radially from one point, rather than falling in a row.
+    origins.forEach(([left, top], burst) => {
+      for (let i = 0; i < Math.ceil(count / 2); i++) {
+        const piece = document.createElement("i");
+        piece.className = "confetti-piece";
+        piece.style.left = `${left}%`;
+        piece.style.top = `${top}%`;
+        piece.style.background = colors[(i + burst) % colors.length];
+        container.appendChild(piece);
+        const angle = (i / Math.ceil(count / 2)) * Math.PI * 2 + Math.random() * .25;
+        const distance = radius * (.55 + Math.random() * .45);
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance - 65;
+        const spin = randomInt(-540, 540);
+        piece.animate([
+          { opacity: 0, transform: "translate(-50%, -50%) scale(.2) rotate(0deg)", offset: 0 },
+          { opacity: 1, offset: .08 },
+          { opacity: 1, transform: `translate(${x * .72}px, ${y}px) scale(1) rotate(${spin * .6}deg)`, offset: .5 },
+          { opacity: 0, transform: `translate(${x}px, ${y + 150}px) scale(.65) rotate(${spin}deg)`, offset: 1 }
+        ], { duration: 1600 + Math.random() * 600, delay: burst * 620 + Math.random() * 100,
+          easing: "cubic-bezier(.12,.5,.35,1)", fill: "both" });
+      }
+    });
   }
 
   let motivationTimer = 0;
@@ -2777,6 +2868,16 @@ function makePowerProblem(max, mastered) {
     window.__kapiDemo = { play, reset, getOutfit: () => demoMotivation.getOutfit() };
   }
 
+  document.addEventListener("click", () => {
+    if ($("resultScreen").classList.contains("active")) soundManager?.stopChannel("music");
+  }, true);
+  document.addEventListener("pointerdown", () => {
+    if ($("resultScreen").classList.contains("active")) soundManager?.stopChannel("music");
+  }, true);
+  document.addEventListener("keydown", () => {
+    if ($("resultScreen").classList.contains("active")) soundManager?.stopChannel("music");
+  }, true);
+  $("skipResultShow").addEventListener("click", () => { endResultShow(); $("againButton").focus(); });
   $("startButton").addEventListener("click", () => startTrainingWithIntro());
   $("homeMascot").addEventListener("click", playHomeReaction);
   document.querySelector(".app-shell").addEventListener("pointerdown", (event) => {

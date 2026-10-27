@@ -80,13 +80,21 @@
     <section class="screen result-screen" id="resultScreen" aria-labelledby="resultTitle">
       <div class="confetti" id="confetti" aria-hidden="true"></div>
       <div class="result-card">
+        <button id="skipResultShow" class="text-button result-skip hidden" type="button">Пропустить</button>
+        <h2 id="resultShowTitle" class="result-show-title" role="status" aria-live="polite"></h2>
+        <div class="result-gift-stage" id="resultGiftStage" aria-live="polite">
+          <div class="gift-aura"></div>
+          <img id="resultGiftItem" class="gift-item" src="assets/cosmetics/star-badge.svg" alt="">
+          <strong id="resultGiftName"></strong>
+        </div>
         <div class="result-mascot kapi-host" id="resultMascot" aria-hidden="true"><canvas class="kapi-rive-canvas" id="resultMascotCanvas"></canvas></div>
         <span class="eyebrow" id="resultEyebrow">Тренировка завершена</span>
         <h1 id="resultTitle">Отличная работа!</h1>
         <p id="resultMotivation" class="feedback hidden" role="status" aria-live="polite"></p>
+        <div id="resultShowProgress" class="result-show-progress"></div>
         <div class="result-grid">
           <div><strong id="correctValue">18</strong><span id="correctLabel">верно из 20</span></div>
-          <div><strong id="averageValue">6,2 c</strong><span id="averageLabel">в среднем</span></div>
+          <div class="result-average"><strong id="averageValue">6,2 c</strong><span id="averageLabel">в среднем</span></div>
           <div><strong id="starsValue">48 XP</strong><span id="xpLabel">опыта</span></div>
         </div>
         <p class="result-note" id="resultNote"></p>
@@ -126,7 +134,7 @@
     </div>
     <p class="settings-hint" id="settingsHint"></p>
     <div class="settings-content" id="settingsContent"></div>
-    <p class="settings-hint">♪ <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400011" target="_blank" rel="noopener">Monkeys Spinning Monkeys — Kevin MacLeod</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · Фрагмент / Ausschnitt</p>
+    <p class="settings-hint">♪ <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400011" target="_blank" rel="noopener">Monkeys Spinning Monkeys — Kevin MacLeod</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · Музыка / Musik</p>
   </dialog>
 
   <div class="install-prompt hidden" id="installPrompt" role="dialog" aria-modal="true" aria-labelledby="installTitle">

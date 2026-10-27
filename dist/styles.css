@@ -1363,3 +1363,139 @@ body.game-active .game-status { display: none; }
     padding: 0;
   }
 }
+
+/* Result show: one mascot, three phases, and stable separated final actions. */
+.result-show-title, .result-skip { display: none; }
+.result-screen .result-average { display: none; }
+.result-screen .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.result-screen[data-show-phase="summary"] .result-mascot { width: min(60vw, 230px); height: clamp(100px, 24vh, 220px); margin: 0 auto; }
+.result-screen[data-show-phase="summary"] .result-card { padding-top: 12px; }
+.result-screen[data-show-phase="summary"] #againButton { display: block; width: min(100%, 330px); margin: 16px auto 0; }
+.result-screen .result-card .share-button { margin-top: 20px; }
+.result-screen[data-show-phase="celebrate"], .result-screen[data-show-phase="gift"] { padding: 8px 0; }
+.result-screen[data-show-phase="celebrate"] .result-card,
+.result-screen[data-show-phase="gift"] .result-card {
+  display: flex; flex-direction: column; align-items: stretch;
+  min-height: 480px; height: calc(var(--app-height) - 110px); padding: 48px 18px 20px;
+  background: radial-gradient(ellipse at 50% 40%, #fff9d9, transparent 65%), var(--paper);
+}
+.result-screen:is([data-show-phase="celebrate"], [data-show-phase="gift"]) .result-skip {
+  display: block; position: absolute; top: 8px; right: 16px; margin: 0; min-height: 36px; font-size: .88rem;
+}
+.result-screen:is([data-show-phase="celebrate"], [data-show-phase="gift"]) .result-show-title {
+  display: block; order: 1; font-size: clamp(1.6rem, 6.8vw, 2.6rem); line-height: 1.12; margin: 8px 0; color: var(--teal-dark);
+}
+.result-screen:is([data-show-phase="celebrate"], [data-show-phase="gift"]) .result-mascot {
+  order: 2; flex: 1 1 0; min-height: 110px; width: 100%; height: auto; margin: 0; overflow: hidden;
+}
+.result-screen:is([data-show-phase="celebrate"], [data-show-phase="gift"]) :is(#resultEyebrow, #resultTitle, #resultMotivation, #resultNote, #weeklyResult, #againButton, #shareButton, #resultStatsButton) { display: none; }
+.result-screen[data-show-phase="celebrate"] .result-grid { order: 4; margin: 12px 0 0; animation: result-arrive .45s .3s both; }
+.result-screen[data-show-phase="celebrate"] .result-grid > div:nth-child(3) { animation: result-arrive .45s .6s both; }
+.result-screen[data-show-phase="celebrate"] #resultRewardGoal { display: none; }
+.result-screen[data-show-phase="gift"] .result-grid { display: none; }
+.result-screen[data-show-phase="gift"] #resultRewardGoal { order: 4; margin: 16px 0 0; animation: result-arrive .4s both; }
+@keyframes result-arrive { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (max-height: 700px) {
+  .result-screen[data-show-phase="summary"] .result-mascot { height: 105px; }
+  .result-screen[data-show-phase="summary"] .result-card h1 { font-size: 1.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .result-screen *, .result-screen *::before { animation: none !important; transition: none !important; }
+}
+.result-show-progress { display: none; }
+.result-screen[data-show-phase="celebrate"] .result-show-progress {
+  display: block; order: 5; margin-top: 10px; padding: 10px; border-radius: 14px;
+  background: var(--yellow-soft); color: var(--teal-dark); font-weight: 850; animation: result-arrive .45s 1s both;
+}
+.result-screen[data-show-phase="summary"] #resultEyebrow { display: none; }
+@media (max-height: 700px) {
+  .result-screen[data-show-phase="summary"] .result-mascot { height: 64px; }
+}
+.result-screen:is([data-show-phase="celebrate"], [data-show-phase="gift"]) .confetti { z-index: 3; }
+/* A user-selected full-motion demo may override the device preference here only.
+   Normal beta training continues to respect reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  body.result-preview.preview-full-motion .result-screen .result-grid,
+  body.result-preview.preview-full-motion .result-screen .result-grid > div:nth-child(3),
+  body.result-preview.preview-full-motion .result-screen #resultRewardGoal,
+  body.result-preview.preview-full-motion .result-screen .result-show-progress {
+    animation: result-arrive .45s ease both !important;
+  }
+
+}
+
+/* The gift has its own stage; Kapi enters only after the gift has emerged. */
+.result-gift-stage { display: none; }
+.result-screen[data-show-phase="gift"] .result-gift-stage {
+  display: block; position: relative; flex: 1 1 auto; min-height: 250px; order: 2;
+}
+.result-screen[data-show-phase="gift"] :is(.result-mascot, #resultRewardGoal) { display: none; }
+.result-screen[data-show-phase="celebrate"] .result-grid { display: none; }
+.result-screen[data-show-phase="celebrate"] #resultRewardGoal { display: block; order: 4; margin: 12px 0 0; }
+.result-screen[data-show-phase="celebrate"] .result-show-progress { display: none; }
+.gift-ground-shadow {
+  position: absolute; left: 50%; top: calc(60% + 108px); width: 178px; height: 18px;
+  transform: translateX(-50%); border-radius: 50%; background: #215b4525; filter: blur(9px);
+}
+.gift-box-body {
+  position: absolute; z-index: 3; left: 50%; top: 60%; width: 154px; height: 110px;
+  transform: translateX(-50%); border-radius: 4px 4px 15px 15px;
+  background: linear-gradient(90deg, #13988e 0 39%, #ffda69 39% 61%, #0b807a 61%);
+  box-shadow: inset 0 7px 0 #07554b70, 0 9px 18px #0c6e5d19;
+}
+.gift-box-body > span { position: absolute; inset: -8px 0 auto; height: 12px; border-radius: 50%; background: #075950; z-index: -1; }
+.gift-box-lid {
+  position: absolute; z-index: 4; left: 50%; top: calc(60% - 18px); width: 174px; height: 27px;
+  transform: translateX(-50%); border-radius: 5px; transform-origin: 24% 70%;
+  background: linear-gradient(90deg, #25b9aa 0 40%, #ffe38c 40% 60%, #18a398 60%);
+  box-shadow: 0 5px 8px #174e3926;
+}
+.gift-box-lid > i, .gift-box-lid > b {
+  position: absolute; bottom: 21px; width: 43px; height: 29px; border: 7px solid #ffd467;
+  border-radius: 65% 65% 25% 65%;
+}
+.gift-box-lid > i { right: 50%; transform: rotate(24deg); transform-origin: right bottom; }
+.gift-box-lid > b { left: 50%; transform: rotate(-24deg); transform-origin: left bottom; border-radius: 65% 65% 65% 25%; }
+.gift-rise-window { position: absolute; z-index: 2; inset: 0; clip-path: inset(0 0 40% 0); }
+.gift-item {
+  position: absolute; left: 50%; top: 60%; width: 94px; height: 94px; object-fit: contain;
+  transform: translate(-50%, 22px) scale(.48); filter: drop-shadow(0 6px 5px #bc842433); opacity: 0;
+}
+.gift-aura {
+  position: absolute; z-index: 1; left: 50%; top: calc(60% - 45px); width: 250px; height: 250px;
+  transform: translate(-50%, -50%); border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle, #ffe993aa, #fff3b044 45%, transparent 70%);
+}
+@media (max-height: 650px) {
+  .result-screen[data-show-phase="gift"] .result-card { min-height: 420px; padding-top: 38px; }
+  .result-screen[data-show-phase="gift"] .result-show-title { font-size: 1.5rem; }
+}
+
+/* Demo 11: dance, individual discoveries, then a quiet results page. */
+.result-screen[data-show-phase="summary"] .result-card { display: flex; flex-direction: column; align-items: stretch; gap: 14px; height: auto; min-height: 0; padding-bottom: 24px; }
+.result-screen[data-show-phase="summary"] .result-card :is(#againButton, #shareButton, #resultStatsButton) { display: block; position: static; flex: 0 0 auto; width: min(100%, 330px); min-height: 48px; margin: 0 auto; transform: none; }
+.result-screen[data-show-phase="summary"] #againButton { margin-bottom: 10px; }
+.result-screen[data-show-phase="summary"] #rewardReveal { display: none; }
+.result-screen[data-show-phase="celebrate"] #resultRewardGoal { display: none; }
+.result-screen[data-show-phase="gift"] .result-gift-stage { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 28px; width: 100%; height: auto; min-height: 300px; position: relative; }
+.result-screen[data-show-phase="gift"] .gift-item { position: relative; inset: auto; width: 160px; height: 160px; object-fit: contain; opacity: 1; transform: none; filter: drop-shadow(0 15px 20px #e3b74855); }
+.result-screen[data-show-phase="gift"] .gift-aura { inset: 35% auto auto 50%; width: 260px; height: 260px; opacity: .65; transform: translate(-50%,-50%); }
+#resultGiftName { position: relative; font-size: 1.5rem; color: var(--teal-dark); }
+@media (max-height: 760px) {
+  .result-screen[data-show-phase="summary"] .result-card { gap: 6px; padding: 8px 13px 14px; }
+  .result-screen[data-show-phase="summary"] .result-mascot { height: 64px; }
+  .result-screen[data-show-phase="summary"] .result-card h1 { font-size: 1.6rem; margin: 4px 0; }
+  .result-screen[data-show-phase="summary"] :is(.result-note, .result-reward, .result-grid) { margin-top: 4px; margin-bottom: 4px; }
+}
+
+.result-screen[data-show-phase="summary"] .result-card #againButton { margin-bottom: 10px; }
+.result-screen[data-show-phase="summary"] .result-mascot { height: clamp(64px, 16vh, 150px); }
+@media (max-height: 760px) {
+  .result-screen[data-show-phase="summary"] .result-mascot { height: 64px; }
+}
+@media (max-height: 700px) {
+  .result-screen[data-show-phase="summary"] .result-card { gap: 4px; padding-bottom: 10px; }
+  .result-screen[data-show-phase="summary"] .result-mascot { height: 48px; }
+  .result-screen[data-show-phase="summary"] .weekly-result { margin: 0 auto; padding: 4px 10px; font-size: .75rem; }
+  .result-screen[data-show-phase="summary"] .result-card :is(#againButton, #shareButton, #resultStatsButton) { min-height: 44px; }
+}

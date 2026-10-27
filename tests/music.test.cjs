@@ -17,11 +17,11 @@ function setup() {
   return { sound, sources, setEnabled(value) { enabled = value; sound.setEnabled(value); } };
 }
 
-test('stock music waits for a gesture, plays one whole phrase, and obeys mute', async () => {
+test('stock music waits for a gesture, loops through the result, and obeys mute', async () => {
   const r = setup(); r.sound.samples.set('danceMusic', { duration: 6.667 });
   assert.equal(await r.sound.playPresentationMusic(), false);
   r.sound.unlock(); assert.equal(await r.sound.playPresentationMusic(), true);
-  assert.equal(r.sources.length, 1); assert.equal(r.sources[0].loop, false);
+  assert.equal(r.sources.length, 1); assert.equal(r.sources[0].loop, true);
   r.setEnabled(false); assert.equal(r.sources[0].stopped, true);
   assert.equal(r.sound.channels.get('music').size, 0);
   assert.equal(await r.sound.playPresentationMusic(), false);
