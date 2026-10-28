@@ -436,3 +436,12 @@ E2E заставки ожидал видимый weeklyStat, скрытый но
 учебной ступени, данных и геометрии сохранены. Локальный intro PASS для пяти
 RU/DE portrait/landscape сценариев. Повторная публикация запускается этим
 исправлением теста; продуктовые файлы и worker v86 без дополнительных изменений.
+
+Публикация завершена: исправление readiness E2E 5575331, workflow 40711960384
+success (unit/mobile/guidance/intro/install, Chromium и WebKit PWA, deploy).
+По HTTPS на Pages и основном https://erstellen-websiten.de/kapi/ проверены
+12 файлов на каждом адресе: worker v86, app/styles/rig/rewards/storage, HTML,
+панорама и четыре варианта предметов. Все совпали с проверенным checkout;
+у HTML proxy учтена единственная штатная вставка base href=/kapi/.
+PR №24 опубликован. Скриншоты снимались локально на тех же байтах; дополнительных
+изменений production-прокси не потребовалось. Блокеров нет.
