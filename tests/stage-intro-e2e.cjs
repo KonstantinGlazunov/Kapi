@@ -20,7 +20,7 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
     await route.fulfill({response, body:source.replace(/\}\)\(\);\s*$/, 'window.__introTest={getProfile,saveProfile,updateHomeStats,state};})();')});
    });
    await page.goto(base);
-   await page.locator('#weeklyStat').waitFor();
+   await page.locator('#journeyTitle').waitFor();
    await page.evaluate(stage => {const api=window.__introTest; const profile=api.getProfile(); profile.currentStage=stage; api.saveProfile(profile); api.updateHomeStats();}, stage);
    assert.equal(await page.locator('.home-stage-card').count(), 0);
    const name=`${width}x${height}-${language}-${stage}`;
