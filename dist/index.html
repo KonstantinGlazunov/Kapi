@@ -20,6 +20,7 @@
     <p id="storageNotice" class="storage-notice" role="status" hidden></p>
 
     <section class="screen start-screen active" id="startScreen" aria-label="Считаем с Капи">
+      <div class="journey-heading"><small id="journeyPlace"></small><h1 id="journeyTitle"></h1><p id="journeyNext"></p><div id="journeyStops"></div></div>
       <div class="home-hero" aria-hidden="false">
         <div class="mascot-stage start-mascot">
           <button class="home-mascot-sprite kapi-host" id="homeMascot" type="button" aria-label="Kapi reagieren lassen"><canvas class="kapi-rive-canvas" id="homeMascotCanvas" aria-hidden="true"></canvas></button>
@@ -87,6 +88,7 @@
           <img id="resultGiftItem" class="gift-item" src="assets/cosmetics/star-badge.svg" alt="">
           <strong id="resultGiftName"></strong>
         </div>
+        <div id="journeyChoice" class="journey-choice hidden"></div>
         <div class="result-mascot kapi-host" id="resultMascot" aria-hidden="true"><canvas class="kapi-rive-canvas" id="resultMascotCanvas"></canvas></div>
         <span class="eyebrow" id="resultEyebrow">Тренировка завершена</span>
         <h1 id="resultTitle">Отличная работа!</h1>
@@ -107,6 +109,7 @@
     </section>
   </main>
 
+  <dialog id="journeyPicker" class="journey-picker"><div id="journeyPickerContent"></div></dialog>
   <dialog class="stats-dialog" id="statsDialog">
     <div class="dialog-head">
       <div><span class="eyebrow" id="parentEyebrow">Для родителей</span><h2 id="historyTitle">История занятий</h2></div>
