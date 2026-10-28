@@ -185,8 +185,7 @@
     introReady() {
       const required = ["head", "torso", "armLeftUpper", "armRightUpper", "armLeftForearm", "armRightForearm", "pawLeft", "pawRight", "legLeft", "legRight"];
       const outfit = this.effectiveOutfit("idle");
-      outfit.neck ||= "neck-scarf";
-      outfit.back ||= "backpack";
+
       const cosmetics = Object.values(outfit).map((id) =>
         id === "session-star" ? "star-badge" : window.KAPI_REWARDS.find((item) => item.id === id)?.asset
       ).filter(Boolean);
@@ -208,6 +207,7 @@
     }
 
     drawCosmetic(context, slot, id, pose, limbs) {
+      if (id === "neck-scarf" || id === "backpack") return; // Recolor the existing garment.
       if (!id || id === "party") return; // The party hat is already part of the horn head.
       const reward = window.KAPI_REWARDS.find((item) => item.id === id);
       const asset = id === "session-star" ? "star-badge" : reward?.asset;
@@ -585,6 +585,40 @@
       return result;
     }
 
+    journeyTorso(image) {
+      const outfit = this.effectiveOutfit('idle');
+      const neck = outfit.neck === 'neck-scarf' ? (this.cosmeticVariants?.['neck-scarf'] || 'berry') : '';
+      const back = outfit.back === 'backpack' ? (this.cosmeticVariants?.backpack || 'stars') : '';
+      if (!neck && !back) return image;
+      this.journeyTorsos ||= new Map();
+      const key = neck + ':' + back;
+      if (this.journeyTorsos.has(key)) return this.journeyTorsos.get(key);
+      const canvas = document.createElement('canvas'); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+      const ctx = canvas.getContext('2d'); ctx.drawImage(image, 0, 0);
+      const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height), data = pixels.data;
+      for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+        const i = (y * canvas.width + x) * 4, r = data[i], g = data[i+1], b = data[i+2];
+        if (!data[i+3]) continue;
+        const teal = g > r * 1.22 && b > r * 1.25;
+        const yellow = r > b * 1.8 && g > b * 1.5 && g > r * .74;
+        let color;
+        if (neck && yellow && x > 140 && x < 455 && y < 240) {
+          color = neck === 'berry' ? [190,44,108] : [46,100,202];
+          const dx = (x + (Math.floor(y/30)%2)*15)%30-15, dy = y%30-15;
+          if (neck === 'berry' ? dx*dx+dy*dy<23 : Math.abs(dx)+Math.abs(dy)<6) color = [255,235,178];
+        } else if (back && (teal || (yellow && x < 100))) {
+          color = back === 'stars' ? [132,64,190] : [39,112,76];
+          if (yellow) color = back === 'stars' ? [245,199,73] : [240,143,57];
+          if (teal && back === 'stars' && Math.abs(x%45-22)+Math.abs(y%45-22)<5) color = [255,229,142];
+        }
+        if (color) {
+          const light = Math.max(r,g,b)/255;
+          data[i] = color[0]*light; data[i+1] = color[1]*light; data[i+2] = color[2]*light;
+        }
+      }
+      ctx.putImageData(pixels,0,0); this.journeyTorsos.set(key,canvas); return canvas;
+    }
+
     drawPart(context, name, x, y, scale, rotation, pivotX, pivotY, scaleX = 1, scaleY = 1) {
       const entry = this.loadImage(RIG_PARTS[name]);
       if (!entry.ready) return;
@@ -592,7 +626,7 @@
       context.translate(x, y);
       context.rotate(rotation);
       context.scale(scale * scaleX, scale * scaleY);
-      context.drawImage(entry.image, -pivotX, -pivotY);
+      context.drawImage(name === "torso" ? this.journeyTorso(entry.image) : entry.image, -pivotX, -pivotY);
       context.restore();
     }
 
@@ -708,8 +742,7 @@
       const pose = this.pose("idle", 0, "hop");
       const outfit = this.effectiveOutfit("idle");
       // The intro uses Kapi's familiar scarf and backpack until the child equips alternatives.
-      outfit.neck ||= "neck-scarf";
-      outfit.back ||= "backpack";
+
       // Reuse the normal depth order; loading order must not change occlusion.
       // Readiness is checked before painting, so this remains one complete frame.
       this.drawRigPose({ canvas, context }, pose, limbs, 1, { state: "idle", outfit });

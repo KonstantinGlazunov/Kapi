@@ -26,6 +26,8 @@
     if (backup.format !== "kapi-backup" || backup.version !== 1 || !object(backup.data)) throw new Error("Unsupported backup");
     const { profile, settings, history } = backup.data;
     if (!object(profile) || !object(settings) || !Array.isArray(history) || history.length > 30) throw new Error("Invalid sections");
+    if (profile.journey !== undefined && (!object(profile.journey) || !Number.isInteger(profile.journey.step) || profile.journey.step < 0 || profile.journey.step > 3 || !Array.isArray(profile.journey.sessions) || profile.journey.sessions.length > 3 || profile.journey.sessions.some(id => typeof id !== "string"))) throw new Error("Invalid journey");
+    if (profile.cosmeticVariants !== undefined && (!object(profile.cosmeticVariants) || Object.entries(profile.cosmeticVariants).some(([key,value]) => !({"neck-scarf":["berry","sky"],backpack:["stars","forest"]}[key] || []).includes(value)))) throw new Error("Invalid outfit variants");
     // Validate every known top-level field before any data can replace local progress.
     for (const [key, expected] of Object.entries(template)) {
       if (!(key in profile)) continue; // Older profiles are migrated additively by the app.

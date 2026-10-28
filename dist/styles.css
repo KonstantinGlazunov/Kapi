@@ -1503,3 +1503,67 @@ body.game-active .game-status { display: none; }
 @media (min-height: 761px) {
   .result-screen[data-show-phase="summary"] :is(.result-note, .result-reward, .result-grid) { margin-top: 8px; margin-bottom: 8px; }
 }
+
+/* The same saved location anchors home, arrival and results. */
+body { --journey-position: 5%; }
+body[data-journey="1"] { --journey-position: 38%; }
+body[data-journey="2"] { --journey-position: 63%; }
+body[data-journey="3"] { --journey-position: 100%; }
+.journey-heading { text-align: center; flex: 0 0 auto; color: #095a56; padding: 0 12px; }
+.journey-heading small { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.journey-heading h1 { font-size: clamp(1.35rem, 5.7vw, 2rem); margin: 3px 0; }
+.journey-heading p { font-size: .85rem; margin: 3px 0; }
+#journeyStops { display: flex; align-items: center; justify-content: center; margin: 7px 0; }
+#journeyStops span { background: #fff9df; border: 2px solid #c5d6be; border-radius: 50%; width: 27px; height: 27px; color: #788c75; line-height: 23px; }
+#journeyStops span.reached { background: #0f8e81; color: white; border-color: #0f8e81; }
+#journeyStops i { width: 32px; height: 3px; background: #a7bda0; }
+body.start-active .start-screen { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
+body.start-active .home-hero { background: url('assets/journey/forest-route.png') var(--journey-position) 70% / auto 100% no-repeat; border-radius: 25px; width: 100%; flex: 1 1 260px; height: auto; min-height: 180px; max-height: 400px; }
+body.start-active .home-hero::before, body.start-active .home-hero::after { display: none; }
+body.start-active .start-mascot { left: 50%; bottom: -32px; width: 250px; max-width: 85%; }
+body.start-active .start-copy { flex: 0 0 auto; margin-top: 0; }
+body.start-active .home-progress-card { margin: 0; padding: 8px 12px; }
+body.start-active .home-stats { display: none; }
+body.start-active .home-reward-figure { width: 42px; height: 42px; }
+body.start-active .home-nav { margin-top: 6px; }
+#journeyGoalButton { margin: 0; padding: 4px; min-height: 36px; font-size: .8rem; }
+#journeyGoalButton[hidden] { display: none; }
+.result-screen .result-card { background: #fffdf5ed; }
+.result-screen { background: linear-gradient(#fff9 0%,#fff3 100%),url('assets/journey/forest-route.png') var(--journey-position) center / auto 100% no-repeat; border-radius: 26px; }
+.result-screen[data-show-phase="arrival"] .result-card { display: flex; flex-direction: column; height: calc(var(--app-height) - 110px); min-height: 390px; background: transparent; padding: 45px 12px 12px; }
+.result-screen[data-show-phase="arrival"] .result-show-title { display: block; font-size: 1.8rem; padding: 10px; border-radius: 18px; background: #fffdf2e8; margin: 0; }
+.result-screen[data-show-phase="arrival"] .result-mascot { flex: 1; width: 100%; height: auto; animation: journey-arrive 1.5s ease-out both; }
+.result-screen[data-show-phase="arrival"] :is(#resultEyebrow,#resultTitle,#resultMotivation,#resultShowProgress,.result-grid,#resultNote,#weeklyResult,#resultRewardGoal,#againButton,#shareButton,#resultStatsButton) { display: none; }
+.result-screen[data-show-phase="arrival"] .result-skip { display: block; position: absolute; right: 15px; top: 0; }
+@keyframes journey-arrive { from { transform: translateX(-65px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.result-screen[data-show-phase="choice"] .result-card { display: flex; flex-direction: column; gap: 8px; padding-top: 48px; }
+.result-screen[data-show-phase="choice"] .result-show-title { display: block; margin: 0; font-size: 1.5rem; }
+.result-screen[data-show-phase="choice"] .result-mascot { order: -1; width: 100%; height: 160px; margin: 0; }
+.result-screen[data-show-phase="choice"] :is(#resultEyebrow,#resultTitle,#resultMotivation,#resultShowProgress,.result-grid,#resultNote,#weeklyResult,#resultRewardGoal,#againButton,#shareButton,#resultStatsButton,#resultGiftStage) { display: none; }
+.result-screen[data-show-phase="choice"] .result-skip { display: block; position: absolute; right: 15px; top: 0; }
+.journey-picker { width: min(440px, calc(100% - 24px)); border: 0; border-radius: 24px; background: #fffdf4; color: #095a56; padding: 20px; max-height: 90dvh; overflow: auto; }
+.journey-picker::backdrop { background: #123d3a88; }
+.journey-choice, #journeyPickerContent { text-align: center; }
+.journey-options { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin: 12px 0 20px; }
+.journey-options button { border: 3px solid #e1d6b1; border-radius: 20px; padding: 12px 6px; background: #fff8df; color: #075b56; font: inherit; }
+.journey-options button[aria-pressed="true"] { border-color: #099d94; background: #ddf7ef; box-shadow: 0 0 0 2px #fff inset; }
+.journey-options img { width: 100%; height: 110px; object-fit: contain; display: block; margin-bottom: 10px; }
+.journey-choice > .primary-button, #journeyPickerContent > .primary-button { width: 100%; margin-bottom: 16px; }
+.journey-choice > .text-button, #journeyPickerContent > .text-button { display: block; margin: 4px auto; min-height: 44px; }
+.result-screen[data-show-phase="summary"] .result-card { gap: 7px; padding: 10px 13px 18px; }
+.result-screen[data-show-phase="summary"] .result-mascot { height: clamp(64px,16vh,135px); }
+.result-screen[data-show-phase="summary"] :is(.result-note,.result-grid,.result-reward) { margin: 6px 0; }
+.result-screen[data-show-phase="summary"] .result-card #againButton { margin-bottom: 10px; }
+@media(max-height:700px) { body.start-active .home-hero { min-height: 145px; } .journey-heading h1 { font-size: 1.25rem; } .journey-heading p { font-size: .75rem; } #journeyStops { margin: 3px; } .result-screen[data-show-phase="summary"] .result-card { gap: 4px; } .result-screen[data-show-phase="summary"] .result-mascot { height: 48px; } .result-screen[data-show-phase="choice"] .result-mascot { height: 90px; } .journey-options img { height: 85px; } }
+@media(prefers-reduced-motion:reduce) { .result-screen[data-show-phase="arrival"] .result-mascot { animation: none; } }
+body.start-active { background: linear-gradient(145deg,#ddf7ed,#edf1d8); }
+body.start-active .brand { color: #075b56; text-shadow: none; }
+body.start-active #startButton { background: #0e9489; border-color: #0e9489; box-shadow: 0 7px 0 #075b56; color: white; }
+body.start-active .home-nav .text-button { color: #075b56; }
+body.start-active .home-hero { background-size: auto 135%; overflow: hidden; }
+.journey-choice > p { display: none; }
+.journey-choice-canvas { width: 100%; height: 170px; object-fit: contain; }
+.result-screen[data-show-phase="arrival"] .result-skip { top: 0; margin: 0; }
+/* The travel scene appears at arrival, after the standalone dance card. */
+.result-screen:not([data-show-phase="arrival"]) { background: none; }
+.result-screen:not([data-show-phase="arrival"]) .result-card { background: #fffdf5; }

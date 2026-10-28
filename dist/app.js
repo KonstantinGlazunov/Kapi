@@ -303,6 +303,8 @@
     revealResultReward = null;
     dismissMotivation();
     $("resultScreen").dataset.showPhase = "summary";
+    $("journeyChoice").classList.add("hidden");
+    $("againButton").textContent = journeyCopy()[getProfile().journey.step >= 3 ? "lake" : "home"];
     $("skipResultShow").classList.add("hidden");
     $("resultRewardProgress").classList.remove("hidden");
     $("confetti").innerHTML = "";
@@ -557,13 +559,14 @@
         const values = Array.isArray(profile.operationStats[operation]) ? profile.operationStats[operation] : [];
         profile.operationStats[operation] = values.filter((value) => value === 0 || value === 1).slice(-10);
       });
+      window.KapiJourney.normalize(profile);
       const rewardMigration = rewards.migrate(profile);
       const weeklyMigration = weekly.migrate(profile, getHistory());
       const masteryMigration = mastery.migrate(profile) || !Object.hasOwn(stored, "skillMastery");
       const subskillMigration = subskills.migrate(profile);
       if (rewardMigration || weeklyMigration || masteryMigration || subskillMigration || profile.errorQueue.length !== oldErrorCount) storage.setItem(PROFILE_KEY, JSON.stringify(profile));
       return profile;
-    } catch { storage.markCorrupt(PROFILE_KEY); rewards.migrate(defaults); weekly.migrate(defaults); mastery.migrate(defaults); subskills.migrate(defaults); return defaults; }
+    } catch { storage.markCorrupt(PROFILE_KEY); window.KapiJourney.normalize(defaults); rewards.migrate(defaults); weekly.migrate(defaults); mastery.migrate(defaults); subskills.migrate(defaults); return defaults; }
   }
 
   function saveProfile(profile) {
@@ -585,6 +588,78 @@
       : [];
   }
 
+  function journeyCopy() { return window.KapiJourney.copy[language]; }
+  function setJourneyScene(step) {
+    document.body.dataset.journey = String(step);
+    $("resultScreen").dataset.journey = String(step);
+  }
+  function renderJourneyHome(profile) {
+    const step = profile.journey.step, words = journeyCopy();
+    setJourneyScene(step);
+    $("journeyTitle").textContent = step === 3 ? words.next[3] : words.title;
+    $("journeyPlace").textContent = words.places[step];
+    $("journeyNext").textContent = words.next[step];
+    $("journeyStops").innerHTML = words.places.map((place, i) => `<span class="${i <= step ? 'reached' : ''}" aria-label="${place}" title="${place}">${i < step ? '✓' : i === step ? '●' : '○'}</span>`).join('<i></i>');
+    $("startButton").textContent = words.start[step];
+    let button = $("journeyGoalButton");
+    if (!button) {
+      button = document.createElement("button"); button.id = "journeyGoalButton"; button.className = "text-button";
+      $("homeRewardGoal").after(button);
+      button.addEventListener("click", () => {
+        const next = rewards.getNextReward(getProfile().totalXp).reward;
+        if (next && window.KapiJourney.variants[next.id]) openJourneyPicker(next.id);
+      });
+    }
+    const next = rewards.getNextReward(profile.totalXp).reward;
+    button.hidden = !window.KapiJourney.variants[next?.id];
+    button.textContent = words.goal;
+  }
+  function renderJourneyWardrobe() {
+    const profile = getProfile();
+    const holder = document.createElement("div"); holder.className = "journey-wardrobe-variants";
+    for (const id of Object.keys(window.KapiJourney.variants)) {
+      if (!profile.unlockedRewards.includes(id)) continue;
+      const button = document.createElement("button"); button.className = "share-button";
+      button.textContent = window.KapiJourney.variant(profile, id)[language] + ' · ' + journeyCopy().goal;
+      button.onclick = () => openJourneyPicker(id);
+      holder.append(button);
+    }
+    $("wardrobeItems").append(holder);
+  }
+  function openJourneyPicker(id) {
+    showJourneyChoice(id, () => { $("journeyPicker").close(); updateMascotOutfit(); renderWardrobe(); renderJourneyWardrobe(); updateHomeStats(); }, false);
+    $("journeyPicker").showModal();
+  }
+  function showJourneyChoice(id, done, inResult) {
+    const profile = getProfile(), words = journeyCopy(), options = window.KapiJourney.variants[id];
+    const earned = profile.unlockedRewards.includes(id);
+    const container = inResult ? $("journeyChoice") : $("journeyPickerContent");
+    let selected = profile.cosmeticVariants[id];
+    if (inResult) { $("resultScreen").dataset.showPhase = "choice"; $("resultShowTitle").textContent = language === "ru" ? (id === "backpack" ? "Выбери новый рюкзак" : "Выбери новый шарф") : (id === "backpack" ? "Wähle deinen Rucksack" : "Wähle dein Halstuch"); }
+    container.classList.remove("hidden");
+    container.innerHTML = `${!inResult && earned ? '<canvas class="journey-choice-canvas" width="700" height="700"></canvas>' : ""}<p>${earned ? words.choose : words.preview}</p><div class="journey-options">${options.map(option => `<button type="button" data-variant="${option.id}" aria-pressed="${option.id === selected}"><img src="assets/cosmetics/${option.asset}.svg" alt=""><strong>${option[language]}</strong></button>`).join('')}</div><button type="button" class="primary-button" data-take>${earned ? words.take : language === "ru" ? "Сохранить выбор" : "Auswahl merken"}</button><button type="button" class="text-button" data-later>${words.later}</button>`;
+    const preview = () => {
+      if (!earned || !kapi?.animator) return;
+      const outfit = { ...profile.equippedOutfit, [id === 'backpack' ? 'back' : 'neck']: id };
+      kapi.animator.cosmeticVariants = { ...profile.cosmeticVariants, [id]: selected };
+      kapi.animator.setOutfit(outfit, {});
+      if (inResult) kapi.reset('result', 'idle');
+      else window.requestAnimationFrame(() => kapi.animator.drawIntroFrame(container.querySelector('canvas'), 0));
+    };
+    container.querySelectorAll('[data-variant]').forEach(button => button.onclick = () => {
+      selected = button.dataset.variant;
+      container.querySelectorAll('[data-variant]').forEach(other => other.setAttribute('aria-pressed', String(other === button)));
+      preview();
+    });
+    container.querySelector('[data-take]').onclick = () => {
+      const fresh = getProfile(); fresh.cosmeticVariants[id] = selected;
+      if (earned) rewards.equip(fresh, id);
+      saveProfile(fresh); updateMascotOutfit(fresh); container.classList.add('hidden'); done();
+    };
+    container.querySelector('[data-later]').onclick = () => { updateMascotOutfit(); container.classList.add('hidden'); done(); };
+    preview();
+  }
+
   function updateHomeStats() {
     const profile = getProfile();
     updateMascotOutfit(profile);
@@ -596,6 +671,7 @@
       ? copy.weeklyDone : progress.count > progress.goal ? copy.weeklyExtra(progress.count) : copy.weeklyCount(progress.count, progress.goal);
     $("totalXpValue").textContent = String(profile.totalXp);
     renderRewardGoal("home", profile.totalXp);
+    renderJourneyHome(profile);
     scheduleFitCheck();
   }
 
@@ -609,11 +685,12 @@
       ? copy.firstReward : `${surface === "result" ? `${copy.nextTarget}: ` : ""}${copy.nextGoal(next.remainingXp, rewardName(next.reward))}`;
     if (surface === "home") {
       $("homeRewardPreview").classList.toggle("hidden", next.allUnlocked);
-      if (next.reward) $("homeRewardPreview").src = `assets/cosmetics/${next.reward.asset}.svg`;
+      if (next.reward) $("homeRewardPreview").src = `assets/cosmetics/${window.KapiJourney.variant(getProfile(), next.reward.id)?.asset || next.reward.asset}.svg`;
     }
   }
 
   function updateMascotOutfit(profile = getProfile()) {
+    if (kapi?.animator) kapi.animator.cosmeticVariants = profile.cosmeticVariants;
     kapi?.animator?.setOutfit(profile.equippedOutfit, motivation?.getOutfit() || {});
   }
 
@@ -627,12 +704,13 @@
       ${rewards.getRewards().filter((reward) => reward.slot === slot && visible.has(reward.id)).map((reward) => {
         const unlocked = profile.unlockedRewards.includes(reward.id);
         const selected = profile.equippedOutfit[slot] === reward.id;
-        return `<button class="wardrobe-item" type="button" data-equip="${reward.id}" aria-label="${rewardName(reward)} · ${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}" aria-pressed="${selected}" ${unlocked ? "" : "disabled"}><img src="assets/cosmetics/${reward.asset}.svg" alt=""><span>${rewardName(reward)}</span><small>${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}</small></button>`;
+        return `<button class="wardrobe-item" type="button" data-equip="${reward.id}" aria-label="${rewardName(reward)} · ${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}" aria-pressed="${selected}" ${unlocked ? "" : "disabled"}><img src="assets/cosmetics/${window.KapiJourney.variant(profile, reward.id)?.asset || reward.asset}.svg" alt=""><span>${window.KapiJourney.variant(profile, reward.id)?.[language] || rewardName(reward)}</span><small>${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}</small></button>`;
       }).join("")}</div></section>`).join("");
   }
 
   function showWardrobe() {
     renderWardrobe();
+    renderJourneyWardrobe();
     $("wardrobeDialog").showModal();
     kapi?.animator?.play("idle", { surface: "wardrobe" });
   }
@@ -681,11 +759,12 @@
     window.cancelAnimationFrame(stageIntroFrame);
     if (target !== $("gameScreen")) { window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
     if (target !== $("resultScreen")) {
-      window.clearTimeout(resultPhaseTimer);
       window.clearTimeout(resultShowTimer);
-      resultGiftAnimations.forEach((animation) => animation.cancel());
-      resultGiftAnimations = [];
+      window.clearTimeout(resultPhaseTimer);
       revealResultReward = null;
+      resultGiftAnimations.forEach(animation => animation.cancel());
+      resultGiftAnimations = [];
+      $("journeyChoice").classList.add("hidden");
       window.clearTimeout(rewardRevealTimer);
       window.clearTimeout(rewardGoalTimer);
     }
@@ -2182,19 +2261,25 @@ function makePowerProblem(max, mastered) {
     state.finalMotivationEvents = [];
     const ru = language === "ru";
     const hasGift = unlocked.length > 0;
-    $("skipResultShow").textContent = ru ? "Пропустить" : "Überspringen";
+    $("skipResultShow").textContent = journeyCopy().stop;
     $("skipResultShow").classList.remove("hidden");
     $("resultShowProgress").textContent = `${ru ? "Шаг вперёд" : "Ein Schritt weiter"} · ${copy.homeStage(state.stage)}`;
     $("resultScreen").dataset.hasGift = String(hasGift);
     const earnedItems = unlocked.map((event) => rewards.getRewards().find((item) => item.id === event.rewardId));
     const showItems = (index = 0) => {
+      $("journeyChoice").classList.add("hidden");
       if (index >= earnedItems.length) { endResultShow(true); return; }
       $("resultScreen").dataset.showPhase = "gift";
       $("resultShowTitle").textContent = ru ? "Новое для Капи!" : "Neu für Kapi!";
       $("resultGiftName").textContent = rewardName(earnedItems[index]);
+      if (window.KapiJourney.variants[earnedItems[index].id]) {
+        showJourneyChoice(earnedItems[index].id, () => showItems(index + 1), true);
+        return;
+      }
       playGiftPresentation(earnedItems[index]);
       resultPhaseTimer = window.setTimeout(() => showItems(index + 1), 2600);
     };
+    setJourneyScene(getProfile().journey.step);
     $("resultScreen").dataset.showPhase = "celebrate";
     $("resultShowTitle").textContent = ru ? "Тренировка окончена!" : "Training beendet!";
     soundManager.playPresentationMusic().catch(() => {});
@@ -2207,7 +2292,10 @@ function makePowerProblem(max, mastered) {
     resultPhaseTimer = window.setTimeout(() => {
       $("confetti").innerHTML = "";
       kapi.reset("result", "idle");
-      showItems();
+      if (freshProfile.journey.step <= profile.journey.step) { showItems(); return; }
+      $("resultScreen").dataset.showPhase = "arrival";
+      $("resultShowTitle").textContent = journeyCopy().arrival[getProfile().journey.step];
+      resultPhaseTimer = window.setTimeout(() => showItems(), 2500);
     }, 4000);
   }
 
@@ -2241,6 +2329,7 @@ function makePowerProblem(max, mastered) {
     }
     const oldXp = profile.totalXp;
     profile.totalXp += session.score;
+    window.KapiJourney.complete(profile, session);
     const unlocked = rewards.unlock(profile, oldXp, profile.totalXp);
     const weeklyResult = session.completed ? weekly.recordCompletedSession(profile, session.id, new Date(session.date)) : null;
     saveProfile(profile);
@@ -2877,13 +2966,14 @@ function makePowerProblem(max, mastered) {
   document.addEventListener("keydown", () => {
     if ($("resultScreen").classList.contains("active")) soundManager?.stopChannel("music");
   }, true);
+  $("journeyPicker").addEventListener("close", () => updateMascotOutfit());
   $("skipResultShow").addEventListener("click", () => { endResultShow(); $("againButton").focus(); });
   $("startButton").addEventListener("click", () => startTrainingWithIntro());
   $("homeMascot").addEventListener("click", playHomeReaction);
   document.querySelector(".app-shell").addEventListener("pointerdown", (event) => {
     if (kapi?.surface === "home" && !kapi.state.startsWith("idle") && !event.target.closest("#homeMascot")) clearHomeReaction();
   });
-  $("againButton").addEventListener("click", () => startTrainingWithIntro());
+  $("againButton").addEventListener("click", () => { showScreen($("startScreen")); updateHomeStats(); });
   $("shareButton").addEventListener("click", shareResult);
   $("statsButton").addEventListener("click", showStats);
   $("wardrobeButton").addEventListener("click", showWardrobe);
@@ -2900,6 +2990,7 @@ function makePowerProblem(max, mastered) {
     saveProfile(profile);
     updateMascotOutfit(profile);
     renderWardrobe();
+    renderJourneyWardrobe();
   });
   $("resultStatsButton").addEventListener("click", showStats);
   $("statsContent").addEventListener("click", (event) => {

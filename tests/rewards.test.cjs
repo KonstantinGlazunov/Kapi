@@ -176,7 +176,7 @@ test('leaving during the item reveal cancels the delayed summary', () => {
   app.state.score = 20; app.state.results = Array.from({length:20}, () => ({firstTry:true, seconds:3}));
   app.finishTraining();
   assert.equal(app.machine.state, 'trainingFinished');
-  env.advance(4000);
+  env.advance(6500);
   assert.equal(env.elements.get('resultScreen').dataset.showPhase, 'gift');
   app.showScreen(env.elements.get('startScreen'));
   env.advance(10000);

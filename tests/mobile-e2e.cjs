@@ -53,8 +53,8 @@ async function run() {
       });
       await page.goto(baseUrl, { waitUntil: 'load' });
       if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-home.png`) });
-      await page.locator('#weeklyStat').waitFor({ state: 'visible' });
-      assert.equal(await page.locator('#weeklyStat').isVisible(), true, `${width}: weekly progress missing`);
+      await page.locator('#journeyTitle').waitFor({ state: 'visible' });
+      assert.equal(await page.locator('#journeyTitle').isVisible(), true, `${width}: journey progress missing`);
       assert.equal(await page.locator('#weeklyLabel').innerText(), 'Diese Woche');
       assert.equal(await page.locator('#startButton').isVisible(), true);
       assert.equal(await page.locator('#speechBubble').count(), 0, 'home greeting must not obscure the castle');
@@ -76,7 +76,7 @@ async function run() {
         navHeight: document.querySelector('#mapButton').getBoundingClientRect().height }));
       assert.equal(homeLayout.width, homeLayout.viewport, `${width}: home horizontal overflow`);
       assert.ok(homeLayout.bottom <= height, `${width}: start button below viewport: ${JSON.stringify(homeLayout)}`);
-      assert.ok(homeLayout.heroHeight >= 200 && homeLayout.startHeight >= 44 && homeLayout.navHeight >= 44,
+      assert.ok(homeLayout.heroHeight >= 145 && homeLayout.startHeight >= 44 && homeLayout.navHeight >= 44,
         `${width}: mascot or controls too small: ${JSON.stringify(homeLayout)}`);
       assert.ok(homeLayout.settingsBottom <= height && homeLayout.historyTop >= homeLayout.bottom + 8 &&
         homeLayout.mapBottom <= height - 2 && homeLayout.wardrobeBottom <= height - 2,
