@@ -252,6 +252,18 @@
         ? p.responseAnswer === response : p.responseAnswer === undefined;
     }
     isPaceComparableTask(problem) { return ["equation", "missingOperand"].includes(problem.taskType || "equation"); }
+    readingAllowance(problem, language = "de") {
+      const type = problem.taskType || "equation";
+      if (type === "microStory") {
+        const words = this.display(problem, language).text.trim().split(/\s+/).length;
+        // A generous visual-guide estimate, not a reading-speed assessment.
+        return Math.max(4, 1 + words * .6);
+      }
+      if (type === "equation" && problem.operation !== "count" && !problem.conceptVisual) return 1.5;
+      if (type === "missingOperand") return 2;
+      if (type === "chooseExpression" || type === "placeValue") return 4;
+      return 3;
+    }
     response(problem) { return problem.responseAnswer ?? problem.answer; }
     choiceLabels(problem, language = "de") {
       if (problem.expressionChoices) return problem.expressionChoices.map((item) => item.label);
