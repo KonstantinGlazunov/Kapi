@@ -486,3 +486,9 @@ PWA на последних байтах также PASS root и /kapi/. Пуб�
 состояние через 5 с, пустую полоску и поздний правильный ответ. Скриншоты
 /workspace/artifacts/prod88 просмотрены: fit 9/10, visual 9/10, consistency 9/10;
 условие и клавиатура читаются, полоска оставляет время на чтение. Worker v88.
+
+PR #26 MERGED 51a13f7. Workflow 40884623277 SUCCESS, полный CI и deploy.
+Локальный Chromium PWA root и /kapi/ PASS: explicit update, сохранение данных,
+offline, backup, quota. Проверены RU (11 с) и DE (11.6 с) истории при темпе 4 с.
+На Pages и основном /kapi/ sw.js v88, app.js и kapi-tasks.js побайтно совпадают
+с проверенными файлами. Публикация завершена, блокеров нет.
