@@ -217,7 +217,7 @@
       const attachment = this.getAttachmentTransform(slot, pose, limbs);
       const bounds = {
         hat: id === "hat-pompom" ? [-164, -290, 328, 190] : [-150, -239, 300, 140],
-        glasses: [-244, -215, 488, 430],
+        glasses: [-174, -135, 335, 160],
         neck: [-122, -216, 245, 165], back: [-325, -170, 170, 220], badge: [82, -45, 85, 90]
       }[slot];
       context.save();
