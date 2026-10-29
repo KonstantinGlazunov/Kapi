@@ -1567,6 +1567,43 @@ body.start-active .home-hero { background-size: auto 135%; overflow: hidden; }
 /* The travel scene appears at arrival, after the standalone dance card. */
 .result-screen:not([data-show-phase="arrival"]) { background: none; }
 .result-screen:not([data-show-phase="arrival"]) .result-card { background: #fffdf5; }
+/* Each new stop has its own optimized illustration. */
+body.start-active .home-hero { background-image: var(--journey-image); background-position: var(--journey-scene-position); background-size: var(--journey-scene-size); }
+.result-screen[data-show-phase="arrival"] { background-image: var(--journey-image); background-position: var(--journey-scene-position); background-size: var(--journey-scene-size); overflow: hidden; }
+body.start-active .start-mascot { width: auto; height: min(250px, calc(100% - 10px)); bottom: -20px; }
+.journey-album-button { display: block; width: 100%; min-height: 36px; padding: 6px; margin: 3px 0; font-size: .85rem; }
+.album-header { display: flex; align-items: center; gap: 12px; justify-content: space-between; position: sticky; top: -20px; background: #fffdf4; z-index: 2; padding: 6px 0; }
+.album-header h2 { font-size: 1.3rem; margin: 0; }
+.album-header button { min-height: 44px; }
+.album-chapter h3 { font-size: 1rem; margin: 18px 0 8px; }
+.album-places { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.album-place { margin: 0; padding: 6px; background: #f1ead6; border-radius: 13px; }
+.album-picture { height: 100px; border-radius: 9px; background-repeat: no-repeat; display: grid; place-items: center; color: #829b91; font-size: 2rem; }
+.album-place figcaption { font-size: .78rem; padding: 5px 2px; }
+.album-place.locked { background: #e9ede5; color: #61776d; }
+body.start-active .home-hero::after { display: block; content: ''; position: absolute; width: 8px; height: 8px; left: 75%; top: 38%; border-radius: 50%; background: #fff6ac; box-shadow: -90px 25px 0 #fff6ac88, -35px -30px 0 #fff6ac66; opacity: .7; pointer-events: none; animation: journey-glimmer 5s ease-in-out infinite; }
+body[data-journey-effect="ripple"] .home-hero::after, body[data-journey-effect="wave"] .home-hero::after { width: 42px; height: 5px; background: #fff9; box-shadow: -80px 25px 0 #fff6; animation: journey-ripple 5s ease-in-out infinite; }
+body[data-journey-effect="butterfly"] .home-hero::after { border-radius: 60% 10%; background: #ffb66b; width: 13px; height: 10px; animation: journey-flutter 6s ease-in-out infinite; }
+@keyframes journey-glimmer { 50% { opacity: .2; transform: translateY(-12px); } }
+@keyframes journey-ripple { 50% { opacity: .25; transform: translateX(12px) scaleX(1.5); } }
+@keyframes journey-flutter { 50% { transform: translate(-24px,-20px) rotate(25deg); } }
+.result-screen[data-show-phase="arrival"][data-chapter-celebration]::after { content: '✉'; position: absolute; bottom: 24px; right: 24px; color: #075b56; background: #fff5cf; padding: 10px 20px; border: 3px solid #e9bd58; border-radius: 12px; font-size: 3rem; animation: postcard-arrive 1s ease-out both; pointer-events: none; }
+@keyframes postcard-arrive { from { transform: translateY(60px) rotate(-15deg); opacity: 0; } to { transform: rotate(5deg); opacity: 1; } }
+.result-screen[data-show-phase="arrival"][data-chapter-celebration="1"]::before { content: ''; position: absolute; width: 180px; height: 100px; border-radius: 160px 160px 0 0; border-top: 12px solid #f4ba6aaa; box-shadow: 0 -9px 0 #f37c7899, inset 0 9px 0 #99cfad99; left: calc(50% - 90px); top: 25%; animation: journey-glimmer 3s ease-in-out infinite; }
+.result-screen[data-show-phase="arrival"][data-chapter-celebration="2"]::before { content: '⚑'; position: absolute; right: 15%; top: 30%; color: #f3654c; font-size: 4rem; animation: journey-flutter 3s ease-in-out infinite; }
+.result-screen[data-show-phase="arrival"][data-chapter-celebration="3"]::before { content: '✦  ✦  ✦'; position: absolute; left: 20%; top: 25%; color: #ffdf80; font-size: 2rem; animation: journey-glimmer 2s ease-in-out infinite; }
+.result-screen[data-show-phase="arrival"][data-chapter-celebration="4"]::before { content: ''; position: absolute; width: 65%; height: 20%; right: 0; top: 30%; background: linear-gradient(90deg,transparent,#fff4b799); clip-path: polygon(0 0,100% 45%,100% 55%,0 100%); transform-origin: right; animation: journey-flutter 4s ease-in-out infinite; }
+.result-screen[data-show-phase="arrival"][data-chapter-celebration="5"]::before { content: '✦ ✧ ✦ ✧'; position: absolute; left: 20%; top: 30%; color: #ffce52; font-size: 2rem; animation: journey-glimmer 2s ease-in-out infinite; }
+@media(prefers-reduced-motion:reduce) { body.start-active .home-hero::after, .result-screen[data-show-phase="arrival"]::before, .result-screen[data-show-phase="arrival"]::after { animation: none !important; } }
+.album-postcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 8px 0 18px; border-bottom: 1px solid #d9dfcb; }
+.postcard { margin: 0; border: 4px solid #fff; outline: 1px solid #ddcf9e; border-radius: 4px; background: #fff8dd; box-shadow: 0 3px 7px #38574914; }
+.postcard .album-picture { border-radius: 0; justify-items: end; align-items: start; padding: 6px; font-size: 1.5rem; color: #fff5b7; text-shadow: 0 1px 3px #14554a; }
+.postcard figcaption { padding: 7px; font-size: .8rem; font-weight: 700; }
+.postcard small { display: block; margin-top: 4px; font-size: .7rem; font-weight: 400; }
+.postcard.locked { opacity: .6; }
+.result-screen[data-show-phase="arrival"] .result-show-title { font-size: clamp(1.2rem, 4.6vw, 1.7rem); line-height: 1.2; }
+.result-screen[data-show-phase="arrival"] .result-show-title small { display: block; margin-top: 8px; font-size: .7em; color: #947025; }
+.result-screen[data-show-phase="arrival"] .result-skip { top: 7px; padding: 4px 8px; background: #fffdf2ed; border-radius: 8px; }
 
 /* A quiet personal-pace guide: expiration has no gameplay effect. */
 .game-screen > .progress-track { flex-shrink: 0; }
