@@ -467,3 +467,11 @@ learning data, cold offline, multi-tab, backup и quota. Chromium 320/390:
 помпон целиком виден на маленьком экране, танец сохраняет одну пару очков.
 SVG оправы обрезан по полезной области для читаемой иконки гардероба;
 координаты на персонаже сохранены. PR #25, релиз после проверок.
+
+PR #25 MERGED c4549d9. Main workflow 40882716528 SUCCESS: unit/mobile,
+guidance/intro/install, Chromium и WebKit PWA, deploy. Финальный локальный
+PWA на последних байтах также PASS root и /kapi/. Публичные HTTPS проверки:
+на Pages и https://erstellen-websiten.de/kapi/ все 8 изменённых файлов совпали
+с checkout (worker v87, app/styles/rig/rewards, HTML, glasses и pompom-hat SVG).
+У основного HTML учтена штатная вставка base href. Релиз опубликован;
+прогресс сохраняется, корона остаётся высшей наградой. Блокеров нет.
