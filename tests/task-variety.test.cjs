@@ -344,3 +344,16 @@ test('number line labels every step, anchors Kapi at start, and directs the arro
     assert.doesNotMatch(html, /влево|вправо|links|rechts/);
   }
 });
+
+ test('pace guide allows reading localized stories and inspecting visual tasks', () => {
+   const {tasks} = context();
+   const equation = {taskType:'equation', operation:'add', a:4, b:7, answer:11};
+   const story = {...equation, taskType:'microStory'};
+   for (const language of ['ru','de']) {
+     assert.ok(tasks.readingAllowance(story,language) > tasks.readingAllowance(equation,language) + 4);
+     assert.equal(tasks.isPaceComparableTask(story),false);
+     assert.ok(Number.isFinite(tasks.readingAllowance(story,language)));
+   }
+   assert.ok(tasks.readingAllowance({...equation,taskType:'chooseExpression'}) > tasks.readingAllowance(equation));
+   assert.ok(tasks.readingAllowance({...equation,taskType:'visualCount',operation:'count'}) > tasks.readingAllowance(equation));
+ });

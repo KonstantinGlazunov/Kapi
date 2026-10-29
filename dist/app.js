@@ -1435,9 +1435,10 @@ function makePowerProblem(max, mastered) {
 
   function startPaceGuide() {
     paceAnimation?.cancel();
-    // Reuse the personal fast-answer threshold; new profiles start at its
-    // existing four-second floor until the first three answers calibrate it.
-    const seconds = getProfile().personalFastTime ?? UNIVERSAL_FAST_TIME;
+    // Add orientation/reading time to the personal solving-time guide.
+    // This is visual only: calibration, scoring and recorded elapsed stay intact.
+    const seconds = (getProfile().personalFastTime ?? UNIVERSAL_FAST_TIME)
+      + tasks.readingAllowance(state.problem, language);
     paceAnimation = $("paceFill").animate([
       { transform: "scaleX(1)" }, { transform: "scaleX(0)" }
     ], { duration: seconds * 1000, easing: "linear", fill: "forwards" });
