@@ -501,3 +501,12 @@ offline, backup, quota. Проверены RU (11 с) и DE (11.6 с) истор
 backup допускает23 шага. Journey JS/CSS встроены в прежние production-файлы,
 без demo-страницы/управления. Worker v89 precaches все20 WebP.
 176 unit PASS; дополнительные browser/PWA/mobile и публикация ниже.
+
+Локальные проверки production:176 unit PASS; полный mobile PASS320×568,
+360×640,390×844,430×932. Chromium PWA root и /kapi/ PASS: явное обновление,
+сохранённый прогресс, offline, multi-tab, backup и quota. Дополнительный браузер:
+переход от озера, новые главы, достижение финала, пять открыток, reduced motion,
+reload с XP/маршрутом, альбом и чистая подложка summary. Скриншоты просмотрены
+/workspace/artifacts/prod89 (320/390 home,album,dance,arrival,summary).
+Соответствие9/10, визуальное качество9/10, согласованность9/10: читаемые
+названия/действия, открытки и Капи помещаются на малом экране. PR#27.
