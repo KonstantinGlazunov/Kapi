@@ -1567,3 +1567,10 @@ body.start-active .home-hero { background-size: auto 135%; overflow: hidden; }
 /* The travel scene appears at arrival, after the standalone dance card. */
 .result-screen:not([data-show-phase="arrival"]) { background: none; }
 .result-screen:not([data-show-phase="arrival"]) .result-card { background: #fffdf5; }
+
+/* A quiet personal-pace guide: expiration has no gameplay effect. */
+.game-screen > .progress-track { flex-shrink: 0; }
+.pace-track { margin-top: 5px; }
+.pace-fill { width: 100%; transform-origin: left center; transition: none; }
+/* Keep tall headwear inside short journey scenes, including small phones. */
+body.start-active .start-mascot { width: auto; height: min(250px, calc(100% - 10px)); bottom: -20px; }

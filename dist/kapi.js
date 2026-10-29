@@ -174,7 +174,7 @@
       this.reducedMotion = motionPreference?.matches === true;
       motionPreference?.addEventListener?.("change", (event) => { this.reducedMotion = event.matches; });
       Object.values(RIG_PARTS).forEach((source) => this.loadImage(source));
-      ["star-badge", "red-cap", "glasses", "scarf", "backpack", "blue-cap", "medal", "crown"].forEach((name) => this.loadImage(`assets/cosmetics/${name}.svg`));
+      ["star-badge", "red-cap", "glasses", "scarf", "backpack", "blue-cap", "medal", "crown", "pompom-hat"].forEach((name) => this.loadImage(`assets/cosmetics/${name}.svg`));
     }
 
     setOutfit(permanent = {}, session = {}) {
@@ -216,7 +216,8 @@
       if (!entry.ready) return;
       const attachment = this.getAttachmentTransform(slot, pose, limbs);
       const bounds = {
-        hat: [-150, -239, 300, 140], glasses: [-181, -84, 362, 104],
+        hat: id === "hat-pompom" ? [-164, -290, 328, 190] : [-150, -239, 300, 140],
+        glasses: [-244, -215, 488, 430],
         neck: [-122, -216, 245, 165], back: [-325, -170, 170, 220], badge: [82, -45, 85, 90]
       }[slot];
       context.save();

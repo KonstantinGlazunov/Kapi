@@ -55,6 +55,7 @@
     { id: "backpack", xp: 200, slot: "back", asset: "backpack-stars", de: "Neuer Rucksack", ru: "Новый рюкзак" },
     { id: "hat-blue", xp: 280, slot: "hat", asset: "blue-cap", de: "Blaue Kappe", ru: "Синяя кепка" },
     { id: "medal", xp: 380, slot: "badge", asset: "medal", de: "Medaille", ru: "Медаль" },
+    { id: "hat-pompom", xp: 440, slot: "hat", asset: "pompom-hat", de: "Bommelmütze", ru: "Шапочка с помпоном" },
     { id: "crown", xp: 500, slot: "hat", asset: "crown", de: "Krone", ru: "Корона" }
   ]);
 
@@ -67,13 +68,16 @@
       const needsSave = legacy || !profile.equippedOutfit || typeof profile.equippedOutfit !== "object";
       const earned = legacy ? KAPI_REWARDS.filter((reward) => reward.xp <= (Number(profile.totalXp) || 0)).map((reward) => reward.id) : profile.unlockedRewards;
       profile.unlockedRewards = [...new Set(earned.filter((id) => KAPI_REWARDS.some((reward) => reward.id === id)))];
+      // This newly added reward is also available to existing high-XP profiles.
+      const addedHat = (Number(profile.totalXp) || 0) >= 440 && !profile.unlockedRewards.includes("hat-pompom");
+      if (addedHat) profile.unlockedRewards.push("hat-pompom");
       const old = profile.equippedOutfit && typeof profile.equippedOutfit === "object" ? profile.equippedOutfit : {};
       profile.equippedOutfit = this.emptyOutfit();
       for (const slot of SLOTS) {
         const reward = KAPI_REWARDS.find((item) => item.id === old[slot]);
         if (reward?.slot === slot && profile.unlockedRewards.includes(reward.id)) profile.equippedOutfit[slot] = reward.id;
       }
-      return needsSave;
+      return needsSave || addedHat;
     }
 
     getNextReward(totalXp) {

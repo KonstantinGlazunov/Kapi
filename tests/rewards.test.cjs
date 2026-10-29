@@ -10,11 +10,11 @@ function setup(app = false) {
   return { env, system, app: env.sandbox.__app };
 }
 
-test('eight ordered cumulative XP rewards and next reachable goal', () => {
+test('nine ordered cumulative XP rewards and next reachable goal', () => {
   const { system } = setup();
   assert.deepEqual(Array.from(system.getRewards(), ({ xp, slot }) => [xp, slot]), [
     [20, 'badge'], [50, 'hat'], [90, 'glasses'], [140, 'neck'], [200, 'back'],
-    [280, 'hat'], [380, 'badge'], [500, 'hat']
+    [280, 'hat'], [380, 'badge'], [440, 'hat'], [500, 'hat']
   ]);
   for (const [xp, target, remaining] of [[0, 20, 20], [19, 20, 1], [20, 50, 30],
     [49, 50, 1], [50, 90, 40], [499, 500, 1]]) {
@@ -43,7 +43,7 @@ test('every XP boundary opens once and XP is never spent', () => {
     assert.equal(system.unlock(profile, before, reward.xp).length, 0);
     assert.equal(profile.totalXp, reward.xp);
   }
-  assert.equal(profile.unlockedRewards.length, 8);
+  assert.equal(profile.unlockedRewards.length, 9);
 });
 
 test('one large XP gain opens three items as one batch without duplication', () => {
@@ -113,7 +113,7 @@ test('session party hat only overrides during its scene; permanent cap returns',
       assert.ok(Object.values(animator.getAttachmentTransform(slot, pose, limbs)).every(Number.isFinite), `${scene}/${slot}`);
     }
   }
-  assert.equal(env.sandbox.KAPI_REWARDS.length, 8);
+  assert.equal(env.sandbox.KAPI_REWARDS.length, 9);
 });
 
 test('completion shows all unlocked items individually after the dance, then equips them once', () => {
@@ -237,3 +237,16 @@ test('assets are preloaded once and all eight cosmetics cached for offline use',
     assert.ok(sw.includes(`assets/${scene}`));
   }
 });
+
+ test('existing high-XP profiles receive pompom without replacing their crown', () => {
+   const { system } = setup();
+   const profile = { totalXp: 510, unlockedRewards: ['crown'], equippedOutfit: {hat: 'crown'}, currentStage: 12 };
+   assert.equal(system.migrate(profile), true);
+   assert.ok(profile.unlockedRewards.includes('hat-pompom'));
+   assert.equal(profile.equippedOutfit.hat, 'crown');
+   assert.equal(profile.totalXp, 510);
+   assert.equal(profile.currentStage, 12);
+   assert.equal(system.migrate(profile), false);
+   assert.equal(system.equip(profile, 'hat-pompom'), true);
+   assert.equal(profile.equippedOutfit.hat, 'hat-pompom');
+ });

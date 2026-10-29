@@ -757,7 +757,7 @@
     stageIntroSoundTimers.forEach((timer) => window.clearTimeout(timer));
     stageIntroSoundTimers = [];
     window.cancelAnimationFrame(stageIntroFrame);
-    if (target !== $("gameScreen")) { window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
+    if (target !== $("gameScreen")) { paceAnimation?.cancel(); window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
     if (target !== $("resultScreen")) {
       window.clearTimeout(resultShowTimer);
       window.clearTimeout(resultPhaseTimer);
@@ -1431,6 +1431,19 @@ function makePowerProblem(max, mastered) {
     sound("start");
   }
 
+  let paceAnimation = null;
+
+  function startPaceGuide() {
+    paceAnimation?.cancel();
+    // Reuse the personal fast-answer threshold; new profiles start at its
+    // existing four-second floor until the first three answers calibrate it.
+    const seconds = getProfile().personalFastTime ?? UNIVERSAL_FAST_TIME;
+    paceAnimation = $("paceFill").animate([
+      { transform: "scaleX(1)" }, { transform: "scaleX(0)" }
+    ], { duration: seconds * 1000, easing: "linear", fill: "forwards" });
+    // Deliberately no completion callback: the child may keep thinking.
+  }
+
   function nextProblem() {
     window.clearTimeout(solutionTimer);
     state.solutionShown = false;
@@ -1454,6 +1467,7 @@ function makePowerProblem(max, mastered) {
     $("streakPill").classList.toggle("hidden", state.streak < 2);
     $("progressFill").style.width = `${(state.index / TOTAL) * 100}%`;
     renderProblem(state.problem);
+    startPaceGuide();
     $("hint").classList.add("hidden");
     $("hint").innerHTML = "";
     const nextFeedback = state.index === 0 && state.targeted
@@ -1640,6 +1654,7 @@ function makePowerProblem(max, mastered) {
 
   function submitAnswer(value) {
     if (state.locked) return;
+    paceAnimation?.pause();
     dismissMotivation();
     state.paceUpdate = null;
     const elapsed = Math.max(.2, (performance.now() - state.startedAt) / 1000);
