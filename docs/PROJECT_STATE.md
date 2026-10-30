@@ -597,3 +597,8 @@ callback очищается до вызова, при skip и уходе. Worker
 /kapi/ safe update/offline/data PASS. Скриншоты /workspace/artifacts/prod94
 просмотрены: fit9/10, visual9/10, consistency9/10 — подсказка читаема,
 сцена доступна целиком для нажатия, чистый итог. Публикация ещё не проверена.
+
+PR#32 merged c94780b. Полный mobile320/360/390/430 PASS. Workflow41104079381
+SUCCESS (CI и deploy). По HTTPS на Pages и основном /kapi/ проверены
+index/app/styles/sw v94 побайтно. Новое ожидание нажатия опубликовано.
+Финальный скриншот320 просмотрен повторно: открытка поднята над подсказкой.
