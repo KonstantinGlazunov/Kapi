@@ -602,7 +602,8 @@
     const step = profile.journey.step, words = journeyCopy();
     setJourneyScene(step);
     $("journeyTitle").textContent = window.KapiJourney.chapters[window.KapiJourney.chapter(step)][language === "ru" ? 1 : 2];
-    $("journeyAlbumButton").textContent = `${words.album} · ${step + 1} / 24`;
+    $("journeyAlbumButton").textContent = words.album;
+    $("journeyAlbumButton").setAttribute("aria-label", `${words.album} · ${step + 1} / 24`);
     $("journeyPlace").textContent = words.places[step];
     $("journeyNext").textContent = words.next[step];
     $("journeyStops").innerHTML = words.places.slice(window.KapiJourney.chapter(step) * 4, window.KapiJourney.chapter(step) * 4 + 4).map((place, local) => { const i = window.KapiJourney.chapter(step) * 4 + local; return `<span class="${i <= step ? 'reached' : ''}" aria-label="${place}" title="${place}">${i < step ? '✓' : i === step ? '●' : '○'}</span>`; }).join('<i></i>');

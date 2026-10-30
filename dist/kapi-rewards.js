@@ -41,7 +41,7 @@
   }
   function chapter(step) { return Math.floor(Math.max(0, Math.min(MAX_STEP, step)) / 4); }
   function scene(step) {
-    if (step < 4) return { asset: 'forest-route.png', position: ['5%','38%','63%','100%'][step] + ' 70%', size: 'auto 135%' };
+    if (step < 4) return { asset: 'forest-' + step + '.webp', position: 'center', size: 'cover' };
     const cell = step % 4;
     return { asset: chapters[chapter(step)][0] + '-' + cell + '.webp', position: 'center', size: 'cover' };
   }
