@@ -636,20 +636,8 @@
     $("journeyAlbum").showModal();
   }
 
-  function renderJourneyWardrobe() {
-    const profile = getProfile();
-    const holder = document.createElement("div"); holder.className = "journey-wardrobe-variants";
-    for (const id of Object.keys(window.KapiJourney.variants)) {
-      if (!profile.unlockedRewards.includes(id)) continue;
-      const button = document.createElement("button"); button.className = "share-button";
-      button.textContent = window.KapiJourney.variant(profile, id)[language] + ' · ' + journeyCopy().goal;
-      button.onclick = () => openJourneyPicker(id);
-      holder.append(button);
-    }
-    $("wardrobeItems").append(holder);
-  }
   function openJourneyPicker(id) {
-    showJourneyChoice(id, () => { $("journeyPicker").close(); updateMascotOutfit(); renderWardrobe(); renderJourneyWardrobe(); updateHomeStats(); }, false);
+    showJourneyChoice(id, () => { $("journeyPicker").close(); updateMascotOutfit(); renderWardrobe();  updateHomeStats(); }, false);
     $("journeyPicker").showModal();
   }
   function showJourneyChoice(id, done, inResult) {
@@ -717,22 +705,26 @@
   }
 
   function renderWardrobe() {
-    const profile = getProfile();
+    const profile = getProfile(), scroller = $("wardrobeItems"), scrollTop = scroller.scrollTop;
     const slots = ["hat", "glasses", "neck", "back", "badge"];
-    const visible = new Set(rewards.getRewards().filter((reward) => profile.unlockedRewards.includes(reward.id)).map((reward) => reward.id));
-    rewards.getRewards().filter((reward) => !visible.has(reward.id)).slice(0, 3).forEach((reward) => visible.add(reward.id));
-    $("wardrobeItems").innerHTML = slots.map((slot) => `<section class="wardrobe-slot"><strong>${copy.wardrobeSlots[slot]}</strong><div class="wardrobe-options">
-      <button class="wardrobe-item" type="button" data-unequip="${slot}" aria-pressed="${profile.equippedOutfit[slot] === null}">${copy.noItem}${profile.equippedOutfit[slot] === null ? ` · ${copy.selected}` : ""}</button>
-      ${rewards.getRewards().filter((reward) => reward.slot === slot && visible.has(reward.id)).map((reward) => {
+    const visible = new Set(rewards.getRewards().filter(reward => profile.unlockedRewards.includes(reward.id)).map(reward => reward.id));
+    rewards.getRewards().filter(reward => !visible.has(reward.id)).slice(0, 3).forEach(reward => visible.add(reward.id));
+    scroller.innerHTML = slots.map(slot => `<section class="wardrobe-slot" aria-label="${copy.wardrobeSlots[slot]}"><div class="wardrobe-options">
+      <button class="wardrobe-item wardrobe-none" type="button" data-unequip="${slot}" aria-label="${copy.wardrobeSlots[slot]} · ${copy.noItem}" aria-pressed="${profile.equippedOutfit[slot] === null}"><span aria-hidden="true">⊘</span></button>
+      ${rewards.getRewards().filter(reward => reward.slot === slot && visible.has(reward.id)).map(reward => {
         const unlocked = profile.unlockedRewards.includes(reward.id);
-        const selected = profile.equippedOutfit[slot] === reward.id;
-        return `<button class="wardrobe-item" type="button" data-equip="${reward.id}" aria-label="${rewardName(reward)} · ${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}" aria-pressed="${selected}" ${unlocked ? "" : "disabled"}><img src="assets/cosmetics/${window.KapiJourney.variant(profile, reward.id)?.asset || reward.asset}.svg" alt=""><span>${window.KapiJourney.variant(profile, reward.id)?.[language] || rewardName(reward)}</span><small>${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}</small></button>`;
-      }).join("")}</div></section>`).join("");
+        const variants = window.KapiJourney.variants[reward.id] || [{id: '', asset: reward.asset, [language]: rewardName(reward)}];
+        return variants.map(variant => {
+          const selected = profile.equippedOutfit[slot] === reward.id && (!variant.id || profile.cosmeticVariants[reward.id] === variant.id);
+          return `<button class="wardrobe-item" type="button" data-equip="${reward.id}" data-variant="${variant.id}" aria-label="${variant[language]} · ${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}" aria-pressed="${selected}" ${unlocked ? '' : 'disabled'}><img src="assets/cosmetics/${variant.asset}.svg" alt="">${unlocked ? '' : `<small>${reward.xp} XP</small>`}</button>`;
+        }).join('');
+      }).join('')}</div></section>`).join('');
+    scroller.scrollTop = scrollTop;
   }
 
   function showWardrobe() {
     renderWardrobe();
-    renderJourneyWardrobe();
+
     $("wardrobeDialog").showModal();
     kapi?.animator?.play("idle", { surface: "wardrobe" });
   }
@@ -3037,10 +3029,17 @@ function makePowerProblem(max, mastered) {
     if (!equip && !unequip) return;
     const profile = getProfile();
     if (equip ? !rewards.equip(profile, equip.dataset.equip) : !rewards.unequip(profile, unequip.dataset.unequip)) return;
+    if (equip?.dataset.variant && window.KapiJourney.variants[equip.dataset.equip]?.some(option => option.id === equip.dataset.variant)) {
+      profile.cosmeticVariants[equip.dataset.equip] = equip.dataset.variant;
+    }
     saveProfile(profile);
     updateMascotOutfit(profile);
     renderWardrobe();
-    renderJourneyWardrobe();
+    const replacement = [...$("wardrobeItems").querySelectorAll("button")].find(button => equip
+      ? button.dataset.equip === equip.dataset.equip && button.dataset.variant === equip.dataset.variant
+      : button.dataset.unequip === unequip.dataset.unequip);
+    replacement?.focus({ preventScroll: true });
+
   });
   $("resultStatsButton").addEventListener("click", showStats);
   $("statsContent").addEventListener("click", (event) => {
