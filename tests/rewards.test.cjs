@@ -177,6 +177,10 @@ test('leaving during the item reveal cancels the delayed summary', () => {
   app.finishTraining();
   assert.equal(app.machine.state, 'trainingFinished');
   env.advance(6500);
+  assert.equal(env.elements.get('resultScreen').dataset.showPhase, 'arrival');
+  env.advance(60000);
+  assert.equal(env.elements.get('resultScreen').dataset.showPhase, 'arrival');
+  env.elements.get('continueArrival').listeners.click();
   assert.equal(env.elements.get('resultScreen').dataset.showPhase, 'gift');
   app.showScreen(env.elements.get('startScreen'));
   env.advance(10000);
@@ -250,3 +254,17 @@ test('assets are preloaded once and all eight cosmetics cached for offline use',
    assert.equal(system.equip(profile, 'hat-pompom'), true);
    assert.equal(profile.equippedOutfit.hat, 'hat-pompom');
  });
+
+
+test('leaving arrival cancels its pending continuation', () => {
+  const { env, app } = setup(true);
+  app.state.results = Array.from({length:20}, () => ({firstTry:true, seconds:3}));
+  app.finishTraining();
+  env.advance(4000);
+  assert.equal(env.elements.get('resultScreen').dataset.showPhase, 'arrival');
+  app.showScreen(env.elements.get('startScreen'));
+  env.elements.get('continueArrival').listeners.click();
+  env.advance(60000);
+  assert.equal(env.elements.get('startScreen').classList.contains('active'), true);
+  assert.equal(env.elements.get('resultScreen').dataset.showPhase, 'arrival');
+});
