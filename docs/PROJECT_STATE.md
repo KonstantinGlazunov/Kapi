@@ -526,3 +526,9 @@ retained progress, offline, multi-tab, backup/quota. Chromium320×568,390×844,
 Скриншоты /workspace/artifacts/prod90 просмотрены: fit9/10, visual9/10,
 consistency9/10 — Капи целиком виден, понятная сетка без повторяющихся надписей,
 доступная кнопка закрытия. Публикация ниже.
+
+PR#28 MERGED954ec6f. Workflow41004394645 SUCCESS: полный CI (mobile,guidance,
+intro,install,Chromium/WebKit PWA) и deploy. По HTTPS на Pages и основном
+/kapi/ побайтно проверены26 файлов: worker v90, HTML/app/styles/rewards/storage
+и все20 новых пейзажей. Путешествие24 и закреплённый гардероб опубликованы.
+Сохранение прогресса подтверждено, блокеров нет.
