@@ -213,6 +213,8 @@ async function run() {
         api.state.score = 0;
         api.finishTraining();
       });
+      await page.waitForFunction(() => ["arrival", "summary"].includes(document.querySelector("#resultScreen").dataset.showPhase));
+      if (await page.locator("#continueArrival").isVisible()) await page.locator("#continueArrival").click();
       await page.waitForFunction(() => document.querySelector("#resultScreen").dataset.showPhase === "summary");
       await page.locator("#weeklyResult").waitFor({ state: "visible" });
       assert.ok((await page.locator('#weeklyResult').innerText()).includes('Wochenziel geschafft'));

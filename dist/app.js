@@ -289,10 +289,12 @@
   let rewardGoalTimer = 0;
   let resultShowTimer = 0;
   let resultPhaseTimer = 0;
+  let continueArrival = null;
   let resultGiftAnimations = [];
   let revealResultReward = null;
 
   function endResultShow(keepMusic = false) {
+    continueArrival = null;
     resultGiftAnimations.forEach((animation) => animation.cancel());
     resultGiftAnimations = [];
     window.clearTimeout(resultShowTimer);
@@ -799,6 +801,7 @@
     window.cancelAnimationFrame(stageIntroFrame);
     if (target !== $("gameScreen")) { paceAnimation?.cancel(); window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
     if (target !== $("resultScreen")) {
+      continueArrival = null;
       window.clearTimeout(resultShowTimer);
       window.clearTimeout(resultPhaseTimer);
       revealResultReward = null;
@@ -2362,7 +2365,8 @@ function makePowerProblem(max, mastered) {
         $("resultShowTitle").appendChild(postcardLabel);
         $("resultScreen").dataset.chapterCelebration = String(window.KapiJourney.chapter(arrivalStep));
       } else delete $("resultScreen").dataset.chapterCelebration;
-      resultPhaseTimer = window.setTimeout(() => showItems(), chapterEnd ? 4200 : 2500);
+      $("continueArrival").textContent = ru ? "Нажми на картинку, чтобы продолжить" : "Tippe auf das Bild, um weiterzugehen";
+      continueArrival = () => showItems();
     }, 4000);
   }
 
@@ -3035,6 +3039,14 @@ function makePowerProblem(max, mastered) {
   }, true);
   $("journeyAlbumButton").addEventListener("click", openJourneyAlbum);
   $("journeyPicker").addEventListener("close", () => updateMascotOutfit());
+  $("continueArrival").addEventListener("click", () => {
+    const next = continueArrival;
+    continueArrival = null;
+    if (!next) return;
+    next();
+    if ($("resultScreen").dataset.showPhase === "summary") $("againButton").focus();
+    else $("skipResultShow").focus();
+  });
   $("skipResultShow").addEventListener("click", () => { endResultShow(); $("againButton").focus(); });
   $("startButton").addEventListener("click", () => startTrainingWithIntro());
   $("homeMascot").addEventListener("click", playHomeReaction);

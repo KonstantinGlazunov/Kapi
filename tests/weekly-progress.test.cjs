@@ -160,6 +160,10 @@ test('a completed third session reveals the weekly goal once after the final ani
   assert.equal(app.getProfile().weeklySessions.count, 3);
   assert.equal(env.elements.get('weeklyResult').classList.contains('hidden'), true);
   env.advance(6500);
+  assert.equal(env.elements.get('resultScreen').dataset.showPhase, 'arrival');
+  env.advance(60000);
+  assert.equal(env.elements.get('resultScreen').dataset.showPhase, 'arrival');
+  env.elements.get('continueArrival').listeners.click();
   assert.equal(env.elements.get('resultScreen').dataset.showPhase, 'summary');
   assert.equal(app.machine.state, 'trainingFinished');
   env.advance(1600);
@@ -183,7 +187,9 @@ test('reward and weekly goal share one reveal and one sound before the next targ
   app.state.score = 1;
   app.finishTraining();
   assert.equal(env.elements.get('resultRewardProgress').classList.contains('hidden'), true);
-  env.advance(9100);
+  env.advance(4000);
+  env.elements.get('continueArrival').listeners.click();
+  env.advance(2600);
   const reveal = env.elements.get('rewardReveal').innerHTML;
   assert.ok(reveal.includes('Großer Fortschritt'));
   assert.ok(reveal.includes('Wochenziel geschafft'));
