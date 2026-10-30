@@ -581,3 +581,8 @@ SUCCESS: полный CI и deploy. По HTTPS на Pages и основном /k
 маршруте; закрытые без кнопок; декодирование, contain, fit, Escape,scroll/focus
 PASS. Просмотрены /workspace/artifacts/prod93; fit9/10, visual9/10,
 consistency9/10: полное изображение, читаемый заголовок, доступное закрытие.
+
+PR#31 merged56761ec. Workflow41059066467 SUCCESS: полный CI и deploy.
+На Pages и основном /kapi/ по HTTPS проверены HTML/app/styles и worker v93:
+побайтно совпадают с проверенными файлами. Крупный просмотр открыток и
+открытых мест опубликован, scroll/focus сохраняются. Блокеров нет.
