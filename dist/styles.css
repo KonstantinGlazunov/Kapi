@@ -1626,3 +1626,14 @@ body.start-active .start-mascot { width: auto; height: min(250px, calc(100% - 10
 .wardrobe-item small { font-size: .72rem; }
 .wardrobe-item[aria-pressed="true"]::after { content: '✓'; position: absolute; right: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #0f766e; color: white; font-size: 14px; line-height: 20px; }
 .wardrobe-none span { font-size: 2.2rem; font-weight: 400; color: #819b94; }
+body.start-active .home-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#journeyAlbum { padding: 0; overflow: hidden; }
+#journeyAlbumContent { display: flex; flex-direction: column; max-height: 90dvh; }
+#journeyAlbum .album-header { position: static; padding: 16px 18px; flex: 0 0 auto; border-bottom: 1px solid #e4e8d9; }
+.album-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 18px 18px; }
+.postcard .album-picture { position: relative; padding: 0; overflow: hidden; height: 100px; }
+.postcard .album-picture img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.postcard.locked { opacity: 1; }
+.postcard.locked .album-picture img { filter: grayscale(.7) brightness(.8); }
+.album-lock { position: absolute; right: 6px; top: 6px; padding: 3px 5px; background: #fffdf3ee; border-radius: 6px; color: #0f766e; font-size: 1rem; text-shadow: none; }
+.album-unvisited { font-size: 1.5rem; }

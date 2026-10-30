@@ -60,14 +60,14 @@ async function run() {
       assert.equal(await page.locator('#speechBubble').count(), 0, 'home greeting must not obscure the castle');
       assert.equal(await page.locator('#homeMascot').isVisible(), true);
       assert.equal(await page.locator('.home-stage-card').count(), 0);
-      assert.equal(await page.locator('.home-nav .text-button').count(), 3);
+      assert.equal(await page.locator('.home-nav .text-button').count(), 2);
       const navBounds = await page.locator('.home-nav .text-button').evaluateAll(buttons =>
         buttons.map(button => { const { top, bottom } = button.getBoundingClientRect(); return { top, bottom }; }));
       assert.ok(navBounds.every(box => Math.abs(box.top - navBounds[0].top) < 1 && Math.abs(box.bottom - navBounds[0].bottom) < 1),
         `${width}: home navigation buttons must share top and bottom edges: ${JSON.stringify(navBounds)}`);
       const homeLayout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth,
         viewport: document.documentElement.clientWidth, bottom: document.querySelector('#startButton').getBoundingClientRect().bottom,
-        historyTop: document.querySelector('#statsButton').getBoundingClientRect().top,
+        navigationTop: document.querySelector('#mapButton').getBoundingClientRect().top,
         mapBottom: document.querySelector('#mapButton').getBoundingClientRect().bottom,
         wardrobeBottom: document.querySelector('#wardrobeButton').getBoundingClientRect().bottom,
         settingsBottom: document.querySelector('#settingsButton').getBoundingClientRect().bottom,
@@ -78,9 +78,13 @@ async function run() {
       assert.ok(homeLayout.bottom <= height, `${width}: start button below viewport: ${JSON.stringify(homeLayout)}`);
       assert.ok(homeLayout.heroHeight >= 145 && homeLayout.startHeight >= 44 && homeLayout.navHeight >= 44,
         `${width}: mascot or controls too small: ${JSON.stringify(homeLayout)}`);
-      assert.ok(homeLayout.settingsBottom <= height && homeLayout.historyTop >= homeLayout.bottom + 8 &&
+      assert.ok(homeLayout.settingsBottom <= height && homeLayout.navigationTop >= homeLayout.bottom + 8 &&
         homeLayout.mapBottom <= height - 2 && homeLayout.wardrobeBottom <= height - 2,
         `${width}: home actions overlap or leave viewport: ${JSON.stringify(homeLayout)}`);
+      await page.locator('#settingsButton').click();
+      await page.locator('[data-settings-section="history"]').click();
+      assert.equal(await page.locator('#statsDialog').isVisible(), true);
+      await page.locator('#closeStatsButton').click();
       await page.locator('#startButton').click();
       await page.locator('#gameScreen').waitFor({state:'visible'});
       assert.equal(await page.locator('#gameScreen').isVisible(), true, 'tap starts training');
@@ -239,7 +243,8 @@ async function run() {
           window.KapiMasterySystem.markStageMastered(profile, 12, new Date('2020-01-01T12:00:00Z'));
           api.saveProfile(profile);
         });
-        await page.locator('#statsButton').click();
+        await page.locator('#settingsButton').click();
+      await page.locator('[data-settings-section="history"]').click();
         assert.ok((await page.locator('#statsContent').innerText()).includes('Plus über den Zehner'), 'History names due canonical skill');
         const titleHeight = await page.locator('#historyTitle').evaluate(element => element.getBoundingClientRect().height);
         assert.ok(titleHeight <= 35, `History title wraps on ${width}px: ${titleHeight}`);
@@ -298,7 +303,8 @@ async function run() {
           window.KapiMasterySystem.markStageMastered(profile, 23, new Date('2020-01-01T12:00:00Z'));
           api.saveProfile(profile);
         });
-        await page.locator('#statsButton').click();
+        await page.locator('#settingsButton').click();
+      await page.locator('[data-settings-section="history"]').click();
         assert.ok((await page.locator('#statsContent').innerText()).includes('Einmaleins-Reihen'), 'late skill needs a human History label');
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-late-skill-history.png`) });
         await page.locator('#closeStatsButton').click();
@@ -343,7 +349,8 @@ async function run() {
             { firstAttempt: true, correct: false, source: 'curriculum' });
           api.saveProfile(profile);
         });
-        await page.locator('#statsButton').click();
+        await page.locator('#settingsButton').click();
+      await page.locator('[data-settings-section="history"]').click();
         const targetButton = page.locator('[data-target-subskill="multiply:table:7"]');
         assert.equal(await targetButton.isVisible(), true, 'History should offer the 7er-Reihe as targeted practice');
         await targetButton.scrollIntoViewIfNeeded();

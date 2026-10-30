@@ -326,7 +326,6 @@
     $("weeklyLabel").textContent = copy.thisWeek;
     $("totalXpLabel").textContent = copy.homeXp;
     $("startButton").innerHTML = `<span class="home-start-icon" aria-hidden="true">▶</span> ${copy.start}`;
-    $("statsButton").textContent = copy.homeHistory;
     $("wardrobeButton").textContent = copy.meinKapi;
     $("mapButton").textContent = copy.learningPath;
     $("mapTitle").textContent = copy.learningPath;
@@ -411,6 +410,7 @@
     const items = [
       ["counting", "±", copy.settingsCounting, copy.settingsCountingMenu],
       ["general", "A", copy.settingsGeneral, copy.settingsGeneralMenu],
+      ["history", "◷", copy.homeHistory, language === "ru" ? "Результаты прошлых тренировок" : "Ergebnisse vergangener Trainings"],
       ["about", "i", copy.settingsAbout, copy.settingsAboutMenu]
     ];
     if (settingsSection === "menu") {
@@ -623,15 +623,15 @@
   function openJourneyAlbum() {
     const profile = getProfile(), words = journeyCopy(), step = profile.journey.step;
     const cards = window.KapiJourney.postcards(profile);
-    $("journeyAlbumContent").innerHTML = `<div class="album-header"><h2 id="journeyAlbumTitle">${words.album}</h2><button class="text-button" id="closeJourneyAlbum">${words.close}</button></div><p>${step + 1} / 24 · ${language === 'ru' ? 'Открытки' : 'Postkarten'}: ${cards.length} / 5</p>`  + `<div class="album-postcards">` + [7,11,15,19,23].map(i => {
+    $("journeyAlbumContent").innerHTML = `<div class="album-header"><h2 id="journeyAlbumTitle">${words.album}</h2><button class="text-button" id="closeJourneyAlbum">${words.close}</button></div><div class="album-scroll"><p>${step + 1} / 24 · ${language === 'ru' ? 'Открытки' : 'Postkarten'}: ${cards.length} / 5</p>`  + `<div class="album-postcards">` + [7,11,15,19,23].map(i => {
       const earned = cards.includes(i), scene = window.KapiJourney.scene(i);
-      return `<figure class="postcard ${earned ? 'earned' : 'locked'}"><div class="album-picture" ${earned ? `style='background-image:url("assets/journey/${scene.asset}");background-size:cover;background-position:center'` : ''}>${earned ? '✉' : '○'}</div><figcaption>${words.places[i]}<small>${earned ? (language === 'ru' ? 'В альбоме' : 'Gesammelt') : (language === 'ru' ? 'После точки ' : 'Nach Ort ') + (i+1)}</small></figcaption></figure>`;
+      return `<figure class="postcard ${earned ? 'earned' : 'locked'}"><div class="album-picture"><img src="assets/journey/${scene.asset}" alt="${words.places[i]}" width="320" height="200"><span class="album-lock" aria-label="${earned ? (language === 'ru' ? 'Получено' : 'Gesammelt') : (language === 'ru' ? 'Ещё не получено' : 'Noch nicht gesammelt')}">${earned ? '✉' : '🔒'}</span></div><figcaption>${words.places[i]}<small>${earned ? (language === 'ru' ? 'В альбоме' : 'Gesammelt') : (language === 'ru' ? 'Откроется после точки ' : 'Ab Ort ') + (i+1)}</small></figcaption></figure>`;
     }).join('') + `</div>` + window.KapiJourney.chapters.map((chapter, c) => {
       return `<section class="album-chapter"><h3>${chapter[language === 'ru' ? 1 : 2]} ${c > 0 && cards.includes(c * 4 + 3) ? '✉' : ''}</h3><div class="album-places">` + words.places.slice(c * 4, c * 4 + 4).map((name, n) => {
         const i = c * 4 + n, scene = window.KapiJourney.scene(i), unlocked = i <= step;
-        return `<figure class="album-place ${unlocked ? 'visited' : 'locked'}"><div class="album-picture" ${unlocked ? `style='background-image:url("assets/journey/${scene.asset}");background-position:${scene.position};background-size:${scene.size}'` : ''}>${unlocked ? '' : '○'}</div><figcaption>${i + 1}. ${name}${i === step ? ' ●' : unlocked ? ' ✓' : ''}</figcaption></figure>`;
+        return `<figure class="album-place ${unlocked ? 'visited' : 'locked'}"><div class="album-picture" ${unlocked ? `style='background-image:url("assets/journey/${scene.asset}");background-position:${scene.position};background-size:${scene.size}'` : ''}>${unlocked ? '' : '<span class="album-unvisited">🔒</span>'}</div><figcaption>${i + 1}. ${name}${i === step ? ' ●' : unlocked ? ' ✓' : ''}</figcaption></figure>`;
       }).join('') + `</div></section>`;
-    }).join('');
+    }).join('') + '</div>';
     $("closeJourneyAlbum").onclick = () => $("journeyAlbum").close();
     $("journeyAlbum").showModal();
   }
@@ -3017,7 +3017,6 @@ function makePowerProblem(max, mastered) {
   });
   $("againButton").addEventListener("click", () => { showScreen($("startScreen")); updateHomeStats(); });
   $("shareButton").addEventListener("click", shareResult);
-  $("statsButton").addEventListener("click", showStats);
   $("wardrobeButton").addEventListener("click", showWardrobe);
   $("mapButton").addEventListener("click", showCurriculumMap);
   $("closeMapButton").addEventListener("click", () => $("mapDialog").close());
@@ -3081,6 +3080,11 @@ function makePowerProblem(max, mastered) {
   $("settingsContent").addEventListener("change", handleSettingsChange);
   $("settingsContent").addEventListener("click", (event) => {
     const sectionButton = event.target.closest("[data-settings-section]");
+    if (sectionButton?.dataset.settingsSection === "history") {
+      $("settingsDialog").close();
+      showStats();
+      return;
+    }
     if (sectionButton) {
       settingsSection = sectionButton.dataset.settingsSection;
       renderSettingsContent();
