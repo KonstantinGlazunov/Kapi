@@ -1666,3 +1666,8 @@ body.start-active .home-nav .text-button::before { line-height: 1; }
 .result-screen[data-show-phase="arrival"] .arrival-continue:focus-visible { outline: 3px solid #087f78; outline-offset: -4px; }
 .result-screen[data-show-phase="arrival"] .result-skip { z-index: 5; }
 .result-screen[data-show-phase="arrival"][data-chapter-celebration]::after { bottom: 90px; }
+
+.journey-viewer img { touch-action: pan-y pinch-zoom; user-select: none; max-height: calc(94dvh - 160px); }
+.journey-viewer-nav { display: flex; align-items: center; justify-content: center; gap: 24px; flex: 0 0 auto; }
+.journey-viewer-nav button:disabled { opacity: .3; cursor: default; }
+.journey-viewer-nav span { min-width: 60px; text-align: center; font-weight: 700; }
