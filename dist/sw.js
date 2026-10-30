@@ -1,6 +1,6 @@
 /* kapi-runtime:v1 — scope-derived URLs and private caches; consumed by /kapi proxy. */
 const CACHE_PREFIX = `kapi:${self.registration.scope}:`;
-const CACHE = `${CACHE_PREFIX}v91`;
+const CACHE = `${CACHE_PREFIX}v92`;
 const SCOPE = new URL(self.registration.scope);
 const LEGACY_PREFIX = SCOPE.pathname === "/kapi/" ? "vibe-kapi-capy-count-" : "capy-count-";
 const ASSETS = ["./", "index.html", "styles.css", "kapi.js", "app.js", "manifest.webmanifest", "manifest-ru.webmanifest", "manifest-de.webmanifest", "favicon.svg", "icon-192.png", "icon-512.png", "assets/capybara.webp", "assets/kapi-welcome-sprite.webp", "assets/kapi-flag.webp", "assets/kapi-party.webp", "assets/kapi-dance.webp", "assets/kapi-handshake.webp", "assets/kapi-rig-v2/head.png", "assets/kapi-rig-v2/torso.png", "assets/kapi-rig-v4/arm-left-upper.png", "assets/kapi-rig-v4/arm-left-forearm.png", "assets/kapi-rig-v3/paw-left.png", "assets/kapi-rig-v4/arm-right-upper.png", "assets/kapi-rig-v4/arm-right-forearm.png", "assets/kapi-rig-v3/paw-right.png", "assets/kapi-rig-v5/leg-and-paw.png"];
@@ -13,7 +13,7 @@ ASSETS.push("assets/sounds/dance-music.wav", "assets/sounds/start.wav", "assets/
 
 ASSETS.push("assets/journey/forest-route.png", ...["scarf-berry", "scarf-sky", "backpack-stars", "backpack-forest"].map(name => `assets/cosmetics/${name}.svg`));
 
-ASSETS.push(...["river", "mountains", "valley", "coast", "island"].flatMap(name => [0,1,2,3].map(i => `assets/journey/${name}-${i}.webp`)));
+ASSETS.push(...["forest", "river", "mountains", "valley", "coast", "island"].flatMap(name => [0,1,2,3].map(i => `assets/journey/${name}-${i}.webp`)));
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

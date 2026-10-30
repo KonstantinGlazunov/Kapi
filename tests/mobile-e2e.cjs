@@ -60,7 +60,7 @@ async function run() {
       assert.equal(await page.locator('#speechBubble').count(), 0, 'home greeting must not obscure the castle');
       assert.equal(await page.locator('#homeMascot').isVisible(), true);
       assert.equal(await page.locator('.home-stage-card').count(), 0);
-      assert.equal(await page.locator('.home-nav .text-button').count(), 2);
+      assert.equal(await page.locator('.home-nav .text-button').count(), 3);
       const navBounds = await page.locator('.home-nav .text-button').evaluateAll(buttons =>
         buttons.map(button => { const { top, bottom } = button.getBoundingClientRect(); return { top, bottom }; }));
       assert.ok(navBounds.every(box => Math.abs(box.top - navBounds[0].top) < 1 && Math.abs(box.bottom - navBounds[0].bottom) < 1),
