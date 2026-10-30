@@ -621,18 +621,43 @@
     button.hidden = !window.KapiJourney.variants[next?.id];
     button.textContent = words.goal;
   }
+  function albumViewButton(step, name, available) {
+    if (!available) return '';
+    const label = (language === 'ru' ? 'Рассмотреть: ' : 'Ansehen: ') + name;
+    return `<button class="album-open" type="button" data-album-view="${step}" aria-label="${label}"><span aria-hidden="true">⤢</span></button>`;
+  }
+
+  function openJourneyViewer(step, trigger) {
+    if (!Number.isInteger(step) || step < 0 || step > getProfile().journey.step) return;
+    const viewer = $("journeyViewer"), scroller = $("journeyAlbumContent").querySelector('.album-scroll');
+    const scrollTop = scroller.scrollTop;
+    const name = journeyCopy().places[step];
+    $("journeyViewerTitle").textContent = name;
+    $("journeyViewerImage").alt = name;
+    $("journeyViewerImage").src = `assets/journey/${window.KapiJourney.scene(step).asset}`;
+    $("closeJourneyViewer").setAttribute('aria-label', journeyCopy().close);
+    $("closeJourneyViewer").onclick = () => viewer.close();
+    viewer.onclick = event => { if (event.target === viewer) viewer.close(); };
+    viewer.onclose = () => { trigger?.focus({preventScroll: true}); scroller.scrollTop = scrollTop; };
+    viewer.showModal();
+  }
+
   function openJourneyAlbum() {
     const profile = getProfile(), words = journeyCopy(), step = profile.journey.step;
     const cards = window.KapiJourney.postcards(profile);
     $("journeyAlbumContent").innerHTML = `<div class="album-header"><h2 id="journeyAlbumTitle">${words.album}</h2><button class="text-button" id="closeJourneyAlbum">${words.close}</button></div><div class="album-scroll"><p>${step + 1} / 24 · ${language === 'ru' ? 'Открытки' : 'Postkarten'}: ${cards.length} / 5</p>`  + `<div class="album-postcards">` + [7,11,15,19,23].map(i => {
       const earned = cards.includes(i), scene = window.KapiJourney.scene(i);
-      return `<figure class="postcard ${earned ? 'earned' : 'locked'}"><div class="album-picture"><img src="assets/journey/${scene.asset}" alt="${words.places[i]}" width="320" height="200"><span class="album-lock" aria-label="${earned ? (language === 'ru' ? 'Получено' : 'Gesammelt') : (language === 'ru' ? 'Ещё не получено' : 'Noch nicht gesammelt')}">${earned ? '✉' : '🔒'}</span></div><figcaption>${words.places[i]}<small>${earned ? (language === 'ru' ? 'В альбоме' : 'Gesammelt') : (language === 'ru' ? 'Откроется после точки ' : 'Ab Ort ') + (i+1)}</small></figcaption></figure>`;
+      return `<figure class="postcard ${earned ? 'earned' : 'locked'}"><div class="album-picture"><img src="assets/journey/${scene.asset}" alt="${words.places[i]}" width="320" height="200"><span class="album-lock" aria-label="${earned ? (language === 'ru' ? 'Получено' : 'Gesammelt') : (language === 'ru' ? 'Ещё не получено' : 'Noch nicht gesammelt')}">${earned ? '✉' : '🔒'}</span></div><figcaption>${words.places[i]}<small>${earned ? (language === 'ru' ? 'В альбоме' : 'Gesammelt') : (language === 'ru' ? 'Откроется после точки ' : 'Ab Ort ') + (i+1)}</small></figcaption>${albumViewButton(i, words.places[i], earned)}</figure>`;
     }).join('') + `</div>` + window.KapiJourney.chapters.map((chapter, c) => {
       return `<section class="album-chapter"><h3>${chapter[language === 'ru' ? 1 : 2]} ${c > 0 && cards.includes(c * 4 + 3) ? '✉' : ''}</h3><div class="album-places">` + words.places.slice(c * 4, c * 4 + 4).map((name, n) => {
         const i = c * 4 + n, scene = window.KapiJourney.scene(i), unlocked = i <= step;
-        return `<figure class="album-place ${unlocked ? 'visited' : 'locked'}"><div class="album-picture" ${unlocked ? `style='background-image:url("assets/journey/${scene.asset}");background-position:${scene.position};background-size:${scene.size}'` : ''}>${unlocked ? '' : '<span class="album-unvisited">🔒</span>'}</div><figcaption>${i + 1}. ${name}${i === step ? ' ●' : unlocked ? ' ✓' : ''}</figcaption></figure>`;
+        return `<figure class="album-place ${unlocked ? 'visited' : 'locked'}"><div class="album-picture" ${unlocked ? `style='background-image:url("assets/journey/${scene.asset}");background-position:${scene.position};background-size:${scene.size}'` : ''}>${unlocked ? '' : '<span class="album-unvisited">🔒</span>'}</div><figcaption>${i + 1}. ${name}${i === step ? ' ●' : unlocked ? ' ✓' : ''}</figcaption>${albumViewButton(i, name, unlocked)}</figure>`;
       }).join('') + `</div></section>`;
     }).join('') + '</div>';
+    $("journeyAlbumContent").onclick = event => {
+      const trigger = event.target.closest('[data-album-view]');
+      if (trigger) openJourneyViewer(Number(trigger.dataset.albumView), trigger);
+    };
     $("closeJourneyAlbum").onclick = () => $("journeyAlbum").close();
     $("journeyAlbum").showModal();
   }
