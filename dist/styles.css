@@ -1671,3 +1671,9 @@ body.start-active .home-nav .text-button::before { line-height: 1; }
 .journey-viewer-nav { display: flex; align-items: center; justify-content: center; gap: 24px; flex: 0 0 auto; }
 .journey-viewer-nav button:disabled { opacity: .3; cursor: default; }
 .journey-viewer-nav span { min-width: 60px; text-align: center; font-weight: 700; }
+
+/* Completed collections have no goal banner; keep newly earned reward reveals. */
+#homeRewardGoal[data-complete="true"],
+#resultRewardGoal[data-complete="true"] #resultRewardProgress,
+#resultRewardGoal[data-complete="true"]:has(#rewardReveal.hidden) { display: none !important; }
+body.start-active .home-progress-card:has(#homeRewardGoal[data-complete="true"]) { display: none; }

@@ -756,7 +756,8 @@
   function renderRewardGoal(surface, totalXp) {
     const next = rewards.getNextReward(totalXp);
     const prefix = surface === "home" ? "homeReward" : "resultReward";
-    $(prefix + "Text").textContent = next.allUnlocked ? copy.allRewards : copy.xpGoal(next.currentXp, next.targetXp);
+    $(prefix + "Goal").dataset.complete = String(next.allUnlocked);
+    $(prefix + "Text").textContent = next.allUnlocked ? "" : copy.xpGoal(next.currentXp, next.targetXp);
     $(prefix + "Fill").style.width = `${next.progress * 100}%`;
     $(prefix + "Next").textContent = next.allUnlocked ? "" : next.currentXp === 0 && surface === "home"
       ? copy.firstReward : `${surface === "result" ? `${copy.nextTarget}: ` : ""}${copy.nextGoal(next.remainingXp, rewardName(next.reward))}`;
