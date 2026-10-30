@@ -563,3 +563,9 @@ Worker v92, четыре новых файла precached. 176 unit PASS. Chromiu
 четыре сцены/альбом/reload; просмотрены /workspace/artifacts/prod92.
 Визуальная оценка fit9/10, visual9/10, consistency9/10: локации различимы,
 общий ряд кнопок, названия читаются. PWA root и /kapi/ update/offline/data PASS.
+
+PR#30 merged e277041. Полный mobile PASS320/360/390/430. Workflow41045821202
+SUCCESS: полный CI и deploy. По HTTPS на Pages и основном /kapi/ проверены
+9 файлов побайтно: HTML/app/styles/rewards/worker v92 и четыре forest WebP.
+Релиз опубликован. Скриншоты финального ряда с иконками над подписями
+просмотрены на320/390: кнопки в одной строке, текст полностью помещается.
