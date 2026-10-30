@@ -633,10 +633,49 @@
     if (!Number.isInteger(step) || step < 0 || step > getProfile().journey.step) return;
     const viewer = $("journeyViewer"), scroller = $("journeyAlbumContent").querySelector('.album-scroll');
     const scrollTop = scroller.scrollTop;
-    const name = journeyCopy().places[step];
-    $("journeyViewerTitle").textContent = name;
-    $("journeyViewerImage").alt = name;
-    $("journeyViewerImage").src = `assets/journey/${window.KapiJourney.scene(step).asset}`;
+    const steps = trigger?.closest('.postcard')
+      ? window.KapiJourney.postcards(getProfile())
+      : Array.from({length: getProfile().journey.step + 1}, (_, i) => i);
+    let index = steps.indexOf(step);
+    const image = $("journeyViewerImage");
+    const render = () => {
+      const name = journeyCopy().places[steps[index]];
+      $("journeyViewerTitle").textContent = name;
+      image.alt = name;
+      image.src = `assets/journey/${window.KapiJourney.scene(steps[index]).asset}`;
+      $("journeyViewerCount").textContent = `${index + 1} / ${steps.length}`;
+      $("journeyViewerPrevious").disabled = index === 0;
+      $("journeyViewerNext").disabled = index === steps.length - 1;
+    };
+    const move = direction => {
+      const next = Math.max(0, Math.min(steps.length - 1, index + direction));
+      if (next !== index) { index = next; render(); }
+    };
+    const ru = language === 'ru';
+    $("journeyViewerPrevious").setAttribute('aria-label', ru ? 'Предыдущая картинка' : 'Vorheriges Bild');
+    $("journeyViewerNext").setAttribute('aria-label', ru ? 'Следующая картинка' : 'Nächstes Bild');
+    $("journeyViewerPrevious").onclick = () => move(-1);
+    $("journeyViewerNext").onclick = () => move(1);
+    viewer.onkeydown = event => {
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault(); move(event.key === 'ArrowLeft' ? -1 : 1);
+      }
+    };
+    let touch = null;
+    image.ontouchstart = event => {
+      touch = event.touches.length === 1
+        ? {x: event.touches[0].clientX, y: event.touches[0].clientY} : null;
+    };
+    image.ontouchmove = event => { if (event.touches.length !== 1) touch = null; };
+    image.ontouchcancel = () => { touch = null; };
+    image.ontouchend = event => {
+      const start = touch; touch = null;
+      if (!start || event.touches.length || !event.changedTouches.length) return;
+      const dx = event.changedTouches[0].clientX - start.x;
+      const dy = event.changedTouches[0].clientY - start.y;
+      if (Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.5) move(dx < 0 ? 1 : -1);
+    };
+    render();
     $("closeJourneyViewer").setAttribute('aria-label', journeyCopy().close);
     $("closeJourneyViewer").onclick = () => viewer.close();
     viewer.onclick = event => { if (event.target === viewer) viewer.close(); };
