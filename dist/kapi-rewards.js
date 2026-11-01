@@ -34,7 +34,6 @@
     words.start = words.places.map((_, i) => i === MAX_STEP ? (ru ? 'Потренироваться' : 'Weiterüben') : (ru ? 'Продолжить путь' : 'Weiterreisen'));
     words.arrival = words.places.map(place => (ru ? 'Мы здесь! ' : 'Angekommen! ') + place);
     words.album = ru ? 'Альбом путешествия' : 'Reisealbum';
-    words.postcard = ru ? 'Новая открытка!' : 'Neue Postkarte!';
     words.close = ru ? 'Закрыть' : 'Schließen';
     words.home = ru ? 'Продолжить путь' : 'Weiterreisen';
     words.lake = ru ? 'К путешествию' : 'Zur Reise';
@@ -45,7 +44,6 @@
     const cell = step % 4;
     return { asset: chapters[chapter(step)][0] + '-' + cell + '.webp', position: 'center', size: 'cover' };
   }
-  function postcards(profile) { return [7,11,15,19,23].filter(step => step <= profile.journey.step); }
   function normalize(profile) {
     const old = profile.journey;
     profile.journey = { step: Math.max(0, Math.min(MAX_STEP, Math.floor(Number(old?.step) || 0))), sessions: Array.isArray(old?.sessions) ? old.sessions.filter(x => typeof x === 'string').slice(-MAX_STEP) : [] };
@@ -64,7 +62,7 @@
     return true;
   }
   function variant(profile, id) { return variants[id]?.find(x => x.id === profile.cosmeticVariants?.[id]) || variants[id]?.[0]; }
-  window.KapiJourney = { variants, copy, normalize, complete, variant, MAX_STEP, chapters, chapter, scene, postcards };
+  window.KapiJourney = { variants, copy, normalize, complete, variant, MAX_STEP, chapters, chapter, scene };
 })();
 
 (function () {

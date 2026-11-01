@@ -1587,20 +1587,12 @@ body[data-journey-effect="butterfly"] .home-hero::after { border-radius: 60% 10%
 @keyframes journey-glimmer { 50% { opacity: .2; transform: translateY(-12px); } }
 @keyframes journey-ripple { 50% { opacity: .25; transform: translateX(12px) scaleX(1.5); } }
 @keyframes journey-flutter { 50% { transform: translate(-24px,-20px) rotate(25deg); } }
-.result-screen[data-show-phase="arrival"][data-chapter-celebration]::after { content: '✉'; position: absolute; bottom: 24px; right: 24px; color: #075b56; background: #fff5cf; padding: 10px 20px; border: 3px solid #e9bd58; border-radius: 12px; font-size: 3rem; animation: postcard-arrive 1s ease-out both; pointer-events: none; }
-@keyframes postcard-arrive { from { transform: translateY(60px) rotate(-15deg); opacity: 0; } to { transform: rotate(5deg); opacity: 1; } }
 .result-screen[data-show-phase="arrival"][data-chapter-celebration="1"]::before { content: ''; position: absolute; width: 180px; height: 100px; border-radius: 160px 160px 0 0; border-top: 12px solid #f4ba6aaa; box-shadow: 0 -9px 0 #f37c7899, inset 0 9px 0 #99cfad99; left: calc(50% - 90px); top: 25%; animation: journey-glimmer 3s ease-in-out infinite; }
 .result-screen[data-show-phase="arrival"][data-chapter-celebration="2"]::before { content: '⚑'; position: absolute; right: 15%; top: 30%; color: #f3654c; font-size: 4rem; animation: journey-flutter 3s ease-in-out infinite; }
 .result-screen[data-show-phase="arrival"][data-chapter-celebration="3"]::before { content: '✦  ✦  ✦'; position: absolute; left: 20%; top: 25%; color: #ffdf80; font-size: 2rem; animation: journey-glimmer 2s ease-in-out infinite; }
 .result-screen[data-show-phase="arrival"][data-chapter-celebration="4"]::before { content: ''; position: absolute; width: 65%; height: 20%; right: 0; top: 30%; background: linear-gradient(90deg,transparent,#fff4b799); clip-path: polygon(0 0,100% 45%,100% 55%,0 100%); transform-origin: right; animation: journey-flutter 4s ease-in-out infinite; }
 .result-screen[data-show-phase="arrival"][data-chapter-celebration="5"]::before { content: '✦ ✧ ✦ ✧'; position: absolute; left: 20%; top: 30%; color: #ffce52; font-size: 2rem; animation: journey-glimmer 2s ease-in-out infinite; }
 @media(prefers-reduced-motion:reduce) { body.start-active .home-hero::after, .result-screen[data-show-phase="arrival"]::before, .result-screen[data-show-phase="arrival"]::after { animation: none !important; } }
-.album-postcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 8px 0 18px; border-bottom: 1px solid #d9dfcb; }
-.postcard { margin: 0; border: 4px solid #fff; outline: 1px solid #ddcf9e; border-radius: 4px; background: #fff8dd; box-shadow: 0 3px 7px #38574914; }
-.postcard .album-picture { border-radius: 0; justify-items: end; align-items: start; padding: 6px; font-size: 1.5rem; color: #fff5b7; text-shadow: 0 1px 3px #14554a; }
-.postcard figcaption { padding: 7px; font-size: .8rem; font-weight: 700; }
-.postcard small { display: block; margin-top: 4px; font-size: .7rem; font-weight: 400; }
-.postcard.locked { opacity: .6; }
 .result-screen[data-show-phase="arrival"] .result-show-title { font-size: clamp(1.2rem, 4.6vw, 1.7rem); line-height: 1.2; }
 .result-screen[data-show-phase="arrival"] .result-show-title small { display: block; margin-top: 8px; font-size: .7em; color: #947025; }
 .result-screen[data-show-phase="arrival"] .result-skip { top: 7px; padding: 4px 8px; background: #fffdf2ed; border-radius: 8px; }
@@ -1631,10 +1623,6 @@ body.start-active .home-nav { grid-template-columns: repeat(3, minmax(0, 1fr)); 
 #journeyAlbumContent { display: flex; flex-direction: column; max-height: 90dvh; }
 #journeyAlbum .album-header { position: static; padding: 16px 18px; flex: 0 0 auto; border-bottom: 1px solid #e4e8d9; }
 .album-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 18px 18px; }
-.postcard .album-picture { position: relative; padding: 0; overflow: hidden; height: 100px; }
-.postcard .album-picture img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.postcard.locked { opacity: 1; }
-.postcard.locked .album-picture img { filter: grayscale(.7) brightness(.8); }
 .album-lock { position: absolute; right: 6px; top: 6px; padding: 3px 5px; background: #fffdf3ee; border-radius: 6px; color: #0f766e; font-size: 1rem; text-shadow: none; }
 .album-unvisited { font-size: 1.5rem; }
 
@@ -1642,7 +1630,7 @@ body.start-active .home-nav .journey-album-button { margin: 0; min-height: 44px;
 body.start-active .home-nav #journeyAlbumButton::before { content: "▧"; color: #1882d4; }
 body.start-active .home-nav .text-button { flex-direction: column; justify-content: center; gap: 3px; padding: 6px 4px; min-height: 64px; }
 body.start-active .home-nav .text-button::before { line-height: 1; }
-.postcard, .album-place { position: relative; }
+.album-place { position: relative; }
 .album-open { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: inherit; background: transparent; color: #075b56; cursor: zoom-in; }
 .album-open span { position: absolute; top: 9px; left: 9px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; background: #fffdf3ed; font-size: 22px; }
 .album-open:focus-visible { outline: 3px solid #0f766e; outline-offset: 2px; }
@@ -1665,7 +1653,6 @@ body.start-active .home-nav .text-button::before { line-height: 1; }
 }
 .result-screen[data-show-phase="arrival"] .arrival-continue:focus-visible { outline: 3px solid #087f78; outline-offset: -4px; }
 .result-screen[data-show-phase="arrival"] .result-skip { z-index: 5; }
-.result-screen[data-show-phase="arrival"][data-chapter-celebration]::after { bottom: 90px; }
 
 .journey-viewer img { touch-action: pan-y pinch-zoom; user-select: none; max-height: calc(94dvh - 160px); }
 .journey-viewer-nav { display: flex; align-items: center; justify-content: center; gap: 24px; flex: 0 0 auto; }
