@@ -633,9 +633,7 @@
     if (!Number.isInteger(step) || step < 0 || step > getProfile().journey.step) return;
     const viewer = $("journeyViewer"), scroller = $("journeyAlbumContent").querySelector('.album-scroll');
     const scrollTop = scroller.scrollTop;
-    const steps = trigger?.closest('.postcard')
-      ? window.KapiJourney.postcards(getProfile())
-      : Array.from({length: getProfile().journey.step + 1}, (_, i) => i);
+    const steps = Array.from({length: getProfile().journey.step + 1}, (_, i) => i);
     let index = steps.indexOf(step);
     const image = $("journeyViewerImage");
     const render = () => {
@@ -685,12 +683,8 @@
 
   function openJourneyAlbum() {
     const profile = getProfile(), words = journeyCopy(), step = profile.journey.step;
-    const cards = window.KapiJourney.postcards(profile);
-    $("journeyAlbumContent").innerHTML = `<div class="album-header"><h2 id="journeyAlbumTitle">${words.album}</h2><button class="text-button" id="closeJourneyAlbum">${words.close}</button></div><div class="album-scroll"><p>${step + 1} / 24 · ${language === 'ru' ? 'Открытки' : 'Postkarten'}: ${cards.length} / 5</p>`  + `<div class="album-postcards">` + [7,11,15,19,23].map(i => {
-      const earned = cards.includes(i), scene = window.KapiJourney.scene(i);
-      return `<figure class="postcard ${earned ? 'earned' : 'locked'}"><div class="album-picture"><img src="assets/journey/${scene.asset}" alt="${words.places[i]}" width="320" height="200"><span class="album-lock" aria-label="${earned ? (language === 'ru' ? 'Получено' : 'Gesammelt') : (language === 'ru' ? 'Ещё не получено' : 'Noch nicht gesammelt')}">${earned ? '✉' : '🔒'}</span></div><figcaption>${words.places[i]}<small>${earned ? (language === 'ru' ? 'В альбоме' : 'Gesammelt') : (language === 'ru' ? 'Откроется после точки ' : 'Ab Ort ') + (i+1)}</small></figcaption>${albumViewButton(i, words.places[i], earned)}</figure>`;
-    }).join('') + `</div>` + window.KapiJourney.chapters.map((chapter, c) => {
-      return `<section class="album-chapter"><h3>${chapter[language === 'ru' ? 1 : 2]} ${c > 0 && cards.includes(c * 4 + 3) ? '✉' : ''}</h3><div class="album-places">` + words.places.slice(c * 4, c * 4 + 4).map((name, n) => {
+    $("journeyAlbumContent").innerHTML = `<div class="album-header"><h2 id="journeyAlbumTitle">${words.album}</h2><button class="text-button" id="closeJourneyAlbum">${words.close}</button></div><div class="album-scroll"><p>${step + 1} / 24</p>` + window.KapiJourney.chapters.map((chapter, c) => {
+      return `<section class="album-chapter"><h3>${chapter[language === 'ru' ? 1 : 2]}</h3><div class="album-places">` + words.places.slice(c * 4, c * 4 + 4).map((name, n) => {
         const i = c * 4 + n, scene = window.KapiJourney.scene(i), unlocked = i <= step;
         return `<figure class="album-place ${unlocked ? 'visited' : 'locked'}"><div class="album-picture" ${unlocked ? `style='background-image:url("assets/journey/${scene.asset}");background-position:${scene.position};background-size:${scene.size}'` : ''}>${unlocked ? '' : '<span class="album-unvisited">🔒</span>'}</div><figcaption>${i + 1}. ${name}${i === step ? ' ●' : unlocked ? ' ✓' : ''}</figcaption>${albumViewButton(i, name, unlocked)}</figure>`;
       }).join('') + `</div></section>`;
@@ -2320,9 +2314,6 @@ function makePowerProblem(max, mastered) {
     if (advanced && chapterBefore?.id !== chapterAfter?.id && chapterAfter) {
       $("resultNote").textContent += ` ${copy.chapterFinished} ${copy.newChapter(chapterAfter[language])}`;
     }
-    if (freshProfile.journey.step > profile.journey.step && window.KapiJourney.postcards(freshProfile).includes(freshProfile.journey.step)) {
-      $("resultNote").textContent += language === "ru" ? " Новая открытка в альбоме!" : " Neue Postkarte im Reisealbum!";
-    }
     renderRewardGoal("result", freshProfile.totalXp);
     $("resultRewardProgress").classList.toggle("hidden", unlocked.length > 0);
     $("weeklyResult").classList.add("hidden");
@@ -2400,9 +2391,6 @@ function makePowerProblem(max, mastered) {
       const arrivalStep = getProfile().journey.step;
       const chapterEnd = arrivalStep >= 7 && arrivalStep % 4 === 3;
       if (chapterEnd) {
-        const postcardLabel = document.createElement("small");
-        postcardLabel.textContent = journeyCopy().postcard;
-        $("resultShowTitle").appendChild(postcardLabel);
         $("resultScreen").dataset.chapterCelebration = String(window.KapiJourney.chapter(arrivalStep));
       } else delete $("resultScreen").dataset.chapterCelebration;
       $("continueArrival").textContent = ru ? "Нажми на картинку, чтобы продолжить" : "Tippe auf das Bild, um weiterzugehen";
