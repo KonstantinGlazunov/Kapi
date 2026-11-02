@@ -72,10 +72,10 @@ cases.push(...[[100,2,10],[400,2,20],[1000,3,10]].map(([a,b,answer])=>({id:`boun
       assert.equal(await page.evaluate(()=>window.__guidanceTest.state.index),before,'does not advance after 2.3 seconds');
       if(shots)await page.screenshot({path:path.join(shots,`${width}-${item.id}-steps.png`)});
       if(item.id==='frame-subtract' && shots){await page.waitForTimeout(1400);await page.screenshot({path:path.join(shots,`${width}-${item.id}-final.png`)});}
-      await page.locator('.solution-replay').click();assert.match(await page.locator('#hint').innerText(),/Шаг 1 из/);
+      assert.match(await page.locator('#hint').innerText(),/Шаг 1 из/);await page.locator('.solution-next').click();await page.locator('.solution-previous').click();assert.match(await page.locator('#hint').innerText(),/Шаг 1 из/);
     }
     if(shots && ['fraction-3','negative-1','root-cube'].includes(item.id))await page.screenshot({path:path.join(shots,`${width}-${item.id}-solution.png`)});
-    const before=await page.evaluate(()=>window.__guidanceTest.state.index);await page.locator('.solution-next').click();assert.equal(await page.evaluate(()=>window.__guidanceTest.state.index),before+1);
+    const before=await page.evaluate(()=>window.__guidanceTest.state.index);while(await page.locator('.solution-next').getAttribute('data-last-step')!=='true')await page.locator('.solution-next').click();await page.locator('.solution-next').click();assert.equal(await page.evaluate(()=>window.__guidanceTest.state.index),before+1);
    }
    assert.deepEqual(errors,[]);console.log(`PASS ${width}×${height}: 36 guidance families + 7 boundary cases, real inputs, hints, worked solutions, replay and Next`);await context.close();
   }

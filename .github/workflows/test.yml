@@ -45,6 +45,10 @@ jobs:
         run: npm run test:answers
         env:
           KAPI_E2E_SCREENSHOTS: artifacts/answers
+      - name: History and manual explanation steps
+        run: npm run test:history
+        env:
+          KAPI_E2E_SCREENSHOTS: artifacts/history
       - name: Detailed hints and worked solutions
         run: npm run test:guidance
         env:

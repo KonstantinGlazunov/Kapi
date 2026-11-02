@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/*.test.cjs",
+    "test:history": "node tests/history-guidance-e2e.cjs",
     "test:answers": "node tests/answer-validation-e2e.cjs",
     "test:mobile": "node tests/mobile-e2e.cjs",
     "test:intro": "node tests/stage-intro-e2e.cjs",

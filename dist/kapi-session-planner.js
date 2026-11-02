@@ -20,7 +20,7 @@
     eligibleError = () => true, eligibleSkill = () => true } = {}) {
     if (!Number.isInteger(total) || total < 1) throw new RangeError("Session length must be positive");
     if (mode === "targeted") {
-      if (!targeted?.skillId || !targeted?.subskillId) throw new Error("Targeted session needs a skill and subskill");
+      if (!targeted?.skillId || (!targeted?.subskillId && !targeted?.historyPractice)) throw new Error("Targeted session needs a skill and subskill");
       const slots = Array.from({ length: total }, () => Object.freeze({ type: "targeted", skillId: targeted.skillId, subskillId: targeted.subskillId }));
       return Object.freeze({ mode, slots: Object.freeze(slots), counts: Object.freeze({ current: 0, errorReview: 0, spacedReview: 0, targeted: total }) });
     }

@@ -29,7 +29,7 @@ async function answerCurrent(page) {
   if (problem.mode === 'choice') {
     if (problem.labeled) await page.locator('#answerArea .answer-button').nth(problem.answer).click();
     else await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${problem.answer}$`) }).click();
-  } else for (const digit of String(problem.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+  } else { for (const digit of String(problem.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click(); await page.locator('[data-action="submit"]').click(); }
 }
 
 async function run() {
@@ -91,7 +91,7 @@ async function run() {
       // A real first answer must pass through the visible choice/keypad and advance the app.
       const first = await page.evaluate(() => ({ answer: window.__e2e.tasks.response(window.__e2e.state.problem), mode: window.__e2e.state.problem.mode }));
       if (first.mode === 'choice') await page.locator('#answerArea .answer-button').filter({ hasText: new RegExp(`^${first.answer}$`) }).click();
-      else for (const digit of String(first.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click();
+      else { for (const digit of String(first.answer)) await page.locator(`#answerArea [data-key="${digit}"]`).click(); await page.locator('[data-action="submit"]').click(); }
       await page.waitForFunction(() => window.__e2e.state.index === 1, null, { timeout: 5000 });
       assert.equal(await page.locator('#problemNumber').innerText(), '2');
       assert.equal((await page.evaluate(() => window.__e2e.state.results[0].firstTry)), true);

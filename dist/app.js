@@ -1385,8 +1385,10 @@ function makePowerProblem(max, mastered) {
   function selectProblem(stage, index) {
     const profile = getProfile();
     if (state.targeted) {
-      const focused = subskills.makeProblemForSubskill(state.targeted.skillId, state.targeted.subskillId,
-        makeCurriculumProblem, index, profile, state.recentFacts);
+      const focused = state.targeted.historyPractice && !state.targeted.subskillId
+        ? skills.makeProblemForSkill(state.targeted.skillId, makeCurriculumProblem, index, profile)
+        : subskills.makeProblemForSubskill(state.targeted.skillId, state.targeted.subskillId,
+          makeCurriculumProblem, index, profile, state.recentFacts);
       if (!focused) throw new Error(`Cannot generate targeted problem for ${state.targeted.subskillId}`);
       return { ...focused, isTargetedPractice: true };
     }
@@ -1533,8 +1535,9 @@ function makePowerProblem(max, mastered) {
     state.enteredAnswer = "";
     state.spacedReviewRecorded = false;
     const base = selectProblem(state.stage, state.index);
-    state.problem = base.isReview || base.isSpacedReview ? base : tasks.decorate(base, state.previousTaskType);
+    state.problem = base.isReview || base.isSpacedReview ? base : tasks.decorate(base, state.previousTaskType, state.targeted?.historyPractice ? state.targeted.taskType : undefined);
     choiceStates.delete(state.problem);
+    answerAttempts.delete(state.problem);
     if (state.problem.mode === "choice") choicesFor(state.problem);
     state.recentFacts ||= [];
     state.recentFacts.push(state.problem.key);
@@ -1551,7 +1554,7 @@ function makePowerProblem(max, mastered) {
     $("hint").classList.add("hidden");
     $("hint").innerHTML = "";
     const nextFeedback = state.index === 0 && state.targeted
-      ? copy.targetedIntro(skills.subskillLabel(state.targeted.subskillId, language))
+      ? copy.targetedIntro(state.targeted.historyPractice ? skills.label(state.targeted.skillId, language) : skills.subskillLabel(state.targeted.subskillId, language))
       : state.index === 0 ? copy.careful : copy.next;
     if (motivationLabel && !motivationLabel.result) motivationLabel.previous = nextFeedback;
     $("feedback").textContent = motivationLabel && !motivationLabel.result ? motivationLabel.text : nextFeedback;
@@ -1570,6 +1573,7 @@ function makePowerProblem(max, mastered) {
   }
 
   const choiceStates = new WeakMap();
+  const answerAttempts = new WeakMap();
   function choicesFor(problem) {
     if (!choiceStates.has(problem)) {
       const labels = tasks.choiceLabels(problem, language);
@@ -1614,7 +1618,7 @@ function makePowerProblem(max, mastered) {
         ${keypadSpecialKeys(state.problem).length ? `<div class="keypad-specials">
           ${keypadSpecialKeys(state.problem).map(([key, label]) => `<button class="number-key number-key-special" type="button" data-key="${key}">${label}</button>`).join("")}
         </div>` : ""}
-        <button class="submit-button" type="button" data-action="submit">${copy.check}</button>`;
+        <button class="submit-button" type="button" data-action="submit" disabled>${copy.check}</button>`;
       keypad.addEventListener("click", handleKeypadClick);
       area.appendChild(keypad);
       updateKeypadDisplay();
@@ -1630,9 +1634,6 @@ function makePowerProblem(max, mastered) {
       if (canAppendKey(state.enteredAnswer, key, state.problem.answerType, state.problem) && state.enteredAnswer.length < 12) state.enteredAnswer += key;
       updateKeypadDisplay();
       sound("tap");
-      if (state.problem.answerType !== "fraction" && state.enteredAnswer !== "" && answersEqual(state.enteredAnswer, tasks.response(state.problem), state.problem.answerType)) {
-        submitAnswer(state.enteredAnswer);
-      }
       return;
     }
     if (button.dataset.action === "clear") state.enteredAnswer = "";
@@ -1649,6 +1650,8 @@ function makePowerProblem(max, mastered) {
     if (!display) return;
     display.textContent = state.enteredAnswer || copy.answer;
     display.classList.toggle("empty", state.enteredAnswer === "");
+    const submit = $("answerArea").querySelector('[data-action="submit"]');
+    if (submit) submit.disabled = state.enteredAnswer.trim() === "";
   }
 
   function displayAnswer(value, answerType) {
@@ -1767,6 +1770,9 @@ function makePowerProblem(max, mastered) {
         return;
       }
     }
+    const responses = answerAttempts.get(state.problem) || [];
+    responses.push(String(value));
+    answerAttempts.set(state.problem, responses);
     paceAnimation?.pause();
     dismissMotivation();
     state.paceUpdate = null;
@@ -1872,29 +1878,31 @@ function makePowerProblem(max, mastered) {
     const next = document.createElement("button");
     next.type = "button"; next.className = "submit-button solution-next";
     next.textContent = language === "ru" ? "Дальше" : "Weiter";
-    next.addEventListener("click", continueAfterSolution);
-    const replay = document.createElement("button");
-    replay.type = "button"; replay.className = "text-button solution-replay";
-    replay.textContent = language === "ru" ? "Показать ещё раз" : "Noch einmal zeigen";
+    const previous = document.createElement("button");
+    previous.type = "button"; previous.className = "text-button solution-previous";
+    previous.textContent = language === "ru" ? "Предыдущий шаг" : "Vorheriger Schritt";
     $("answerArea").innerHTML = "";
-    $("answerArea").append(replay, next);
-    const play = () => {
-      window.clearTimeout(solutionTimer);
-      let index = 0;
-      const step = () => {
-        if (state.problem !== problem || !state.solutionShown || !$("gameScreen").classList.contains("active")) return;
-        const current = plan.steps[index];
-        $("hint").textContent = `${plan.context ? `${plan.context} · ` : ""}${language === "ru" ? `Шаг ${index + 1} из ${plan.steps.length}` : `Schritt ${index + 1} von ${plan.steps.length}`} · ${current.text}`;
-        $("taskVisual").innerHTML = current.visual || plan.hintVisual;
-        $("taskVisual").classList.toggle("hidden", !$("taskVisual").innerHTML);
-        scheduleFitCheck();
-        index += 1;
-        if (index < plan.steps.length) solutionTimer = window.setTimeout(step, 1300);
-      };
-      step();
+    $("answerArea").append(previous, next);
+    let index = 0;
+    const render = () => {
+      if (state.problem !== problem || !state.solutionShown) return;
+      const current = plan.steps[index];
+      $("hint").textContent = `${plan.context ? `${plan.context} · ` : ""}${language === "ru" ? `Шаг ${index + 1} из ${plan.steps.length}` : `Schritt ${index + 1} von ${plan.steps.length}`} · ${current.text}`;
+      $("taskVisual").innerHTML = current.visual || plan.hintVisual;
+      $("taskVisual").classList.toggle("hidden", !$("taskVisual").innerHTML);
+      previous.disabled = index === 0;
+      next.textContent = index === plan.steps.length - 1
+        ? (language === "ru" ? "Следующий пример" : "Nächste Aufgabe")
+        : (language === "ru" ? "Следующий шаг" : "Nächster Schritt");
+      next.dataset.lastStep = String(index === plan.steps.length - 1);
+      scheduleFitCheck();
     };
-    replay.addEventListener("click", play);
-    play();
+    previous.addEventListener("click", () => { if (index > 0) { index--; render(); } });
+    next.addEventListener("click", () => {
+      if (index < plan.steps.length - 1) { index++; render(); }
+      else continueAfterSolution();
+    });
+    render();
     next.focus({ preventScroll: true });
   }
 
@@ -1907,6 +1915,8 @@ function makePowerProblem(max, mastered) {
 
   function recordResult(success, elapsed, attempt) {
     const item = {
+      problem: JSON.parse(JSON.stringify(state.problem)),
+      responses: [...(answerAttempts.get(state.problem) || [])],
       key: state.problem.key,
       text: state.problem.text,
       a: state.problem.a,
@@ -2334,6 +2344,7 @@ function makePowerProblem(max, mastered) {
       curriculumVersion: CURRICULUM_VERSION,
       advanced,
       perfect,
+      mistakes: state.results.filter((item) => !item.firstTry && item.problem).map((item) => ({ problem: item.problem, responses: item.responses })),
       trouble: state.results.filter((item) => !item.firstTry).map((item) => item.key).slice(0, 5)
     };
     const { unlocked, weeklyGoalComplete } = saveSession(session);
@@ -2506,7 +2517,7 @@ function makePowerProblem(max, mastered) {
         }).slice(0, 3);
       const stableSkills = Object.values(profile.skillMastery).filter((skill) => mastery.getMasteryStatus(skill) === "stable").length;
       const practicingSkills = Object.values(profile.skillMastery).filter((skill) => mastery.getMasteryStatus(skill) === "inPractice").length;
-      const commonTrouble = mostCommon(history.flatMap((item) => item.trouble || []));
+      const hasTrouble = history.some(item => item.mistakes?.length || item.trouble?.length);
       content.innerHTML = `
         <div class="summary-stats">
           <div><strong>${summary.thisWeek}</strong><span>${copy.thisWeek}</span></div>
@@ -2522,7 +2533,7 @@ function makePowerProblem(max, mastered) {
           `<li>${skills.label(skillId, language, copy.stageNames[skills.stageForSkill(skillId) - 1] || "")}</li>`).join("")}${dueSkills.length > 3 ? `<li>${copy.moreAreas(dueSkills.length - 3)}</li>` : ""}</ul>` : ""}</div>` : ""}
         ${focusTargets.length ? `<div class="subskill-summary"><strong>${copy.subskillsToPractice}</strong><div class="subskill-actions">${focusTargets.map(({ skillId, subskillId }) =>
           `<button class="target-skill-button" type="button" data-target-skill="${skillId}" data-target-subskill="${subskillId}" aria-label="${skills.subskillLabel(subskillId, language)}: ${copy.targetedPractice}"><span>${skills.subskillLabel(subskillId, language)}</span><small>${copy.targetedPractice} →</small></button>`).join("")}</div></div>` : ""}
-        <div class="history-list">${history.slice(0, 10).map((item) => {
+        <div class="history-list">${history.slice(0, 10).map((item, sessionIndex) => {
           const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(item.stage) || 1));
           const currentScale = item.curriculumVersion === CURRICULUM_VERSION || new Date(item.date).getTime() >= Date.parse("2026-09-27T18:11:52Z");
           const help = currentScale
@@ -2535,21 +2546,35 @@ function makePowerProblem(max, mastered) {
               <summary class="history-level" aria-label="${copy.stageInfo}" title="${copy.stageInfo}">${copy.levelShort(stage)}</summary>
               <p class="history-stage-help">${help}</p>
             </details>
+            ${renderHistoryMistakes(item, sessionIndex)}
           </div>`;
         }).join("")}</div>
-        ${commonTrouble.length
-          ? `<p class="trouble-note"><strong>${copy.repeat}</strong> ${commonTrouble.map(prettyKey).join(", ")}</p>`
-          : `<p class="trouble-note no-errors"><strong>${copy.noErrors}</strong></p>`}`;
+        ${hasTrouble ? "" : `<p class="trouble-note no-errors"><strong>${copy.noErrors}</strong></p>`}`;
     }
     $("statsDialog").showModal();
   }
 
-  function mostCommon(items) {
-    const counts = items.reduce((map, key) => map.set(key, (map.get(key) || 0) + 1), new Map());
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([key]) => key);
+  function escapeHistory(value) {
+    return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
   }
 
-  function prettyKey(key) { return key.replace("= ?", "").replace("−", " − ").replace("+", " + ").replace("×", " × ").replace("÷", " ÷ "); }
+  function renderHistoryMistakes(session, sessionIndex) {
+    const ru = language === 'ru';
+    if (!session.mistakes?.length) return session.trouble?.length
+      ? `<p class="history-mistakes">${ru ? 'В этом занятии были ошибки. Подробности ответов в старой версии не сохранялись.' : 'In dieser Übung gab es Fehler. Die frühere Version hat die Antworten nicht gespeichert.'}</p>` : '';
+    return `<div class="history-mistakes">${session.mistakes.map((entry, index) => {
+      const p = entry.problem;
+      if (!tasks.isValidReviewProblem({ ...p, correctStreak: 0, lastShown: 0 }) || !Array.isArray(entry.responses)) return '';
+      const display = tasks.display(p, language), labels = tasks.choiceLabels(p, language);
+      const answer = value => labels?.[Number(value)] ?? displayAnswer(value, p.answerType);
+      return `<article class="history-mistake"><strong>${escapeHistory(display.text)}</strong>
+        <div class="history-task-visual">${display.html || (p.operation === "count" ? tasks.renderProduce(p.answer, p) : "")}</div>
+        <p>${ru ? 'Ответ ребёнка' : 'Antwort des Kindes'}: ${entry.responses.map(value => escapeHistory(answer(value))).join(' → ')}</p>
+        <p>${ru ? 'Правильный ответ' : 'Richtige Antwort'}: ${escapeHistory(answer(tasks.response(p)))}</p>
+        <button type="button" class="text-button" data-history-repeat="${sessionIndex}:${index}">${ru ? 'Повторить похожее' : 'Ähnliche Aufgaben üben'}</button></article>`;
+    }).join('')}</div>`;
+  }
+
   function formatNumber(value) { return new Intl.NumberFormat(copy.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(value || 0)); }
   function formatSeconds(value) { return formatNumber(value); }
   function formatDate(value) {
@@ -3144,6 +3169,18 @@ function makePowerProblem(max, mastered) {
   });
   $("resultStatsButton").addEventListener("click", showStats);
   $("statsContent").addEventListener("click", (event) => {
+    const repeat = event.target.closest("[data-history-repeat]");
+    if (repeat) {
+      const [sessionIndex, index] = repeat.dataset.historyRepeat.split(':').map(Number);
+      const p = getHistory()[sessionIndex]?.mistakes?.[index]?.problem;
+      if (!tasks.isValidReviewProblem({ ...p, correctStreak: 0, lastShown: 0 })) return;
+      const target = skills.classifyProblem(p), profile = getProfile();
+      if (!target.skillId) return;
+      if (target.subskillId && !subskills.availableSubskills(target.skillId, profile).includes(target.subskillId)) return;
+      $("statsDialog").close();
+      startTraining({}, { profile, targeted: { ...target, historyPractice: true, taskType: p.taskType }, trainingStage: skills.stageForSkill(target.skillId) });
+      return;
+    }
     const button = event.target.closest("[data-target-subskill]");
     if (!button) return;
     const profile = getProfile();
