@@ -1534,6 +1534,8 @@ function makePowerProblem(max, mastered) {
     state.spacedReviewRecorded = false;
     const base = selectProblem(state.stage, state.index);
     state.problem = base.isReview || base.isSpacedReview ? base : tasks.decorate(base, state.previousTaskType);
+    choiceStates.delete(state.problem);
+    if (state.problem.mode === "choice") choicesFor(state.problem);
     state.recentFacts ||= [];
     state.recentFacts.push(state.problem.key);
     state.recentFacts = state.recentFacts.slice(-4);
@@ -1567,6 +1569,15 @@ function makePowerProblem(max, mastered) {
     document.querySelector(".play-card").classList.toggle("has-task-visual", !!display.html);
   }
 
+  const choiceStates = new WeakMap();
+  function choicesFor(problem) {
+    if (!choiceStates.has(problem)) {
+      const labels = tasks.choiceLabels(problem, language);
+      choiceStates.set(problem, { values: labels ? labels.map((_, index) => index) : makeChoices({ ...problem, answer: tasks.response(problem) }), rejected: new Set() });
+    }
+    return choiceStates.get(problem);
+  }
+
   function renderAnswer() {
     const area = $("answerArea");
     area.innerHTML = "";
@@ -1574,11 +1585,16 @@ function makePowerProblem(max, mastered) {
       const wrap = document.createElement("div");
       wrap.className = state.problem.expressionChoices || state.problem.placeValue?.options ? "choices task-choice-labels" : "choices";
       const labels = tasks.choiceLabels(state.problem, language);
-      const values = labels ? labels.map((_, index) => index) : makeChoices({ ...state.problem, answer: tasks.response(state.problem) });
+      const { values, rejected } = choicesFor(state.problem);
       values.forEach((value) => {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "answer-button";
+        if (rejected.has(String(value))) {
+          button.classList.add("answer-rejected");
+          button.disabled = true;
+          button.setAttribute("aria-label", `${labels ? labels[value] : displayAnswer(value, state.problem.answerType)} — ${language === "ru" ? "уже пробовали, неверно" : "schon versucht, falsch"}`);
+        }
         button.textContent = labels ? labels[value] : displayAnswer(value, state.problem.answerType);
         button.addEventListener("click", () => submitAnswer(value));
         wrap.appendChild(button);
@@ -1614,7 +1630,7 @@ function makePowerProblem(max, mastered) {
       if (canAppendKey(state.enteredAnswer, key, state.problem.answerType, state.problem) && state.enteredAnswer.length < 12) state.enteredAnswer += key;
       updateKeypadDisplay();
       sound("tap");
-      if (state.enteredAnswer !== "" && answersEqual(state.enteredAnswer, tasks.response(state.problem), state.problem.answerType)) {
+      if (state.problem.answerType !== "fraction" && state.enteredAnswer !== "" && answersEqual(state.enteredAnswer, tasks.response(state.problem), state.problem.answerType)) {
         submitAnswer(state.enteredAnswer);
       }
       return;
@@ -1663,12 +1679,20 @@ function makePowerProblem(max, mastered) {
     return /^[0-9]$/.test(key);
   }
 
+  function parseFractionAnswer(value) {
+    const match = String(value).trim().match(/^(-?\d+)(?:\/(\d+))?$/);
+    if (!match) return { error: 'incomplete' };
+    const numerator = Number(match[1]), denominator = match[2] === undefined ? 1 : Number(match[2]);
+    if (denominator === 0) return { error: 'zeroDenominator' };
+    if (!Number.isSafeInteger(numerator) || !Number.isSafeInteger(denominator)) return { error: 'incomplete' };
+    return { normalized: normalizeFraction(numerator, denominator) };
+  }
+
   function answersEqual(value, answer, answerType) {
     const raw = String(value).trim().replace(",", ".");
     if (answerType === "fraction") {
-      const match = raw.match(/^(-?\d+)\/(\d+)$/);
-      if (!match || Number(match[2]) === 0) return false;
-      return normalizeFraction(Number(match[1]), Number(match[2])) === String(answer);
+      const parsed = parseFractionAnswer(value), expected = parseFractionAnswer(answer);
+      return !parsed.error && !expected.error && parsed.normalized === expected.normalized;
     }
     const numeric = Number(raw);
     return Number.isFinite(numeric) && Math.abs(numeric - Number(answer)) < .000001;
@@ -1732,6 +1756,17 @@ function makePowerProblem(max, mastered) {
 
   function submitAnswer(value) {
     if (state.locked) return;
+    if (state.problem.mode === "choice" && choicesFor(state.problem).rejected.has(String(value))) return;
+    if (state.problem.answerType === "fraction") {
+      const { error } = parseFractionAnswer(value);
+      if (error) {
+        dismissMotivation();
+        $("feedback").textContent = error === 'zeroDenominator'
+          ? (language === 'ru' ? 'Знаменатель не может быть нулём' : 'Der Nenner darf nicht null sein')
+          : (language === 'ru' ? 'Заверши запись: введи целое число или дробь с числителем и знаменателем' : 'Vervollständige die Eingabe: eine ganze Zahl oder einen Bruch mit Zähler und Nenner');
+        return;
+      }
+    }
     paceAnimation?.pause();
     dismissMotivation();
     state.paceUpdate = null;
@@ -1795,6 +1830,7 @@ function makePowerProblem(max, mastered) {
       state.attempt = 2;
       state.hintLevel = 2;
       state.enteredAnswer = "";
+      if (state.problem.mode === "choice") choicesFor(state.problem).rejected.add(String(value));
       $("feedback").textContent = pick(messages.tryAgain);
       if (adaptiveMessage) showMotivation(adaptiveMessage, copy.adaptiveAdjusted, null, "wrong");
       showDetailedHint();

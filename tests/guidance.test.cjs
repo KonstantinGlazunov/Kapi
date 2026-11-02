@@ -92,7 +92,7 @@ test('a second error records once, waits indefinitely for Next, and cancels repl
   assert.equal(app.state.hintLevel,2);
   assert.equal(app.state.locked,false);
   assert.ok(env.elements.get('taskVisual').innerHTML);
-  app.submitAnswer(wrong);
+  app.submitAnswer(wrong + 1);
   assert.equal(app.state.solutionShown,true);
   assert.equal(app.state.results.length,1);
   app.submitAnswer(wrong);

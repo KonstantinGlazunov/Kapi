@@ -30,7 +30,7 @@ test('first error gives a detailed model; second error demonstrates and waits fo
   assert.ok(!env.elements.get('feedback').textContent.includes(String(original.answer)));
   assert.equal(app.getProfile().errorQueue.find(item => item.key === original.key).correctStreak, 0);
 
-  app.submitAnswer(original.answer + 1);
+  app.submitAnswer(original.answer + 2);
   assert.equal(app.state.hintLevel, 2);
   assert.equal(app.state.solutionShown, true);
   assert.match(env.elements.get('taskVisual').innerHTML, /guidance-/);
@@ -90,7 +90,7 @@ test('subtraction gets a detailed model immediately and removes items in the dem
   assert.match(env.elements.get('hint').textContent, /Nimm|zerlegen/);
   assert.match(env.elements.get('taskVisual').innerHTML, /guidance-/);
   assert.ok(!env.elements.get('hint').innerHTML.includes('counter'));
-  app.submitAnswer(app.state.problem.answer + 1);
+  app.submitAnswer(app.state.problem.answer + 2);
   env.advance(15000);
   assert.match(env.elements.get('taskVisual').innerHTML, /taken|task-cell.*removed/);
 });
