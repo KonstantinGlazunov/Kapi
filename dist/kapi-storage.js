@@ -78,6 +78,9 @@
         !Number.isInteger(item.correct) || ![10, 20, 30].includes(item.total || 20) || item.correct < 0 || item.correct > (item.total || 20) ||
         !Number.isFinite(item.average) || item.average < 0 || !Number.isFinite(item.score) || item.score < 0 ||
         (item.trouble !== undefined && (!Array.isArray(item.trouble) || item.trouble.some((key) => typeof key !== "string")))) throw new Error("Invalid history");
+      if (item.mistakes !== undefined && (!Array.isArray(item.mistakes) || item.mistakes.length > 30 || item.mistakes.some(entry =>
+        !object(entry) || !taskSystem.isValidReviewProblem({ ...entry.problem, correctStreak: 0, lastShown: 0 }) || !Array.isArray(entry.responses) || entry.responses.length > 2 ||
+        entry.responses.some(value => typeof value !== 'string' || value.length > 100)))) throw new Error("Invalid history mistakes");
     }
     return backup.data;
   }

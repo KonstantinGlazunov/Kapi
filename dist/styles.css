@@ -1666,3 +1666,11 @@ body.start-active .home-nav .text-button::before { line-height: 1; }
 body.start-active .home-progress-card:has(#homeRewardGoal[data-complete="true"]) { display: none; }
 
 .answer-button.answer-rejected:disabled { opacity: 1; color: #785b51; background: #f4e8df; border-color: #bc8d7b; box-shadow: none; text-decoration: line-through; cursor: default; }
+
+.submit-button:disabled, .solution-previous:disabled { opacity: .45; cursor: default; box-shadow: none; }
+.history-mistakes { grid-column: 1 / -1; width: 100%; }
+.history-mistake { margin-top: 12px; padding: 12px; border-radius: 14px; background: #f0f8f3; text-align: left; overflow-wrap: anywhere; }
+.history-mistake p { margin: 7px 0; }
+.history-task-visual { max-width: 100%; overflow: auto; }
+.history-task-visual:empty { display: none; }
+.history-mistake .text-button { margin-top: 6px; }

@@ -49,9 +49,12 @@
         if (op === '+' || op === '−') {
           const common = ad / gcd(ad, bd) * bd;
           const left = an * (common / ad), right = bn * (common / bd);
-          result.hint = t.fraction;
+          result.hint = ad === bd
+            ? (language === 'ru' ? `Доли уже одинаковые. ${op === '+' ? `Сложи ${an} и ${bn}` : `Вычти ${bn} из ${an}`}. Знаменатель остаётся ${ad}.` : `Die Teile sind schon gleich groß. Rechne ${an} ${op} ${bn}. Der Nenner bleibt ${ad}.`)
+            : t.fraction;
           result.hintVisual = chips([`${a} = ${left}/${common}`, `${b} = ${right}/${common}`]);
-          add(`${a} = ${left}/${common}; ${b} = ${right}/${common}`, this.fractionBar(left, common) + this.fractionBar(right, common));
+          if (ad !== bd) add(`${a} = ${left}/${common}; ${b} = ${right}/${common}`, this.fractionBar(left, common) + this.fractionBar(right, common));
+          if (ad === bd) { result.hintVisual = chips([`${an} ${op} ${bn}`, `${language === 'ru' ? 'Знаменатель' : 'Nenner'}: ${ad}`]); add(result.hint, result.hintVisual); }
           numerator = op === '+' ? left + right : left - right; denominator = common;
           add(`${left}/${common} ${op} ${right}/${common} = ${numerator}/${common}`, this.fractionBar(op === '+' ? numerator : left, common, op === '−' ? right : 0));
         } else {
@@ -61,7 +64,10 @@
           if (op !== '×') add(`${a} : ${b} = ${a} × ${bd}/${bn}`, this.fractionBar(an, ad));
           add(`(${an} × ${op === '×' ? bn : bd}) / (${ad} × ${op === '×' ? bd : bn}) = ${numerator}/${denominator}`, this.fractionBar(numerator, denominator));
         }
-        add(`${numerator}/${denominator} = ${answer}`, this.fractionBar(...answer.split('/').map(Number)));
+        const divisor = gcd(numerator, denominator);
+        if (divisor > 1) add(language === 'ru'
+          ? `Сократи дробь: раздели числитель и знаменатель на ${divisor}. ${numerator}/${denominator} = ${answer}`
+          : `Kürze den Bruch: Teile Zähler und Nenner durch ${divisor}. ${numerator}/${denominator} = ${answer}`, this.fractionBar(...answer.split('/').map(Number)));
       } else if (operation === 'decimal') {
         const places = n => (String(n).split('.')[1] || '').length;
         if (op === '+' || op === '−') {
