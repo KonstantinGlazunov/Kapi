@@ -44,8 +44,8 @@
     ru: {
       locale: "ru-RU", appName: "Считаем с Капи", description: "Адаптивный тренажёр арифметики для детей — от сложения до корней.",
       startEyebrow: "Уровень 1", startTitle: "Готовы считать?", startDescription: "20 коротких примеров. Капи постепенно повышает сложность.",
-      homeSubtitle: "Шаг за шагом с Капи.", homeHistory: "История", homeXp: "XP", homeStage: (stage) => `Ступень ${stage}`,
-      dayStreak: "дней подряд", totalXp: "всего XP", start: "Начать тренировку", history: "История занятий", speech: "Hey!",
+      homeSubtitle: "Шаг за шагом с Капи.", homeHistory: "История", homeXp: "Очки", homeStage: (stage) => `Ступень ${stage}`,
+      dayStreak: "дней подряд", totalXp: "всего очков", start: "Начать тренировку", history: "История занятий", speech: "Hey!",
       homeGreetings: ["Привет! Начнём?", "Поехали!", "Продолжим!", "Рад тебя видеть!"],
       weeklyGoal: "Цель на неделю", thisWeek: "На этой неделе", weeklyZero: "Первое занятие ждёт",
       weeklyCount: (count, goal) => `${count} из ${goal} тренировок`,
@@ -98,8 +98,8 @@
     de: {
       locale: "de-DE", appName: "Rechnen mit Kapi", description: "Adaptives Rechentraining für Kinder – von Addition bis zu Wurzeln.",
       startEyebrow: "Stufe 1", startTitle: "Bereit zum Rechnen?", startDescription: "20 kurze Aufgaben. Kapi erhöht die Schwierigkeit Schritt für Schritt.",
-      homeSubtitle: "Schritt für Schritt mit Kapi.", homeHistory: "Verlauf", homeXp: "XP", homeStage: (stage) => `Stufe ${stage}`,
-      dayStreak: "Tage in Folge", totalXp: "XP insgesamt", start: "Training starten", history: "Trainingsverlauf", speech: "Hey!",
+      homeSubtitle: "Schritt für Schritt mit Kapi.", homeHistory: "Verlauf", homeXp: "Punkte", homeStage: (stage) => `Stufe ${stage}`,
+      dayStreak: "Tage in Folge", totalXp: "Punkte insgesamt", start: "Training starten", history: "Trainingsverlauf", speech: "Hey!",
       homeGreetings: ["Hallo! Bereit?", "Los geht’s!", "Weiter geht’s!", "Schön, dass du da bist!"],
       weeklyGoal: "Wochenziel", thisWeek: "Diese Woche", weeklyZero: "Erstes Training wartet",
       weeklyCount: (count, goal) => `${count} von ${goal} Trainings`,
@@ -176,11 +176,16 @@
     hintLookAgain: "Schau noch einmal genau hin.", hintRemaining: "Was bleibt übrig?",
     speedImprovedTitle: "Du wirst schneller!", personalRecordTitle: "Neuer Rekord!"
   });
+  function pointCount(n, lang = language) {
+    const count = Math.abs(Number(n)), mod100 = count % 100, mod10 = count % 10;
+    const word = lang === 'de' ? (count === 1 ? 'Punkt' : 'Punkte') : mod100 >= 11 && mod100 <= 14 ? 'очков' : mod10 === 1 ? 'очко' : mod10 >= 2 && mod10 <= 4 ? 'очка' : 'очков';
+    return `${n} ${word}`;
+  }
   Object.assign(translations.de, {
     meinKapi: "Mein Kapi", wardrobeIntro: "Für deinen Fortschritt bekommt Kapi neue Sachen.",
     wardrobeSlots: { hat: "Kopfbedeckung", glasses: "Brille", neck: "Hals", back: "Rücken", badge: "Abzeichen" },
-    noItem: "Ohne", selected: "Ausgewählt", unlocked: "Freigeschaltet", locked: (xp) => `🔒 ${xp} XP`,
-    xpGoal: (xp, target) => `${xp} / ${target} XP`, nextGoal: (remaining, name) => `Noch ${remaining} XP bis ${name}`,
+    noItem: "Ohne", selected: "Ausgewählt", unlocked: "Freigeschaltet", locked: (xp) => `🔒 ${pointCount(xp, "de")}`,
+    xpGoal: (xp, target) => `${xp} / ${pointCount(target, "de")}`, nextGoal: (remaining, name) => `Noch ${pointCount(remaining, "de")} bis zur Belohnung „${name}“`,
     firstReward: "Erstes Abzeichen wartet!", allRewards: "Alle Kapi-Sachen freigeschaltet!",
     newThings: (count) => count === 1 ? "Neu für Kapi!" : `${count} neue Sachen für Kapi!`,
     rewardUnlocked: "freigeschaltet", nextTarget: "Nächstes Ziel"
@@ -188,8 +193,8 @@
   Object.assign(translations.ru, {
     meinKapi: "Мой Капи", wardrobeIntro: "За твои успехи Капи получает новые вещи.",
     wardrobeSlots: { hat: "Головной убор", glasses: "Очки", neck: "Шея", back: "Спина", badge: "Значок" },
-    noItem: "Без предмета", selected: "Выбрано", unlocked: "Открыто", locked: (xp) => `🔒 ${xp} XP`,
-    xpGoal: (xp, target) => `${xp} / ${target} XP`, nextGoal: (remaining, name) => `Ещё ${remaining} XP до ${name}`,
+    noItem: "Без предмета", selected: "Выбрано", unlocked: "Открыто", locked: (xp) => `🔒 ${pointCount(xp, "ru")}`,
+    xpGoal: (xp, target) => `${xp} / ${pointCount(target, "ru")}`, nextGoal: (remaining, name) => `До ${name === "Значок-звезда" ? "значка «Звезда»" : `награды «${name}»`} осталось ${pointCount(remaining, "ru")}`,
     firstReward: "Первый значок уже ждёт!", allRewards: "Все предметы Капи открыты!",
     newThings: (count) => count === 1 ? "Новинка для Капи!" : `${count} новых предмета для Капи!`,
     rewardUnlocked: "открыт", nextTarget: "Следующая цель"
@@ -257,6 +262,9 @@
   let deferredInstallPrompt = null;
   let installPlatform = "android";
   let settingsSection = "menu";
+  let settingsRenderedSection = null;
+  let advancedSettingsOpen = false;
+  let settingsNotice = "";
 
   const state = {
     index: 0,
@@ -306,7 +314,7 @@
     dismissMotivation();
     $("resultScreen").dataset.showPhase = "summary";
     $("journeyChoice").classList.add("hidden");
-    $("againButton").textContent = journeyCopy()[getProfile().journey.step >= window.KapiJourney.MAX_STEP ? "lake" : "home"];
+    $("againButton").textContent = language === "ru" ? "На главную" : "Zur Startseite";
     $("skipResultShow").classList.add("hidden");
     $("resultRewardProgress").classList.remove("hidden");
     $("confetti").innerHTML = "";
@@ -349,7 +357,7 @@
     $("problemTotal").textContent = String(TOTAL);
     $("correctLabel").textContent = copy.correctOfTotal(TOTAL);
     $("averageLabel").textContent = copy.average;
-    $("xpLabel").textContent = copy.experience;
+    $("xpLabel").textContent = language === "ru" ? "за занятие" : "für die Übung";
     $("againButton").textContent = copy.again;
     $("shareButton").textContent = copy.share;
     $("resultStatsButton").textContent = copy.viewHistory;
@@ -381,9 +389,10 @@
     try {
       const value = storage.readJSON(SETTINGS_KEY, {});
       appSettings.language = ["ru", "de"].includes(value.language) ? value.language : defaultLanguage;
-      appSettings.problemCount = [10, 20, 30].includes(Number(value.problemCount)) ? Number(value.problemCount) : 20;
+      appSettings.problemCount = [10, 20, 30].includes(Number(value.problemCount)) ? Number(value.problemCount) : 10;
       const currentCurriculum = value.curriculumVersion === CURRICULUM_VERSION;
       appSettings.automatic = value.automatic !== false;
+      appSettings.rangeLocked = value.rangeLocked === true;
       appSettings.range = ["10", "20", "100", "above100"].includes(String(value.range)) ? String(value.range) : "above100";
       appSettings.operations = Array.isArray(value.operations)
         ? OPERATION_ORDER.filter((operation) => value.operations.includes(operation))
@@ -406,12 +415,31 @@
   }
 
   function renderSettingsContent() {
+    const active = document.activeElement;
+    const identity = active && { name: active.name, value: active.value, id: active.id };
+    const advanced = $("settingsContent").querySelector("details.settings-advanced");
+    if (advanced) advancedSettingsOpen = advanced.open;
+    const changed = settingsRenderedSection !== settingsSection;
+    renderSettingsBody();
+    settingsRenderedSection = settingsSection;
+    if (!$("settingsDialog").open) return;
+    if (!changed && identity) {
+      const replacement = [...$("settingsContent").querySelectorAll('input,select,button')].find(el => identity.id ? el.id === identity.id : identity.name && el.name === identity.name && (el.tagName === 'SELECT' || el.value === identity.value));
+      if (replacement) { replacement.focus({preventScroll:true}); return; }
+    }
+    const heading = $("settingsContent").querySelector('h3');
+    if (heading) { heading.tabIndex = -1; heading.focus(); }
+    else $("settingsContent").querySelector('button')?.focus();
+  }
+
+  function renderSettingsBody() {
     const content = $("settingsContent");
     if (!content) return;
     $("settingsHint").hidden = settingsSection !== "menu";
     const items = [
       ["counting", "±", copy.settingsCounting, copy.settingsCountingMenu],
       ["general", "A", copy.settingsGeneral, copy.settingsGeneralMenu],
+      ["data", "⇄", language === "ru" ? "Данные и перенос" : "Daten und Umzug", copy.backupHelp],
       ["history", "◷", copy.homeHistory, language === "ru" ? "Результаты прошлых тренировок" : "Ergebnisse vergangener Trainings"],
       ["about", "i", copy.settingsAbout, copy.settingsAboutMenu]
     ];
@@ -427,12 +455,6 @@
       const selectedWeeklyGoal = getProfile().weeklyGoal;
       content.innerHTML = `${navigation}
         <section class="settings-panel">
-          <fieldset class="backup-controls"><legend>${copy.backupTitle}</legend>
-            <p class="settings-note">${copy.backupHelp}</p>
-            <button class="setting-toggle" type="button" data-backup-export>${copy.backupExport}</button>
-            <label class="backup-file">${copy.backupImport}<input type="file" data-backup-import accept="application/json,.json"></label>
-            <p id="backupStatus" role="status"></p>
-          </fieldset>
           <fieldset><legend>${copy.language}</legend>
             <label><input type="radio" name="language" value="de" ${language === "de" ? "checked" : ""}> Deutsch</label>
             <label><input type="radio" name="language" value="ru" ${language === "ru" ? "checked" : ""}> Русский</label>
@@ -444,6 +466,16 @@
             ${weekly.GOALS.map((goal) => `<label><input type="radio" name="weeklyGoal" value="${goal}" ${selectedWeeklyGoal === goal ? "checked" : ""}> ${copy.weeklyOption(goal)}</label>`).join("")}
           </fieldset>
         </section>`;
+      return;
+    }
+    if (settingsSection === "data") {
+      content.innerHTML = `${navigation}<section class="settings-panel">          <fieldset class="backup-controls"><legend>${copy.backupTitle}</legend>
+            <p class="settings-note">${copy.backupHelp}</p>
+            <button class="setting-toggle" type="button" data-backup-export>${copy.backupExport}</button>
+            <label class="backup-file">${copy.backupImport}<input type="file" data-backup-import accept="application/json,.json"></label>
+            <p id="backupStatus" role="status"></p>
+          </fieldset>
+</section>`;
       return;
     }
     if (settingsSection === "about") {
@@ -460,41 +492,29 @@
         </section>`;
       return;
     }
-    const profile = getProfile();
-    const maxStage = maximumAllowedStage();
-    const selectableStageCount = appSettings.automatic ? maxStage : CURRICULUM_STAGE_COUNT;
-    const selectedStage = Math.min(selectableStageCount, appSettings.automatic ? profile.currentStage : appSettings.manualStage);
-    if (appSettings.automatic && profile.currentStage !== selectedStage) {
-      profile.currentStage = selectedStage;
-      saveProfile(profile);
-    }
-    appSettings.manualStage = selectedStage;
-    const stageIndex = selectedStage - 1;
-    content.innerHTML = `${navigation}
-      <section class="settings-panel">
-        <fieldset><legend>${copy.examples}</legend>
-          ${[10, 20, 30].map((count) => `<label><input type="radio" name="problemCount" value="${count}" ${TOTAL === count ? "checked" : ""}> ${count}</label>`).join("")}
-        </fieldset>
-        <fieldset><legend>${copy.mode}</legend>
-          <label class="setting-wide"><input type="checkbox" name="automatic" ${appSettings.automatic ? "checked" : ""}> ${copy.automatic}</label>
-          ${appSettings.automatic ? `<p class="settings-note">${copy.automaticHint}</p>` : ""}
-        </fieldset>
-        <fieldset><legend>${copy.range}</legend>
-          ${[["10", copy.rangeNames[10]], ["20", copy.rangeNames[20]], ["100", copy.rangeNames[100]], ["above100", copy.rangeNames.above100]].map(([value, label]) => `<label><input type="radio" name="range" value="${value}" ${appSettings.range === value ? "checked" : ""}> ${label}</label>`).join("")}
-        </fieldset>
-        <fieldset class="stage-settings"><legend>${appSettings.automatic ? copy.startStage : copy.chooseStage}</legend>
-            <select name="manualStage" aria-label="${appSettings.automatic ? copy.startStage : copy.chooseStage}">${Array.from({ length: selectableStageCount }, (_, index) => `<option value="${index + 1}" ${selectedStage === index + 1 ? "selected" : ""}>${index + 1}. ${copy.stageNames[index]}</option>`).join("")}</select>
-            <div class="stage-summary"><span>${copy.stageBrief(copy.stageNames[stageIndex], STAGE_EXAMPLES[stageIndex])}</span><details><summary aria-label="${copy.stageInfo}" title="${copy.stageInfo}">i</summary><p>${copy.stageDetail(appSettings.manualStage, copy.stageNames[stageIndex], STAGE_EXAMPLES[stageIndex])}</p></details></div>
-        </fieldset>
-        <fieldset class="operation-settings"><legend>${copy.operations}</legend>
-            ${appSettings.automatic ? `<p class="settings-note">${copy.operationsAutomatic}</p>` : ""}
-            ${OPERATION_ORDER.map((operation) => {
-              const available = operationAvailableAtStage(operation, selectedStage);
-              const checked = appSettings.automatic ? available : appSettings.operations.includes(operation);
-              return `<label class="${available ? "" : "operation-locked"}"><input type="checkbox" name="operation" value="${operation}" ${checked ? "checked" : ""} ${(appSettings.automatic || !available) ? "disabled" : ""}> ${copy.operationNames[operation]}</label>`;
-            }).join("")}
-        </fieldset>
-      </section>`;
+    const ru = language === 'ru', profile = getProfile();
+    const selectedStage = appSettings.automatic ? profile.currentStage : appSettings.manualStage;
+    const limit = appSettings.rangeLocked ? maximumAllowedStage() : CURRICULUM_STAGE_COUNT;
+    const chapters = curriculumMap.getChapters().filter(c => c.first <= limit);
+    const chosenChapter = curriculumMap.chapterForStage(selectedStage);
+    const rangeHint = ru ? 'Для выбранной темы диапазон:' : 'Zahlenraum für das gewählte Thema:';
+    content.innerHTML = `${navigation}<section class="settings-panel">
+      <fieldset><legend>${ru ? 'Как заниматься?' : 'Wie möchtest du üben?'}</legend>
+        <label class="setting-wide"><input type="radio" name="automatic" value="auto" ${appSettings.automatic ? 'checked' : ''}>${ru ? 'Подбирай задания сам' : 'Aufgaben automatisch auswählen'}</label>
+        <label class="setting-wide"><input type="radio" name="automatic" value="manual" ${!appSettings.automatic ? 'checked' : ''}>${ru ? 'Хочу потренировать тему' : 'Ich möchte ein Thema üben'}</label>
+      </fieldset>
+      ${appSettings.automatic ? `<p class="settings-note">${copy.automaticHint}</p>` : `<label class="topic-picker">${ru ? 'Тема' : 'Thema'}<select name="topic">${chapters.map(c => `<option value="${c.first}" ${c.id === chosenChapter?.id ? 'selected' : ''}>${c[language]}${!appSettings.rangeLocked && rangeForStage(c.first) !== appSettings.range ? " — " + (ru ? "диапазон изменится на " : "Zahlenraum wechselt zu ") + copy.rangeNames[rangeForStage(c.first)] : ""}</option>`).join('')}</select></label>
+        <p class="topic-example"><strong>${copy.stageNames[selectedStage-1]}</strong><br>${STAGE_EXAMPLES[selectedStage-1]}</p>
+        <p class="settings-note">${rangeHint} ${copy.rangeNames[rangeForStage(selectedStage)]}. ${ru ? 'Выбор другой темы может изменить диапазон. Жёсткую границу можно задать ниже.' : 'Ein anderes Thema kann den Zahlenraum ändern. Eine feste Grenze lässt sich unten setzen.'}</p>`}
+      <p id="settingsNotice" role="status">${settingsNotice}</p>
+      <details class="settings-advanced" ${advancedSettingsOpen ? 'open' : ''}><summary>${ru ? 'Дополнительные параметры' : 'Weitere Einstellungen'}</summary>
+        <fieldset><legend>${copy.examples}</legend>${[10,20,30].map(n=>`<label><input type="radio" name="problemCount" value="${n}" ${appSettings.problemCount===n?'checked':''}>${n}</label>`).join('')}</fieldset>
+        <fieldset><legend>${copy.range}</legend>${['10','20','100','above100'].map(value=>`<label><input type="radio" name="range" value="${value}" ${appSettings.range===value?'checked':''}>${copy.rangeNames[value]}</label>`).join('')}
+        <label class="setting-wide"><input type="checkbox" name="rangeLocked" ${appSettings.rangeLocked?'checked':''}>${ru?'Не выходить за выбранный диапазон':'Diesen Zahlenraum nicht überschreiten'}</label></fieldset>
+        <fieldset class="stage-settings"><legend>${copy.chooseStage}</legend><select name="manualStage" aria-label="${copy.chooseStage}">${Array.from({length:limit},(_,i)=>`<option value="${i+1}" ${selectedStage===i+1?'selected':''}>${i+1}. ${copy.stageNames[i]}${!appSettings.rangeLocked&&rangeForStage(i+1)!==appSettings.range?' — '+copy.rangeNames[rangeForStage(i+1)]:''}</option>`).join('')}</select>
+        <p>${STAGE_EXAMPLES[selectedStage-1]}</p></fieldset>
+        <fieldset class="operation-settings"><legend>${copy.operations}</legend><p class="settings-note">${ru?'Действия доступны для выбранной темы. Должно остаться хотя бы одно.':'Rechenarten hängen vom Thema ab. Mindestens eine muss ausgewählt bleiben.'}</p>${OPERATION_ORDER.map(operation=>{const available=operationAvailableAtStage(operation,selectedStage);return `<label><input type="checkbox" name="operation" value="${operation}" ${appSettings.automatic?available?'checked':'':appSettings.operations.includes(operation)?'checked':''} ${appSettings.automatic||!available?'disabled':''}>${copy.operationNames[operation]}</label>`}).join('')}</fieldset>
+      </details></section>`;
   }
 
   function getProfile() {
@@ -609,7 +629,12 @@
     $("journeyPlace").textContent = words.places[step];
     $("journeyNext").textContent = words.next[step];
     $("journeyStops").innerHTML = words.places.slice(window.KapiJourney.chapter(step) * 4, window.KapiJourney.chapter(step) * 4 + 4).map((place, local) => { const i = window.KapiJourney.chapter(step) * 4 + local; return `<span class="${i <= step ? 'reached' : ''}" aria-label="${place}" title="${place}">${i < step ? '✓' : i === step ? '●' : '○'}</span>`; }).join('<i></i>');
-    $("startButton").textContent = words.start[step];
+    const first = profile.totalXp === 0 && getHistory().length === 0 && step === 0;
+    $("startButton").textContent = first ? (language === 'ru' ? 'Начать первое занятие' : 'Erste Übung starten') : (language === 'ru' ? 'Начать занятие' : 'Übung starten');
+    document.body.classList.toggle("first-visit", first);
+    $("homeFirstHint").hidden = !first;
+    $("homeFirstHint").textContent = language === 'ru' ? 'Решай примеры и путешествуй с Капи' : 'Löse Aufgaben und reise mit Kapi';
+    $("homeTaskCount").textContent = language === 'ru' ? `${appSettings.problemCount} заданий` : `${appSettings.problemCount} Aufgaben`;
     let button = $("journeyGoalButton");
     if (!button) {
       button = document.createElement("button"); button.id = "journeyGoalButton"; button.className = "text-button";
@@ -623,6 +648,31 @@
     button.hidden = !window.KapiJourney.variants[next?.id];
     button.textContent = words.goal;
   }
+  if (window.history?.state?.kapiAlbumDepth) window.history.replaceState({ ...window.history.state, kapiAlbumDepth: 0 }, "");
+  const albumLayers = [];
+  const backClosing = new WeakSet();
+  function openAlbumLayer(dialog) {
+    if (dialog.open) return;
+    albumLayers.push(dialog);
+    window.history.pushState({ ...window.history.state, kapiAlbumDepth: albumLayers.length }, '');
+    dialog.showModal();
+  }
+  for (const id of ['journeyAlbum', 'journeyViewer']) {
+    $(id).addEventListener('close', () => {
+      if (backClosing.has($(id))) { backClosing.delete($(id)); return; }
+      const index = albumLayers.indexOf($(id));
+      if (index < 0) return;
+      albumLayers.splice(index, 1);
+      window.history.back();
+    });
+  }
+  window.addEventListener('popstate', event => {
+    const depth = Math.max(0, Math.min(albumLayers.length, Number(event.state?.kapiAlbumDepth) || 0));
+    while (albumLayers.length > depth) {
+      const dialog = albumLayers.pop(); backClosing.add(dialog); dialog.close();
+    }
+  });
+
   function albumViewButton(step, name, available) {
     if (!available) return '';
     const label = (language === 'ru' ? 'Рассмотреть: ' : 'Ansehen: ') + name;
@@ -678,23 +728,23 @@
     $("closeJourneyViewer").onclick = () => viewer.close();
     viewer.onclick = event => { if (event.target === viewer) viewer.close(); };
     viewer.onclose = () => { trigger?.focus({preventScroll: true}); scroller.scrollTop = scrollTop; };
-    viewer.showModal();
+    openAlbumLayer(viewer);
   }
 
   function openJourneyAlbum() {
     const profile = getProfile(), words = journeyCopy(), step = profile.journey.step;
     $("journeyAlbumContent").innerHTML = `<div class="album-header"><h2 id="journeyAlbumTitle">${words.album}</h2><button class="text-button" id="closeJourneyAlbum">${words.close}</button></div><div class="album-scroll"><p>${step + 1} / 24</p>` + window.KapiJourney.chapters.map((chapter, c) => {
-      return `<section class="album-chapter"><h3>${chapter[language === 'ru' ? 1 : 2]}</h3><div class="album-places">` + words.places.slice(c * 4, c * 4 + 4).map((name, n) => {
+      return `<details class="album-chapter" ${c <= window.KapiJourney.chapter(step) ? "open" : ""}><summary>${chapter[language === 'ru' ? 1 : 2]}</summary><div class="album-places">` + words.places.slice(c * 4, c * 4 + 4).map((name, n) => {
         const i = c * 4 + n, scene = window.KapiJourney.scene(i), unlocked = i <= step;
-        return `<figure class="album-place ${unlocked ? 'visited' : 'locked'}"><div class="album-picture" ${unlocked ? `style='background-image:url("assets/journey/${scene.asset}");background-position:${scene.position};background-size:${scene.size}'` : ''}>${unlocked ? '' : '<span class="album-unvisited">🔒</span>'}</div><figcaption>${i + 1}. ${name}${i === step ? ' ●' : unlocked ? ' ✓' : ''}</figcaption>${albumViewButton(i, name, unlocked)}</figure>`;
-      }).join('') + `</div></section>`;
+        return `<figure class="album-place ${unlocked ? 'visited' : 'locked'}"><div class="album-picture" ${unlocked ? `style='background-image:url("assets/journey/${scene.asset}");background-position:${scene.position};background-size:${scene.size}'` : ''}>${unlocked ? '' : '<span class="album-unvisited">🔒</span>'}</div><figcaption>${i + 1}. ${name}${i === step ? ' ●' : unlocked ? ' ✓' : ''}${i === step + 1 ? `<small class="next-stop-help">${language === 'ru' ? 'Откроется после следующего занятия' : 'Öffnet sich nach der nächsten Übung'}</small>` : ''}</figcaption>${albumViewButton(i, name, unlocked)}</figure>`;
+      }).join('') + `</div></details>`;
     }).join('') + '</div>';
     $("journeyAlbumContent").onclick = event => {
       const trigger = event.target.closest('[data-album-view]');
       if (trigger) openJourneyViewer(Number(trigger.dataset.albumView), trigger);
     };
     $("closeJourneyAlbum").onclick = () => $("journeyAlbum").close();
-    $("journeyAlbum").showModal();
+    openAlbumLayer($("journeyAlbum"));
   }
 
   function openJourneyPicker(id) {
@@ -768,17 +818,18 @@
 
   function renderWardrobe() {
     const profile = getProfile(), scroller = $("wardrobeItems"), scrollTop = scroller.scrollTop;
-    const slots = ["hat", "glasses", "neck", "back", "badge"];
+    const nextReward = rewards.getNextReward(profile.totalXp).reward;
+    const slots = ["hat", "glasses", "neck", "back", "badge"].sort((a,b) => Number(b === nextReward?.slot) - Number(a === nextReward?.slot));
     const visible = new Set(rewards.getRewards().filter(reward => profile.unlockedRewards.includes(reward.id)).map(reward => reward.id));
-    rewards.getRewards().filter(reward => !visible.has(reward.id)).slice(0, 3).forEach(reward => visible.add(reward.id));
-    scroller.innerHTML = slots.map(slot => `<section class="wardrobe-slot" aria-label="${copy.wardrobeSlots[slot]}"><div class="wardrobe-options">
+    rewards.getRewards().filter(reward => !visible.has(reward.id)).slice(0, 1).forEach(reward => visible.add(reward.id));
+    scroller.innerHTML = (nextReward ? `<p class="wardrobe-next">${copy.nextGoal(nextReward.xp-profile.totalXp, rewardName(nextReward))}</p>` : "") + slots.filter(slot => rewards.getRewards().some(reward => reward.slot === slot && visible.has(reward.id))).map(slot => `<section class="wardrobe-slot" aria-label="${copy.wardrobeSlots[slot]}"><h3>${copy.wardrobeSlots[slot]}</h3><div class="wardrobe-options">
       <button class="wardrobe-item wardrobe-none" type="button" data-unequip="${slot}" aria-label="${copy.wardrobeSlots[slot]} · ${copy.noItem}" aria-pressed="${profile.equippedOutfit[slot] === null}"><span aria-hidden="true">⊘</span></button>
       ${rewards.getRewards().filter(reward => reward.slot === slot && visible.has(reward.id)).map(reward => {
         const unlocked = profile.unlockedRewards.includes(reward.id);
         const variants = window.KapiJourney.variants[reward.id] || [{id: '', asset: reward.asset, [language]: rewardName(reward)}];
         return variants.map(variant => {
           const selected = profile.equippedOutfit[slot] === reward.id && (!variant.id || profile.cosmeticVariants[reward.id] === variant.id);
-          return `<button class="wardrobe-item" type="button" data-equip="${reward.id}" data-variant="${variant.id}" aria-label="${variant[language]} · ${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}" aria-pressed="${selected}" ${unlocked ? '' : 'disabled'}><img src="assets/cosmetics/${variant.asset}.svg" alt="">${unlocked ? '' : `<small>${reward.xp} XP</small>`}</button>`;
+          return `<button class="wardrobe-item" type="button" data-equip="${reward.id}" data-variant="${variant.id}" aria-label="${variant[language]} · ${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}" aria-pressed="${selected}" ${unlocked ? '' : 'disabled'}><img src="assets/cosmetics/${variant.asset}.svg" alt="">${unlocked ? '' : `<small>${pointCount(reward.xp)}</small>`}</button>`;
         }).join('');
       }).join('')}</div></section>`).join('');
     scroller.scrollTop = scrollTop;
@@ -797,22 +848,31 @@
   }
 
   function renderCurriculumMap() {
-    const profile = getProfile();
-    const stage = profile.currentStage;
-    const allComplete = profile.curriculumCompleted && stage === CURRICULUM_STAGE_COUNT;
-    $("mapIntro").textContent = allComplete ? copy.mapAllComplete : copy.mapIntro;
-    $("mapIntro").classList.toggle("map-complete", allComplete);
-    $("mapChapters").innerHTML = curriculumMap.chaptersAt(stage, profile.curriculumCompleted).map((chapter) => {
-      const status = { completed: copy.mapCompleted, current: copy.mapCurrent, locked: copy.mapLocked }[chapter.status];
-      const currentStep = chapter.status === "current" ? `<small>${copy.mapSteps(chapter.step, chapter.total)} · ${copy.stageNames[stage - 1]}</small>` : "";
-      const reinforced = chapter.status === "completed" && Array.from({ length: chapter.last - chapter.first + 1 }, (_, index) => chapter.first + index)
-        .every((step) => ["secure", "stable"].includes(mastery.getMasteryStatus(profile.skillMastery[mastery.skillIdForProblem({ curriculumStage: step })])))
-        ? `<small class="map-mastery">✓ ${copy.mapReinforced}</small>` : "";
-      return `<article class="map-chapter ${chapter.status}" aria-label="${chapter[language]}: ${status}">
-        <div class="map-marker">${chapter.status === "current" ? '<img src="assets/kapi-rig-v2/head.png" alt="">' : chapter.status === "completed" ? "✓" : "🔒"}</div>
-        <div><strong>${chapter[language]}</strong><p>${chapter[language === "de" ? "detailDe" : "detailRu"]}</p>${currentStep}${reinforced}</div>
-        <span class="map-status">${status}</span></article>`;
-    }).join("");
+    const profile = getProfile(), ru = language === 'ru';
+    const stage = profile.currentStage, selected = appSettings.automatic ? stage : appSettings.manualStage;
+    $("mapIntro").textContent = `${profile.curriculumCompleted ? copy.mapAllComplete + " " : ""}${ru ? 'Автоматическое обучение' : 'Automatischer Lernweg'}: ${copy.stageNames[stage-1]}. ${ru ? 'Выбрано для следующего занятия' : 'Für die nächste Übung gewählt'}: ${copy.stageNames[selected-1]}.`;
+    $("mapIntro").classList.toggle('map-complete', profile.curriculumCompleted);
+    const chapters = curriculumMap.chaptersAt(stage, profile.curriculumCompleted);
+    const render = chapter => {
+      const chosen = selected >= chapter.first && selected <= chapter.last;
+      const active = chapter.status === 'current';
+      const label = chosen ? (ru?'Выбрано для следующего занятия':'Für die nächste Übung gewählt') : chapter.status === 'completed' ? (ru?'Освоено автоматически':'Automatisch abgeschlossen') : active ? (ru?'Изучаем автоматически':'Automatisch in Arbeit') : (ru?'Будущая тема':'Zukünftiges Thema');
+      const exampleStage = chosen ? selected : active ? stage : chapter.first;
+      const reinforced = chapter.status === 'completed' && Array.from({length:chapter.last-chapter.first+1},(_,i)=>chapter.first+i).every(step=>['secure','stable'].includes(mastery.getMasteryStatus(profile.skillMastery[mastery.skillIdForProblem({curriculumStage:step})])));
+
+      return `<details class="map-chapter ${chosen&&!appSettings.automatic?'selected':chapter.status}" ${chosen||active?'open':''}><summary>${active?'<img src="assets/kapi-rig-v2/head.png" width="28" height="28" alt="">':''}<strong>${chapter[language]}</strong><span class="map-status">${label}</span></summary><p>${chapter[ru?'detailRu':'detailDe']}</p><p>${STAGE_EXAMPLES[exampleStage-1]}</p>${active?`<small>${copy.mapSteps(chapter.step,chapter.total)}</small>`:""}${reinforced?`<small>✓ ${copy.mapReinforced}</small>`:""}${chosen||active||chapter.status==='completed'?`<button type="button" class="text-button" data-map-practice="${exampleStage}">${ru?'Тренироваться':'Üben'}</button>`:''}</details>`;
+    };
+    const near = chapters.filter(c => c.status==='current'||selected>=c.first&&selected<=c.last);
+    $("mapChapters").innerHTML = near.map(render).join('') + `<details class="map-full-plan"><summary>${ru?'Весь учебный план — для родителей':'Gesamter Lernplan — für Eltern'}</summary>${chapters.filter(c=>!near.includes(c)).map(render).join('')}</details>`;
+  }
+
+  function practiceHistoryProblem(p) {
+    if (!tasks.isValidReviewProblem({ ...p, correctStreak:0, lastShown:0 })) return;
+    const target = skills.classifyProblem(p), profile = getProfile();
+    if (!target.skillId) return;
+    if (target.subskillId && !subskills.availableSubskills(target.skillId, profile).includes(target.subskillId)) return;
+    $("statsDialog").close(); $("settingsDialog").close();
+    startTraining({}, { profile, targeted:{...target,historyPractice:true,taskType:p.taskType}, trainingStage:skills.stageForSkill(target.skillId) });
   }
 
   function showCurriculumMap() {
@@ -993,7 +1053,7 @@
       operationAvailableAtStage(operation, stage) &&
       stageOperations.has(operation)
     );
-    if (stage > 1 && !appSettings.operations.length) appSettings.operations = [nativeOperationForStage(stage)];
+    if (!appSettings.operations.length) appSettings.operations = [stage === 1 ? "add" : nativeOperationForStage(stage)];
   }
 
   function syncStageToOperations() {
@@ -1546,6 +1606,7 @@ function makePowerProblem(max, mastered) {
     state.startedAt = performance.now();
     $("problemNumber").textContent = String(state.index + 1);
     $("scoreValue").textContent = String(state.score);
+    $("scoreUnit").textContent = pointCount(state.score).split(" ").slice(1).join(" ");
     $("streakValue").textContent = String(state.streak);
     $("streakPill").classList.toggle("hidden", state.streak < 2);
     $("progressFill").style.width = `${(state.index / TOTAL) * 100}%`;
@@ -1563,6 +1624,7 @@ function makePowerProblem(max, mastered) {
   }
 
   function renderProblem(problem) {
+    document.querySelector(".play-card").classList.toggle("math-focused", (problem.curriculumStage || state.stage) >= 31);
     const display = tasks.display(problem, language);
     $("problemText").textContent = display.text;
     $("problemText").classList.toggle("problem-wide", display.text.length > 12 || problem.taskType === "microStory");
@@ -1807,7 +1869,7 @@ function makePowerProblem(max, mastered) {
       const adaptiveMessage = updateAdaptiveProgress(state.problem, state.attempt === 1, true, elapsed);
       const reachedNewStage = state.stage > stageBeforeAnswer;
       const text = recovery === "errorMastered" ? copy.masteredTitle : recovery === "errorRecovered" ? copy.recoveredTitle : pick(messages.correct);
-      $("feedback").textContent = `${text} +${earned} ★`;
+      $("feedback").textContent = `${text} +${pointCount(earned)}`;
       const events = [{ type: "correct" }];
       if (recovery) events.push({ type: recovery });
       if ([3, 6, 10].includes(state.streak)) events.push({ type: "streakMilestone", count: state.streak });
@@ -1820,7 +1882,8 @@ function makePowerProblem(max, mastered) {
         // Final-answer rewards and completion are selected in one batch.
         state.finalMotivationEvents = events;
       } else {
-        motivation.handle(events, { batchId: `answer:${state.index}:${state.attempt}`, notice: operationMessage || adaptiveMessage });
+        if ((state.problem.curriculumStage || state.stage) >= 31) { sound("correct"); kapi.reset("game", "idle"); }
+        else motivation.handle(events, { batchId: `answer:${state.index}:${state.attempt}`, notice: operationMessage || adaptiveMessage });
       }
       scheduleAdvance(350);
       return;
@@ -1830,7 +1893,8 @@ function makePowerProblem(max, mastered) {
     const adaptiveMessage = updateAdaptiveProgress(state.problem, state.attempt === 1, false, elapsed);
     state.streak = 0;
     $("streakPill").classList.add("hidden");
-    motivation.handle([{ type: "wrong" }], { batchId: `answer:${state.index}:${state.attempt}` });
+    if ((state.problem.curriculumStage || state.stage) >= 31) { sound("wrong"); kapi.reset("game", "idle"); }
+    else motivation.handle([{ type: "wrong" }], { batchId: `answer:${state.index}:${state.attempt}` });
     if (state.attempt === 1) {
       registerProblemError(state.problem);
       state.attempt = 2;
@@ -2350,7 +2414,7 @@ function makePowerProblem(max, mastered) {
     const { unlocked, weeklyGoalComplete } = saveSession(session);
     $("correctValue").textContent = String(state.correct);
     $("averageValue").textContent = `${formatSeconds(average)} ${copy.seconds}`;
-    $("starsValue").textContent = `${state.score} XP`;
+    $("starsValue").textContent = pointCount(state.score);
     $("resultTitle").textContent = perfect ? copy.perfectTitle : copy.completeTitle;
     const freshProfile = getProfile();
     const chapterBefore = curriculumMap.chapterForStage(state.trainingStartStage);
@@ -2361,6 +2425,18 @@ function makePowerProblem(max, mastered) {
     if (advanced && chapterBefore?.id !== chapterAfter?.id && chapterAfter) {
       $("resultNote").textContent += ` ${copy.chapterFinished} ${copy.newChapter(chapterAfter[language])}`;
     }
+    const trouble = state.results.find(item => !item.firstTry && item.problem);
+    const nextTopic = trouble?.problem || {curriculumStage: freshProfile.currentStage};
+    const topicName = nextTopic.operation === 'count' ? (language === 'ru' ? 'подсчёт предметов' : 'das Zählen von Gegenständen') : copy.stageNames[(nextTopic.curriculumStage || freshProfile.currentStage)-1];
+    $("resultNote").textContent = language === 'ru'
+      ? `${state.correct} из ${TOTAL}. ${trouble ? 'Ещё потренируем' : 'Следующая тема:'} ${topicName}.`
+      : `${state.correct} von ${TOTAL}. ${trouble ? 'Wir üben noch' : 'Nächstes Thema:'} ${topicName}.`;
+    if (freshProfile.curriculumCompleted && !state.trainingStartedCompleted) $("resultNote").textContent += ` ${copy.curriculumComplete}`;
+    else if (advanced && chapterBefore?.id !== chapterAfter?.id && chapterAfter) $("resultNote").textContent += ` ${copy.chapterFinished} ${copy.newChapter(chapterAfter[language])}`;
+    $("resultRepeatButton").hidden = !trouble;
+    $("resultRepeatButton").textContent = language === 'ru' ? 'Повторить трудное' : 'Schwieriges wiederholen';
+    $("resultNewButton").textContent = language === 'ru' ? 'Начать новое занятие' : 'Neue Übung starten';
+    $("resultNewButton").classList.toggle('primary-button', !trouble);
     renderRewardGoal("result", freshProfile.totalXp);
     $("resultRewardProgress").classList.toggle("hidden", unlocked.length > 0);
     $("weeklyResult").classList.add("hidden");
@@ -2386,7 +2462,8 @@ function makePowerProblem(max, mastered) {
         saveProfile(profile);
         updateMascotOutfit(profile);
         $("rewardReveal").innerHTML = `<strong>${weeklyGoalComplete && earned.length ? copy.weeklyAndReward : earned.length ? copy.newThings(earned.length) : copy.weeklyDone}</strong>${earned.length ? `<div>${earned.map((reward) =>
-          `<img src="assets/cosmetics/${reward.asset}.svg" alt="">${rewardName(reward)} ${copy.rewardUnlocked}`).join(" · ")}</div>` : ""}${weeklyGoalComplete && earned.length ? `<div>${copy.weeklyDone}</div>` : ""}`;
+          `<img src="assets/cosmetics/${reward.asset}.svg" alt="">${rewardName(reward)} ${copy.rewardUnlocked}<button type="button" class="text-button" data-equip-now="${reward.id}">${language === "ru" ? "Надеть сейчас" : "Jetzt anziehen"}</button>`).join(" · ")}</div>` : ""}${weeklyGoalComplete && earned.length ? `<div>${copy.weeklyDone}</div>` : ""}`;
+        if (earned.some(reward => reward.id === "badge-star")) $("rewardReveal").innerHTML += `<p>${language === "ru" ? "За верные ответы ты получаешь очки. Они открывают вещи для Капи." : "Für richtige Antworten bekommst du Punkte. Damit werden Kapis Sachen freigeschaltet."}</p>`;
         $("rewardReveal").classList.remove("hidden");
         if (animate) kapi.trigger("rewardReveal", { surface: "result", rewardAsset: earned[0]?.asset });
         rewardGoalTimer = window.setTimeout(() => {
@@ -2520,7 +2597,7 @@ function makePowerProblem(max, mastered) {
       const hasTrouble = history.some(item => item.mistakes?.length || item.trouble?.length);
       content.innerHTML = `
         <div class="summary-stats">
-          <div><strong>${summary.thisWeek}</strong><span>${copy.thisWeek}</span></div>
+          <div><strong>${summary.thisWeek}</strong><span>${language === "ru" ? `из ${profile.weeklyGoal} тренировок на этой неделе` : `von ${profile.weeklyGoal} Übungen diese Woche`}</span></div>
           <div><strong>${summary.lastFourWeeks}</strong><span>${copy.lastFourWeeks}</span></div>
           <div><strong>${profile.currentStage}</strong><span>${copy.currentLevel}</span></div>
         </div>
@@ -2747,7 +2824,7 @@ function makePowerProblem(max, mastered) {
     const average = state.results.length ? state.results.reduce((sum, item) => sum + item.seconds, 0) / state.results.length : 0;
     context.fillStyle = "#627774";
     context.font = "700 30px system-ui, sans-serif";
-    context.fillText(`${copy.average}: ${formatSeconds(average)} ${copy.seconds}  •  ${state.score} XP`, 105, 405);
+    context.fillText(`${copy.average}: ${formatSeconds(average)} ${copy.seconds}  •  ${pointCount(state.score)}`, 105, 405);
     context.fillStyle = "#0a514d";
     context.font = "800 26px system-ui, sans-serif";
     context.fillText(copy.shareText, 105, 495);
@@ -2827,6 +2904,7 @@ function makePowerProblem(max, mastered) {
   function handleSettingsChange(event) {
     const input = event.target;
     if (!input?.name) return;
+    if ($("settingsDialog").open) input.focus?.({preventScroll:true});
     if (input.name === "language") {
       language = input.value === "ru" ? "ru" : "de";
       appSettings.language = language;
@@ -2852,10 +2930,10 @@ function makePowerProblem(max, mastered) {
       return;
     }
     if (input.name === "automatic") {
-      appSettings.automatic = input.checked;
+      appSettings.automatic = input.value ? input.value === "auto" : input.checked;
       const profile = getProfile();
       if (appSettings.automatic) {
-        setAdaptiveStage(profile, appSettings.manualStage);
+        appSettings.manualStage = profile.currentStage;
       } else {
         appSettings.manualStage = Math.min(profile.currentStage, maximumAllowedStage());
         reconcileOperationsForStage(appSettings.manualStage);
@@ -2865,8 +2943,16 @@ function makePowerProblem(max, mastered) {
       updateHomeStats();
       return;
     }
+    if (input.name === "rangeLocked") {
+      appSettings.rangeLocked = input.checked; saveSettings(); renderSettingsContent(); return;
+    }
+    if (input.name === "topic") {
+      handleSettingsChange({target:{name:'manualStage',value:input.value}}); return;
+    }
     if (input.name === "range") {
+      appSettings.rangeLocked = true;
       appSettings.range = input.value;
+      settingsNotice = language === 'ru' ? 'Жёсткая граница включена. Показаны только совместимые темы.' : 'Feste Grenze aktiviert. Es werden nur passende Themen angezeigt.';
       const profile = getProfile();
       if (appSettings.automatic) setAdaptiveStage(profile, Math.min(profile.currentStage, maximumAllowedStage()));
       else {
@@ -2880,10 +2966,12 @@ function makePowerProblem(max, mastered) {
     }
     if (input.name === "manualStage") {
       const previousStage = appSettings.manualStage;
-      appSettings.manualStage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(input.value) || 1));
+      appSettings.manualStage = Math.min(appSettings.rangeLocked ? maximumAllowedStage() : CURRICULUM_STAGE_COUNT, Math.max(1, Number(input.value) || 1));
       if (!appSettings.automatic) {
-        appSettings.range = rangeForStage(appSettings.manualStage);
+        if (!appSettings.rangeLocked) appSettings.range = rangeForStage(appSettings.manualStage);
+        settingsNotice = `${language === "ru" ? "Тема выбрана. Диапазон:" : "Thema gewählt. Zahlenraum:"} ${copy.rangeNames[appSettings.range]}`;
         appSettings.operations = availableOperationsThroughStage(appSettings.manualStage);
+        if (!appSettings.operations.length) appSettings.operations = ["add"];
       }
       if (appSettings.manualStage !== previousStage || appSettings.automatic) {
         const profile = getProfile();
@@ -2905,6 +2993,7 @@ function makePowerProblem(max, mastered) {
       const selected = [...$("settingsContent").querySelectorAll('input[name="operation"]:checked')].map((item) => item.value);
       if (!selected.length) {
         input.checked = true;
+        $("settingsNotice").textContent = language === "ru" ? "Оставь хотя бы одно действие." : "Bitte mindestens eine Rechenart auswählen.";
         return;
       }
       appSettings.operations = OPERATION_ORDER.filter((operation) => selected.includes(operation));
@@ -3137,10 +3226,36 @@ function makePowerProblem(max, mastered) {
     else $("skipResultShow").focus();
   });
   $("skipResultShow").addEventListener("click", () => { endResultShow(); $("againButton").focus(); });
-  $("startButton").addEventListener("click", () => startTrainingWithIntro());
+  $("startButton").addEventListener("click", () => {
+    if (!storage.getItem('kapi-journey-explained-v1')) {
+      $("journeyExplanationTitle").textContent = language === 'ru' ? 'Учимся и путешествуем' : 'Lernen und reisen';
+      $("journeyExplanationText").textContent = language === 'ru' ? 'Закончи занятие — откроешь место. Собирай очки — получишь вещи для Капи. Когда тема станет лёгкой, появится следующая.' : 'Beende eine Übung und entdecke einen Ort. Sammle Punkte für Kapis Sachen. Wenn ein Thema leicht wird, kommt das nächste.';
+      $("journeyExplanationStart").textContent = language === 'ru' ? `Начать · ${appSettings.problemCount} заданий` : `Starten · ${appSettings.problemCount} Aufgaben`;
+      $("journeyExplanation").showModal();
+    } else startTrainingWithIntro();
+  });
+  $("journeyExplanationStart").addEventListener('click', () => { storage.setItem('kapi-journey-explained-v1', '1'); $("journeyExplanation").close(); startTrainingWithIntro(); });
+  $("resultScreen").addEventListener('click', event => {
+    const button = event.target.closest('[data-equip-now]'); if (!button) return;
+    const profile = getProfile(); rewards.equip(profile, button.dataset.equipNow); saveProfile(profile); updateMascotOutfit(profile);
+    button.textContent = language === 'ru' ? 'Надето' : 'Angezogen'; button.disabled = true;
+  });
   $("homeMascot").addEventListener("click", playHomeReaction);
   document.querySelector(".app-shell").addEventListener("pointerdown", (event) => {
     if (kapi?.surface === "home" && !kapi.state.startsWith("idle") && !event.target.closest("#homeMascot")) clearHomeReaction();
+  });
+  $("resultRepeatButton").addEventListener('click', () => {
+    const problem = state.results.find(item => !item.firstTry && item.problem)?.problem;
+    if (problem) practiceHistoryProblem(problem);
+  });
+  $("resultNewButton").addEventListener('click', () => startTrainingWithIntro());
+  $("mapChapters").addEventListener('click', event => {
+    const button = event.target.closest('[data-map-practice]');
+    if (!button) return;
+    const stage = Number(button.dataset.mapPractice), profile = getProfile();
+    if (stage > Math.max(profile.currentStage, appSettings.automatic ? 0 : appSettings.manualStage)) return;
+    $("mapDialog").close();
+    startTraining({}, {profile, targeted:{skillId:skills.KAPI_SKILLS.find(s=>s.stage===stage).id,historyPractice:true,taskType:'equation'}, trainingStage:stage});
   });
   $("againButton").addEventListener("click", () => { showScreen($("startScreen")); updateHomeStats(); });
   $("shareButton").addEventListener("click", shareResult);
@@ -3167,18 +3282,26 @@ function makePowerProblem(max, mastered) {
     replacement?.focus({ preventScroll: true });
 
   });
+  document.addEventListener("keydown", event => {
+    if (!$("gameScreen").classList.contains("active") || state.locked || state.problem?.mode === "choice" || document.querySelector('dialog[open]') || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+    if (event.target?.isContentEditable || ['INPUT','TEXTAREA','SELECT'].includes(event.target?.tagName)) return;
+    let key = event.key;
+    if (event.code === 'NumpadDecimal') key = ',';
+    if (key === '.') key = ',';
+    const action = key === 'Enter' ? 'submit' : key === 'Backspace' ? 'backspace' : key === 'Delete' ? 'clear' : null;
+    if (!action && !/^[0-9,\-/]$/.test(key)) return;
+    event.preventDefault();
+    const dataset = action ? { action } : { key };
+    handleKeypadClick({ target: { closest: () => ({ dataset }) } });
+  });
+
   $("resultStatsButton").addEventListener("click", showStats);
   $("statsContent").addEventListener("click", (event) => {
     const repeat = event.target.closest("[data-history-repeat]");
     if (repeat) {
       const [sessionIndex, index] = repeat.dataset.historyRepeat.split(':').map(Number);
       const p = getHistory()[sessionIndex]?.mistakes?.[index]?.problem;
-      if (!tasks.isValidReviewProblem({ ...p, correctStreak: 0, lastShown: 0 })) return;
-      const target = skills.classifyProblem(p), profile = getProfile();
-      if (!target.skillId) return;
-      if (target.subskillId && !subskills.availableSubskills(target.skillId, profile).includes(target.subskillId)) return;
-      $("statsDialog").close();
-      startTraining({}, { profile, targeted: { ...target, historyPractice: true, taskType: p.taskType }, trainingStage: skills.stageForSkill(target.skillId) });
+      practiceHistoryProblem(p);
       return;
     }
     const button = event.target.closest("[data-target-subskill]");
@@ -3189,7 +3312,7 @@ function makePowerProblem(max, mastered) {
     if (!skill || skill.stage > targetLimit ||
       (!appSettings.automatic && !appSettings.operations.includes(skills.getSubskill(button.dataset.targetSubskill)?.operation)) ||
       !subskills.availableSubskills(skill.id, profile).includes(button.dataset.targetSubskill)) return;
-    $("statsDialog").close();
+    $("statsDialog").close(); $("settingsDialog").close();
     startTrainingWithIntro({ targetSkillId: skill.id, targetSubskillId: button.dataset.targetSubskill });
   });
   $("closeStatsButton").addEventListener("click", () => $("statsDialog").close());
@@ -3220,7 +3343,6 @@ function makePowerProblem(max, mastered) {
   $("settingsContent").addEventListener("click", (event) => {
     const sectionButton = event.target.closest("[data-settings-section]");
     if (sectionButton?.dataset.settingsSection === "history") {
-      $("settingsDialog").close();
       showStats();
       return;
     }

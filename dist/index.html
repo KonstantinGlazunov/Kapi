@@ -30,10 +30,11 @@
         <div class="home-progress-card">
           <div class="home-stats" id="homeStats" aria-label="Игровой прогресс">
             <div class="weekly-stat" id="weeklyStat"><small id="weeklyLabel">Diese Woche</small><strong id="weeklyValue"></strong><small id="weeklyDetail">Erstes Training wartet</small></div>
-            <div class="home-xp-stat"><span aria-hidden="true">✦</span><strong id="totalXpValue">0</strong><small id="totalXpLabel">XP</small></div>
+            <div class="home-xp-stat"><span aria-hidden="true">✦</span><strong id="totalXpValue">0</strong><small id="totalXpLabel">Очки</small></div>
           </div>
           <div class="reward-goal" id="homeRewardGoal" aria-live="polite"><div class="home-reward-copy"><strong id="homeRewardText"></strong><span class="reward-track"><span id="homeRewardFill"></span></span><small id="homeRewardNext"></small></div><span class="home-reward-figure"><img id="homeRewardPreview" src="assets/cosmetics/star-badge.svg" alt="" aria-hidden="true"></span></div>
         </div>
+        <p id="homeFirstHint" class="home-first-hint" hidden></p><small id="homeTaskCount" class="home-task-count"></small>
         <button class="primary-button" id="startButton" type="button"><span class="home-start-icon" aria-hidden="true">▶</span> Training starten</button>
         <nav class="home-nav" aria-label="Kapi">
 <button class="text-button journey-album-button" id="journeyAlbumButton" type="button">Альбом путешествия</button>
@@ -63,7 +64,7 @@
         </div>
         <div class="game-badges">
           <div class="streak-pill hidden" id="streakPill" aria-label="Серия правильных ответов">🔥 <strong id="streakValue">0</strong></div>
-          <div class="score-pill" id="scorePill" aria-label="Набранные очки опыта"><span aria-hidden="true">⚡</span> <strong id="scoreValue">0</strong> XP</div>
+          <div class="score-pill" id="scorePill" aria-label="Набранные очки опыта"><span aria-hidden="true">⚡</span> <strong id="scoreValue">0</strong> <span id="scoreUnit">очков</span></div>
         </div>
       </div>
       <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
@@ -99,18 +100,21 @@
         <div class="result-grid">
           <div><strong id="correctValue">18</strong><span id="correctLabel">верно из 20</span></div>
           <div class="result-average"><strong id="averageValue">6,2 c</strong><span id="averageLabel">в среднем</span></div>
-          <div><strong id="starsValue">48 XP</strong><span id="xpLabel">опыта</span></div>
+          <div><strong id="starsValue">48 очков</strong><span id="xpLabel">опыта</span></div>
         </div>
         <p class="result-note" id="resultNote"></p>
         <div class="weekly-result hidden" id="weeklyResult" role="status"></div>
         <div class="reward-goal result-reward" id="resultRewardGoal" aria-live="polite"><div id="rewardReveal" class="reward-reveal hidden"></div><div id="resultRewardProgress"><strong id="resultRewardText"></strong><span class="reward-track"><span id="resultRewardFill"></span></span><small id="resultRewardNext"></small></div></div>
-        <button class="primary-button" id="againButton" type="button">Ещё раз</button>
+        <button class="primary-button result-extra-action" id="resultRepeatButton" type="button" hidden></button>
+        <button class="share-button result-extra-action" id="resultNewButton" type="button"></button>
+        <button class="text-button" id="againButton" type="button">Ещё раз</button>
         <button class="share-button" id="shareButton" type="button">Поделиться результатом</button>
         <button class="text-button" id="resultStatsButton" type="button">Посмотреть историю</button>
       </div>
     </section>
   </main>
 
+  <dialog id="journeyExplanation" aria-labelledby="journeyExplanationTitle"><h2 id="journeyExplanationTitle"></h2><p id="journeyExplanationText"></p><button type="button" class="primary-button" id="journeyExplanationStart"></button></dialog>
   <dialog id="journeyAlbum" class="journey-picker" aria-labelledby="journeyAlbumTitle"><div id="journeyAlbumContent"></div></dialog>
   <dialog id="journeyViewer" class="journey-viewer" aria-labelledby="journeyViewerTitle"><header><h2 id="journeyViewerTitle"></h2><button id="closeJourneyViewer" class="icon-button" type="button">×</button></header><img id="journeyViewerImage" alt="" draggable="false"><nav class="journey-viewer-nav"><button id="journeyViewerPrevious" class="icon-button" type="button">←</button><span id="journeyViewerCount" role="status" aria-live="polite"></span><button id="journeyViewerNext" class="icon-button" type="button">→</button></nav></dialog>
   <dialog id="journeyPicker" class="journey-picker"><div id="journeyPickerContent"></div></dialog>

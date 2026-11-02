@@ -114,7 +114,7 @@ test('history summarizes four calendar weeks and stage growth', () => {
 });
 
 test('app counts only a finished session, persists goal, and never duplicates XP or completion', () => {
-  const env = environment({ app: true });
+  const env = environment({ app: true, savedSettings: {problemCount:20} });
   const app = env.sandbox.__app;
   const start = app.getProfile();
   const initial = start.weeklySessions.count;
@@ -129,7 +129,7 @@ test('app counts only a finished session, persists goal, and never duplicates XP
   assert.equal(app.getProfile().totalXp, xp);
   app.handleSettingsChange({ target: { name: 'weeklyGoal', value: '4' } });
   assert.equal(app.getProfile().weeklyGoal, 4);
-  const reload = environment({ app: true });
+  const reload = environment({ app: true, savedSettings: {problemCount:20} });
   for (const [key, value] of env.storage) reload.storage.set(key, value);
   assert.equal(reload.sandbox.__app.getProfile().weeklyGoal, 4);
   app.startTraining();
@@ -148,7 +148,7 @@ test('app counts only a finished session, persists goal, and never duplicates XP
 });
 
 test('a completed third session reveals the weekly goal once after the final animation', () => {
-  const env = environment({ app: true });
+  const env = environment({ app: true, savedSettings: {problemCount:20} });
   const app = env.sandbox.__app;
   const profile = app.getProfile();
   profile.weeklySessions.count = 2;
@@ -173,7 +173,7 @@ test('a completed third session reveals the weekly goal once after the final ani
 });
 
 test('reward and weekly goal share one reveal and one sound before the next target', () => {
-  const env = environment({ app: true });
+  const env = environment({ app: true, savedSettings: {problemCount:20} });
   const app = env.sandbox.__app;
   const profile = app.getProfile();
   profile.totalXp = 19;
@@ -200,7 +200,7 @@ test('reward and weekly goal share one reveal and one sound before the next targ
 });
 
 test('legacy app migration retains progress and restores current-week sessions from history', () => {
-  const env = environment({ app: true });
+  const env = environment({ app: true, savedSettings: {problemCount:20} });
   const app = env.sandbox.__app;
   const legacy = app.getProfile();
   delete legacy.weeklyGoal;
@@ -221,7 +221,7 @@ test('legacy app migration retains progress and restores current-week sessions f
 });
 
 test('home copy and offline cache include weekly goal in both languages', () => {
-  const env = environment({ app: true });
+  const env = environment({ app: true, savedSettings: {problemCount:20} });
   const app = env.sandbox.__app;
   const profile = app.getProfile();
   const count = profile.weeklySessions.count;

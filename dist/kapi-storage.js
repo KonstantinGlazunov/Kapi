@@ -73,6 +73,7 @@
       !Number.isInteger(settings.manualStage) || settings.manualStage < 1 || settings.manualStage > 41 ||
       !Array.isArray(settings.operations) || !settings.operations.length ||
       settings.operations.some((op) => !["add", "subtract", "multiply", "divide", "negative", "decimal", "fraction", "power", "root"].includes(op))) throw new Error("Invalid settings");
+    if (settings.rangeLocked !== undefined && typeof settings.rangeLocked !== "boolean") throw new Error("Invalid range lock");
     for (const item of history) {
       if (!object(item) || typeof item.date !== "string" || !Number.isFinite(Date.parse(item.date)) ||
         !Number.isInteger(item.correct) || ![10, 20, 30].includes(item.total || 20) || item.correct < 0 || item.correct > (item.total || 20) ||

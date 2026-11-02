@@ -274,7 +274,7 @@
       const t = TEXT[language] || TEXT.de;
       const type = problem.taskType || "equation";
       if (problem.operation === "count") return { text: this.countCopy(problem, language).question,
-        html: type === "visualCount" ? this.renderProduce(problem.answer, problem) : "" };
+        html: type === "visualCount" ? this.renderProduce(problem.answer, problem, language) : "" };
       if (type === "missingOperand") return { text: problem.displayText, html: "" };
       if (type === "chooseExpression") return { text: t.choose(problem.answer), html: "" };
       if (type === "microStory") return { text: t[problem.operation === "subtract" ? "storySubtract" : "storyAdd"](problem.a, problem.b), html: "" };
@@ -286,7 +286,7 @@
       }
       if (type === "tenFrame") return { text: problem.text, html: this.renderFrame(problem.visualData) };
       if (type === "visualCount") return { text: problem.operation === "count" ? t.count : problem.text, html: problem.visualData.operands
-        ? this.renderOperandGroups(problem.visualData.operands, (n) => this.renderProduce(n, problem)) : this.renderProduce(problem.visualData.quantity, problem) };
+        ? this.renderOperandGroups(problem.visualData.operands, (n) => this.renderProduce(n, problem, language)) : this.renderProduce(problem.visualData.quantity, problem, language) };
       return { text: problem.text, html: "" };
     }
     countCopy(problem, language = "de") {
@@ -295,12 +295,12 @@
         ? { question: carrot ? "Сколько морковок?" : "Сколько яблок?", hint: carrot ? "Посчитай морковки." : "Посчитай яблоки." }
         : { question: carrot ? "Wie viele Karotten?" : "Wie viele Äpfel?", hint: carrot ? "Zähle die Karotten." : "Zähle die Äpfel." };
     }
-    renderProduce(n, problem) {
+    renderProduce(n, problem, language = window.document?.documentElement?.lang || "de") {
       const carrot = problem.a % 2 === 0;
       const shape = carrot
         ? '<path d="M8 10Q16 7 24 10L21 27Q20 31 16 31T11 27Z" fill="#f28a27" stroke="#633b2c" stroke-width="2"/><path d="M10 13h12M10 19h10M11 25h8" stroke="#d86620" stroke-width="1.8" stroke-linecap="round"/><path d="M16 9V3M15 8 9 4M17 8l6-4M16 8l1-6" stroke="#4d8d3d" stroke-width="2.6" stroke-linecap="round"/>'
         : '<path d="M16 10C3 3 1 18 9 28Q12 31 16 28Q20 31 24 26C31 13 25 4 16 10Z" fill="#df534a"/><path d="M16 10V4" stroke="#775339" stroke-width="2.5"/><path d="M17 7Q18 0 26 3Q24 9 17 7" fill="#39834c"/>';
-      return `<div class="task-dots task-produce${n === 0 ? " empty" : ""}" role="group">${Array.from({ length: n }, () => `<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">${shape}</svg>`).join("")}</div>`;
+      return `<div class="task-dots task-produce${n === 0 ? " empty" : ""}" role="group">${Array.from({ length: n }, () => `<svg viewBox="0 0 32 32" width="30" height="30" role="img" tabindex="0" aria-label="${language === "ru" ? (carrot ? "морковка" : "яблоко") : (carrot ? "Karotte" : "Apfel")}">${shape}</svg>`).join("")}</div>`;
     }
     renderDots(n) { return `<div class="task-dots${n === 0 ? " empty" : ""}" role="group">${Array.from({ length: n }, () => '<span aria-label="●">●</span>').join("")}</div>`; }
     renderOperandGroups(operands, render) {
@@ -352,7 +352,7 @@
       if (type === "chooseExpression") return { text: t.choose(problem.answer), html: this.renderDots(problem.answer) };
       if (type === "microStory") return { text: problem.text, html: this.renderFrame(problem.operation === "subtract" ? frame(problem.a, problem.b) : frame(problem.answer, 0, problem.a)) };
       if (type === "tenFrame") return { text: t.hintFrame, html: this.renderFrame(problem.visualData) };
-      return { text: this.countCopy(problem, language).hint, html: this.renderProduce(problem.visualData.quantity, problem) };
+      return { text: this.countCopy(problem, language).hint, html: this.renderProduce(problem.visualData.quantity, problem, language) };
     }
   }
   window.KapiTaskSystem = KapiTaskSystem;
