@@ -682,3 +682,8 @@ PWA root и /kapi/ safe update/offline/data PASS. Скриншоты artifacts/p
 просмотрены: fit9/10, visual9/10, consistency9/10 — сообщение читается,
 клавиатура помещается, неверный вариант явно отмечен без смены позиции.
 Публикация пока не проверена; проверки подсказок выполняются отдельно.
+
+PR#36 merged5fd2c56. Локальный guidance320/390 PASS (36families+7boundaries).
+Workflow41440164915 SUCCESS: unit/mobile/new answers/guidance/intro/install/
+Chromium PWA/WebKit/deploy. По HTTPS на Pages и основном /kapi/ app/styles
+и worker v98 побайтно совпадают с проверенной версией. Исправления опубликованы.
