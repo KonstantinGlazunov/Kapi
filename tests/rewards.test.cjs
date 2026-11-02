@@ -5,7 +5,7 @@ const path = require('node:path');
 const { environment, root } = require('./helpers/environment.cjs');
 
 function setup(app = false) {
-  const env = environment({ app });
+  const env = environment({ app, savedSettings: {problemCount:20} });
   const system = new env.sandbox.KapiRewardSystem();
   return { env, system, app: env.sandbox.__app };
 }
@@ -214,12 +214,12 @@ test('cosmetic render pass uses cached images for idle, correct, wrong and dance
 
 test('home state and wardrobe distinguish locked, unlocked, equipped with localized labels', () => {
   const { env, app } = setup(true);
-  assert.equal(env.elements.get('homeRewardText').textContent, '0 / 20 XP');
+  assert.equal(env.elements.get('homeRewardText').textContent, '0 / 20 Punkte');
   assert.equal(env.elements.get('homeRewardNext').textContent, 'Erstes Abzeichen wartet!');
   app.showWardrobe();
   const html = env.elements.get('wardrobeItems').innerHTML;
   assert.ok(html.includes('Mein Kapi') === false);
-  assert.ok(html.includes('🔒 20 XP'));
+  assert.ok(html.includes('🔒 20 Punkte'));
   assert.ok(html.includes('disabled'));
   assert.ok(html.includes('aria-pressed'));
   assert.ok(html.includes('assets/cosmetics/'));

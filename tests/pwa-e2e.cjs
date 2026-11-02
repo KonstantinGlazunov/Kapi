@@ -93,7 +93,7 @@ async function run() {
       const offline = await context.newPage();
       await offline.goto(origin + prefix + 'index.html');
       assert.equal(await offline.locator('#totalXpValue').innerText(), '246');
-      await offline.locator('#startButton').click();
+      await offline.locator('#startButton').click();if (await offline.locator('#journeyExplanation').isVisible()) await offline.locator('#journeyExplanationStart').click();
       await offline.locator('#gameScreen').waitFor({state:'visible'});
       assert.equal(await offline.locator('#gameScreen').isVisible(), true);
       await offline.locator('#homeButton').click();
@@ -105,7 +105,7 @@ async function run() {
       }
       const training = await context.newPage();
       await training.goto(origin + prefix + 'index.html');
-      await training.locator('#startButton').click();
+      await training.locator('#startButton').click();if (await training.locator('#journeyExplanation').isVisible()) await training.locator('#journeyExplanationStart').click();
       await training.locator('#gameScreen').waitFor({state:'visible'});
       const identity = await training.evaluate(() => {
         window.trainingIdentity = 'unfinished-training';
@@ -155,7 +155,7 @@ async function run() {
       await context.setOffline(false);
       // Export/import UI: cancellation and malformed files cannot replace progress.
       await offline.locator('#settingsButton').click();
-      await offline.locator('[data-settings-section=general]').click();
+      await offline.locator('[data-settings-section=data]').click();
       const downloadPromise = offline.waitForEvent('download');
       await offline.locator('[data-backup-export]').click();
       const download = await downloadPromise;
@@ -182,12 +182,12 @@ async function run() {
       assert.equal(unexpectedConfirm, 0, 'invalid task must be rejected before asking to replace data');
       assert.deepEqual(await offline.evaluate(() => ['capy-count-data-v1', 'capy-count-profile-v1', 'capy-count-settings-v1', 'capy-count-history-v1'].map(key => localStorage.getItem(key))), rawBefore);
       await offline.locator('#closeSettingsButton').click();
-      await offline.locator('#startButton').click();
+      await offline.locator('#startButton').click();if (await offline.locator('#journeyExplanation').isVisible()) await offline.locator('#journeyExplanationStart').click();
       await offline.locator('#gameScreen').waitFor({state:'visible'});
       assert.equal(await offline.locator('#gameScreen').isVisible(), true, 'training still starts after rejected import');
       await offline.locator('#homeButton').click();
       await offline.locator('#settingsButton').click();
-      await offline.locator('[data-settings-section=general]').click();
+      await offline.locator('[data-settings-section=data]').click();
       await offline.locator('[data-backup-import]').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
       await offline.waitForFunction(() => document.querySelector('#backupStatus').textContent.includes('beschädigt'));
       assert.equal(await offline.locator('#totalXpValue').innerText(), '333');
@@ -218,7 +218,7 @@ async function run() {
     const page = await denied.newPage();
     await page.goto(origin + '/');
     assert.equal(await page.locator('#storageNotice').isVisible(), true);
-    await page.locator('#startButton').click();
+    await page.locator('#startButton').click();if (await page.locator('#journeyExplanation').isVisible()) await page.locator('#journeyExplanationStart').click();
     await page.locator('#gameScreen').waitFor({state:'visible'});
     assert.equal(await page.locator('#gameScreen').isVisible(), true);
     const controlsBottom = await page.locator('#answerArea').evaluate(el => el.getBoundingClientRect().bottom);

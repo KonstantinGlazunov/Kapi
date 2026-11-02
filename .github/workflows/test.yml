@@ -49,6 +49,10 @@ jobs:
         run: npm run test:history
         env:
           KAPI_E2E_SCREENSHOTS: artifacts/history
+      - name: Accessible input, navigation and clear settings
+        run: npm run test:usability
+        env:
+          KAPI_E2E_SCREENSHOTS: artifacts/usability
       - name: Detailed hints and worked solutions
         run: npm run test:guidance
         env:

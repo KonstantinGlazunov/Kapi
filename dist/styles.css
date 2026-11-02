@@ -1674,3 +1674,24 @@ body.start-active .home-progress-card:has(#homeRewardGoal[data-complete="true"])
 .history-task-visual { max-width: 100%; overflow: auto; }
 .history-task-visual:empty { display: none; }
 .history-mistake .text-button { margin-top: 6px; }
+
+.task-produce svg:focus-visible { outline: 3px solid #147e77; outline-offset: 2px; border-radius: 6px; }
+.settings-advanced { width: 100%; } .settings-advanced summary, .map-full-plan > summary, .album-chapter > summary { padding: 12px 0; font-weight: 800; cursor: pointer; }
+.topic-picker { display: grid; gap: 8px; } .topic-example { padding: 12px; background: #e8f5ee; border-radius: 12px; }
+#settingsNotice:empty { display: none; } #settingsNotice { color: #805529; }
+.map-chapter { display: block; } .map-chapter summary { cursor: pointer; } .map-chapter.selected { border: 3px solid #0d8a80; opacity: 1; } .map-status { display: block; margin: 6px 0; }
+.result-screen:not([data-show-phase="summary"]) .result-extra-action { display: none; }
+.result-extra-action[hidden] { display: none !important; }
+.result-card .result-extra-action { margin-top: 8px; min-height: 44px; }
+.home-first-hint { margin: 4px 0; font-weight: 700; text-align: center; font-size: .85rem; }
+.home-task-count { display: block; text-align: center; margin: 3px 0; }
+.next-stop-help { display: block; margin-top: 5px; font-size: .8em; }
+.wardrobe-next { margin: 0; padding: 10px; background: #fff2bc; border-radius: 12px; grid-column: 1 / -1; }
+.wardrobe-slot h3 { margin: 6px 0; font-size: 1rem; }
+.play-card.math-focused .mini-mascot { height: 60px; max-height: 60px; }
+.play-card.math-focused .problem { font-size: clamp(2rem, 7vw, 3.4rem); }
+.play-card.math-focused.showing-solution .task-visual { flex: 1; }
+
+body.first-visit.start-active .home-progress-card { display: none; }
+
+.result-screen[data-show-phase="summary"] .result-card { max-height: calc(var(--app-height) - 95px); overflow-y: auto; overscroll-behavior: contain; }
