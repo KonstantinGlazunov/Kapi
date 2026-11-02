@@ -735,3 +735,11 @@ TalkBack/VoiceOver не проверен; проверены accessibility tree 
 полный mobile320/360/390/430 PASS; PWA root и /kapi/ safe update, multi-tab,
 offline, backup и quota-denied PASS. При повторении из истории обе модалки
 закрываются; stage1 сохраняет валидный непустой набор операций для backup.
+
+v100 опубликован: implementation93ab983, PR#38 mergedf412f52.
+Workflow41518812711 SUCCESS: unit/mobile/answers/history/usability/guidance/
+intro/install/Chromium PWA/WebKit PWA/deploy. После выкладки HTML, app.js,
+kapi-tasks.js, kapi-storage.js, styles.css и sw.js v100 побайтно проверены
+по HTTPS на https://konstantinglazunov.github.io/Kapi/ и
+https://erstellen-websiten.de/kapi/ (для proxy HTML исключён добавленный base).
+Рабочая версия доступна в production, прогресс остаётся локальным.
