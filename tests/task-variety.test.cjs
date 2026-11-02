@@ -291,7 +291,7 @@ test('second error reveals an expression label rather than an internal choice in
   const wrongIndex = (expression.correctExpressionIndex + 1) % 4;
   app.submitAnswer(wrongIndex);
   assert.equal(app.state.hintLevel, 2);
-  app.submitAnswer(wrongIndex);
+  app.submitAnswer((expression.correctExpressionIndex + 2) % 4);
   assert.equal(app.state.hintLevel, 2);
   assert.ok(env.elements.get('feedback').textContent.includes(expression.expressionChoices[expression.correctExpressionIndex].label));
   assert.ok(!env.elements.get('feedback').textContent.endsWith(`${expression.correctExpressionIndex}.`));

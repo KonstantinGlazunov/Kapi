@@ -51,7 +51,8 @@ cases.push(...[[100,2,10],[400,2,20],[1000,3,10]].map(([a,b,answer])=>({id:`boun
     },item);
     const wrong=await page.evaluate(()=>{const {state,tasks}=window.__guidanceTest;return tasks.choiceLabels(state.problem)?(tasks.response(state.problem)+1)%4:state.problem.answerType==='fraction'?'999/1':999;});
     // The first and second submissions use the actual visible input controls.
-    async function submitWrong(){const choice=await page.locator('#answerArea .answer-button').count();if(choice)await page.locator('#answerArea .answer-button').nth(wrong).click();else{for(const d of String(wrong))await page.locator(`#answerArea [data-key="${d}"]`).click();await page.locator('#answerArea [data-action="submit"]').click();}}
+    let choiceAttempts = 0;
+    async function submitWrong(){const choice=await page.locator('#answerArea .answer-button').count();if(choice)await page.locator('#answerArea .answer-button').nth((wrong + choiceAttempts++) % 4).click();else{for(const d of String(wrong))await page.locator(`#answerArea [data-key="${d}"]`).click();await page.locator('#answerArea [data-action="submit"]').click();}}
     await submitWrong();await page.waitForTimeout(60);
     assert.equal(await page.evaluate(()=>window.__guidanceTest.state.attempt),2,item.id);
     assert.equal(await page.locator('#hint').isVisible(),true);

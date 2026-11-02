@@ -1664,3 +1664,5 @@ body.start-active .home-nav .text-button::before { line-height: 1; }
 #resultRewardGoal[data-complete="true"] #resultRewardProgress,
 #resultRewardGoal[data-complete="true"]:has(#rewardReveal.hidden) { display: none !important; }
 body.start-active .home-progress-card:has(#homeRewardGoal[data-complete="true"]) { display: none; }
+
+.answer-button.answer-rejected:disabled { opacity: 1; color: #785b51; background: #f4e8df; border-color: #bc8d7b; box-shadow: none; text-decoration: line-through; cursor: default; }
