@@ -27,7 +27,7 @@ const path = require('node:path');
           await prepare(answer);
           for (const key of value) await page.locator(`[data-key="${key}"]`).click();
           assert.equal(await page.evaluate(() => __answers.state.results.length), 0);
-          await page.locator('[data-action="submit"]').click();
+          await page.waitForFunction(() => __answers.state.results.length === 1);
           assert.equal(await page.evaluate(() => __answers.state.results[0].firstTry), true);
         }
       }

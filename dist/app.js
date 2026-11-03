@@ -292,6 +292,7 @@
   let motivation = null;
   let soundManager = null;
   let advanceTimer = 0;
+  let autoAnswerTimer = 0;
   let solutionTimer = 0;
   let rewardRevealTimer = 0;
   let rewardGoalTimer = 0;
@@ -623,11 +624,11 @@
   function renderJourneyHome(profile) {
     const step = profile.journey.step, words = journeyCopy();
     setJourneyScene(step);
-    $("journeyTitle").textContent = window.KapiJourney.chapters[window.KapiJourney.chapter(step)][language === "ru" ? 1 : 2];
+    $("journeyTitle").textContent = words.places[Math.min(step + 1, window.KapiJourney.MAX_STEP)];
     $("journeyAlbumButton").textContent = words.album;
     $("journeyAlbumButton").setAttribute("aria-label", `${words.album} · ${step + 1} / 24`);
-    $("journeyPlace").textContent = words.places[step];
-    $("journeyNext").textContent = step < window.KapiJourney.MAX_STEP ? (language === "ru" ? "После занятия: " : "Nach der Übung: ") + words.places[step + 1] : words.next[step];
+    $("journeyPlace").textContent = (language === "ru" ? "Сейчас: " : "Jetzt: ") + words.places[step];
+    $("journeyNext").textContent = step < window.KapiJourney.MAX_STEP ? (language === "ru" ? "После завершённого занятия" : "Nach einer abgeschlossenen Übung") : words.next[step];
     $("journeyStops").innerHTML = words.places.slice(window.KapiJourney.chapter(step) * 4, window.KapiJourney.chapter(step) * 4 + 4).map((place, local) => { const i = window.KapiJourney.chapter(step) * 4 + local; return `<span class="${i <= step ? 'reached' : ''}" aria-label="${place}" title="${place}">${i < step ? '✓' : i === step ? '●' : '○'}</span>`; }).join('<i></i>');
     const first = profile.totalXp === 0 && getHistory().length === 0 && step === 0;
     $("startButton").textContent = first ? (language === 'ru' ? 'Начать первое занятие' : 'Erste Übung starten') : (language === 'ru' ? 'Начать следующее занятие' : 'Nächste Übung starten');
@@ -894,7 +895,7 @@
     stageIntroSoundTimers.forEach((timer) => window.clearTimeout(timer));
     stageIntroSoundTimers = [];
     window.cancelAnimationFrame(stageIntroFrame);
-    if (target !== $("gameScreen")) { paceAnimation?.cancel(); window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
+    if (target !== $("gameScreen")) { window.clearTimeout(autoAnswerTimer); paceAnimation?.cancel(); window.clearTimeout(advanceTimer); window.clearTimeout(solutionTimer); }
     if (target !== $("resultScreen")) {
       continueArrival = null;
       window.clearTimeout(resultShowTimer);
@@ -1647,6 +1648,7 @@ function makePowerProblem(max, mastered) {
   }
 
   function renderAnswer() {
+    window.clearTimeout(autoAnswerTimer);
     const area = $("answerArea");
     area.innerHTML = "";
     if (state.problem.mode === "choice") {
@@ -1697,6 +1699,7 @@ function makePowerProblem(max, mastered) {
       const key = button.dataset.key;
       if (canAppendKey(state.enteredAnswer, key, state.problem.answerType, state.problem) && state.enteredAnswer.length < 12) state.enteredAnswer += key;
       updateKeypadDisplay();
+      scheduleCorrectKeypadAnswer();
       sound("tap");
       return;
     }
@@ -1707,6 +1710,24 @@ function makePowerProblem(max, mastered) {
       return;
     }
     updateKeypadDisplay();
+    scheduleCorrectKeypadAnswer();
+  }
+
+  // Accept only a complete, correct value after a pause. Further typing or deletion
+  // cancels the pending check, including correct prefixes such as 0 in 0/5.
+  function scheduleCorrectKeypadAnswer() {
+    window.clearTimeout(autoAnswerTimer);
+    const problem = state.problem, value = state.enteredAnswer;
+    const complete = problem.answerType === "fraction"
+      ? !parseFractionAnswer(value).error : /^-?\d+(?:[.,]\d+)?$/.test(value);
+    if (state.locked || problem.mode === "choice" || !complete ||
+        !answersEqual(value, tasks.response(problem), problem.answerType)) return;
+    const answeredAt = performance.now();
+    autoAnswerTimer = window.setTimeout(() => {
+      if (state.problem !== problem || state.enteredAnswer !== value || state.locked ||
+          !$("gameScreen").classList.contains("active") || document.querySelectorAll("dialog[open]").length) return;
+      submitAnswer(value, answeredAt);
+    }, 800);
   }
 
   function updateKeypadDisplay() {
@@ -1821,7 +1842,8 @@ function makePowerProblem(max, mastered) {
     return [...values].slice(0, 4).sort(() => Math.random() - .5);
   }
 
-  function submitAnswer(value) {
+  function submitAnswer(value, answeredAt = performance.now()) {
+    window.clearTimeout(autoAnswerTimer);
     if (state.locked) return;
     if (state.problem.mode === "choice" && choicesFor(state.problem).rejected.has(String(value))) return;
     if (state.problem.answerType === "fraction") {
@@ -1840,7 +1862,7 @@ function makePowerProblem(max, mastered) {
     paceAnimation?.pause();
     dismissMotivation();
     state.paceUpdate = null;
-    const elapsed = Math.max(.2, (performance.now() - state.startedAt) / 1000);
+    const elapsed = Math.max(.2, (answeredAt - state.startedAt) / 1000);
     const isCorrect = answersEqual(value, tasks.response(state.problem), state.problem.answerType);
     const operationMessage = state.attempt === 1 && !state.problem.isReview && !state.problem.isSpacedReview && !state.targeted
       ? recordOperationAttempt(state.problem.operation, isCorrect)
