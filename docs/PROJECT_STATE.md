@@ -766,3 +766,12 @@ PWA root и /kapi/: safe update, offline, multi-tab, backup PASS.
 На320 первый старт/награда/дроби читаемы; клавиши не перекрываются; в740×390
 вопрос виден одновременно с клавиатурой. Капи компактен, место под разбор
 сохраняет положение ввода. Это Chromium-эмуляция, не физическое устройство.
+
+v101 опубликован: implementationf74cebf, PR#39 merged224b051.
+Workflow41580045679 SUCCESS: unit/mobile/answers/history/usability/journey/
+guidance/intro/install/ChromiumPWA/WebKitPWA/deploy. Pages и основной /kapi/
+по HTTPS побайтно отдают проверенные HTML, app, tasks, storage, styles и
+worker v101; отдельно подтверждён /kapi/index.html. Первый запрос storage
+на основном домене получил502; повторная полная проверка успешно прошла.
+README синхронизирован с первым запуском, очками, девятью предметами,
+альбомом без дополнительных открыток и разделом Данные и перенос.
