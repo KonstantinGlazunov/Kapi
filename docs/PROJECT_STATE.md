@@ -810,3 +810,10 @@ v102 уже выпущен. Ветка fix/leading-decimal-autocheck содер�
 v103 PWA root+/kapi/: безопасное обновление, offline, multi-tab, backup,
 quota-denied повторно PASS. Внешний вид не менялся, используются проверенные
 скриншоты prod102-journey.
+
+v103 завершён после восстановления среды: PR#41 merged55cb92d.
+Локальная проверка194unit и PWA safe-update PASS. Workflow41644033265
+повторно запущен после отмены и завершился SUCCESS. По HTTPS побайтно
+сверены index.html, app.js, styles.css и worker v103 на Pages и основном
+/kapi/. URL /kapi/index.html проверен отдельно; добавленная прокси-строка
+<base href="/kapi/"> исключена при сравнении HTML.
