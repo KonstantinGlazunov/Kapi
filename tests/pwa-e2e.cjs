@@ -218,7 +218,7 @@ async function run() {
     const page = await denied.newPage();
     await page.goto(origin + '/');
     assert.equal(await page.locator('#storageNotice').isVisible(), true);
-    await page.locator('#startButton').click();if (await page.locator('#journeyExplanation').isVisible()) await page.locator('#journeyExplanationStart').click();
+    await page.locator('#startButton').click();
     await page.locator('#gameScreen').waitFor({state:'visible'});
     assert.equal(await page.locator('#gameScreen').isVisible(), true);
     const controlsBottom = await page.locator('#answerArea').evaluate(el => el.getBoundingClientRect().bottom);

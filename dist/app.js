@@ -39,7 +39,7 @@
   const CORE_DIVISORS = [1, 2, 10, 5];
   const DERIVED_DIVISORS = [4, 3, 9, 6, 8, 7];
   const STAGE_EXAMPLES = ["● ● ●", "3 + 1", "2 + 3", "6 + 4", "4 + 5", "5 − 1", "9 − 3", "6 + 3 / 8 − 4", "10 + 7", "12 + 3", "18 − 4", "8 + 5", "13 − 5", "16 − 7 / 7 + 8", "42 + 10", "34 + 23", "37 + 25", "63 − 27", "3 + 3 + 3", "5 × 2", "12 : 3", "20 : 5", "7 × 8", "42 : 6 / 6 × 7", "340 + 220", "478 − 195", "3 400 + 2 100", "6 302 − 2 748", "48 000 ÷ 600", "7²", "1/4 + 2/4", "2/3 + 1/6", "3/4 × 2/5", "2,4 + 1,7", "3,6 ÷ 0,6", "4 − 9", "−6 × 3", "2⁵", "√144", "∛125", "3³ / √81"];
-  const appSettings = { language: "de", problemCount: 20, automatic: true, range: "above100", operations: [...OPERATION_ORDER], manualStage: 1, sound: true, curriculumVersion: CURRICULUM_VERSION };
+  const appSettings = { language: "de", problemCount: 10, automatic: true, range: "above100", operations: [...OPERATION_ORDER], manualStage: 1, sound: true, curriculumVersion: CURRICULUM_VERSION };
   const translations = {
     ru: {
       locale: "ru-RU", appName: "Считаем с Капи", description: "Адаптивный тренажёр арифметики для детей — от сложения до корней.",
@@ -627,10 +627,10 @@
     $("journeyAlbumButton").textContent = words.album;
     $("journeyAlbumButton").setAttribute("aria-label", `${words.album} · ${step + 1} / 24`);
     $("journeyPlace").textContent = words.places[step];
-    $("journeyNext").textContent = words.next[step];
+    $("journeyNext").textContent = step < window.KapiJourney.MAX_STEP ? (language === "ru" ? "После занятия: " : "Nach der Übung: ") + words.places[step + 1] : words.next[step];
     $("journeyStops").innerHTML = words.places.slice(window.KapiJourney.chapter(step) * 4, window.KapiJourney.chapter(step) * 4 + 4).map((place, local) => { const i = window.KapiJourney.chapter(step) * 4 + local; return `<span class="${i <= step ? 'reached' : ''}" aria-label="${place}" title="${place}">${i < step ? '✓' : i === step ? '●' : '○'}</span>`; }).join('<i></i>');
     const first = profile.totalXp === 0 && getHistory().length === 0 && step === 0;
-    $("startButton").textContent = first ? (language === 'ru' ? 'Начать первое занятие' : 'Erste Übung starten') : (language === 'ru' ? 'Начать занятие' : 'Übung starten');
+    $("startButton").textContent = first ? (language === 'ru' ? 'Начать первое занятие' : 'Erste Übung starten') : (language === 'ru' ? 'Начать следующее занятие' : 'Nächste Übung starten');
     document.body.classList.toggle("first-visit", first);
     $("homeFirstHint").hidden = !first;
     $("homeFirstHint").textContent = language === 'ru' ? 'Решай примеры и путешествуй с Капи' : 'Löse Aufgaben und reise mit Kapi';
@@ -733,10 +733,11 @@
 
   function openJourneyAlbum() {
     const profile = getProfile(), words = journeyCopy(), step = profile.journey.step;
-    $("journeyAlbumContent").innerHTML = `<div class="album-header"><h2 id="journeyAlbumTitle">${words.album}</h2><button class="text-button" id="closeJourneyAlbum">${words.close}</button></div><div class="album-scroll"><p>${step + 1} / 24</p>` + window.KapiJourney.chapters.map((chapter, c) => {
+    const nextStop = step < window.KapiJourney.MAX_STEP ? `<aside class="album-next"><strong>${language === 'ru' ? 'Следующая остановка' : 'Nächster Halt'}: ${words.places[step+1]}</strong><span>${language === 'ru' ? 'Откроется после следующего завершённого занятия' : 'Wird nach der nächsten abgeschlossenen Übung freigeschaltet'}</span></aside>` : '';
+    $("journeyAlbumContent").innerHTML = `<div class="album-header"><h2 id="journeyAlbumTitle">${words.album}</h2><button class="text-button" id="closeJourneyAlbum">${words.close}</button></div><div class="album-scroll"><p>${step + 1} / 24</p>${nextStop}` + window.KapiJourney.chapters.map((chapter, c) => {
       return `<details class="album-chapter" ${c <= window.KapiJourney.chapter(step) ? "open" : ""}><summary>${chapter[language === 'ru' ? 1 : 2]}</summary><div class="album-places">` + words.places.slice(c * 4, c * 4 + 4).map((name, n) => {
         const i = c * 4 + n, scene = window.KapiJourney.scene(i), unlocked = i <= step;
-        return `<figure class="album-place ${unlocked ? 'visited' : 'locked'}"><div class="album-picture" ${unlocked ? `style='background-image:url("assets/journey/${scene.asset}");background-position:${scene.position};background-size:${scene.size}'` : ''}>${unlocked ? '' : '<span class="album-unvisited">🔒</span>'}</div><figcaption>${i + 1}. ${name}${i === step ? ' ●' : unlocked ? ' ✓' : ''}${i === step + 1 ? `<small class="next-stop-help">${language === 'ru' ? 'Откроется после следующего занятия' : 'Öffnet sich nach der nächsten Übung'}</small>` : ''}</figcaption>${albumViewButton(i, name, unlocked)}</figure>`;
+        return `<figure class="album-place ${unlocked ? 'visited' : 'locked'} ${i === step + 1 ? 'nearest' : ''}"><div class="album-picture" ${unlocked ? `style='background-image:url("assets/journey/${scene.asset}");background-position:${scene.position};background-size:${scene.size}'` : ''}>${unlocked ? '' : '<span class="album-unvisited">🔒</span>'}</div><figcaption>${i + 1}. ${name}${i === step ? ' ●' : unlocked ? ' ✓' : ''}${i === step + 1 ? `<small class="next-stop-help">${language === 'ru' ? 'Откроется после следующего занятия' : 'Öffnet sich nach der nächsten Übung'}</small>` : ''}</figcaption>${albumViewButton(i, name, unlocked)}</figure>`;
       }).join('') + `</div></details>`;
     }).join('') + '</div>';
     $("journeyAlbumContent").onclick = event => {
@@ -819,17 +820,17 @@
   function renderWardrobe() {
     const profile = getProfile(), scroller = $("wardrobeItems"), scrollTop = scroller.scrollTop;
     const nextReward = rewards.getNextReward(profile.totalXp).reward;
-    const slots = ["hat", "glasses", "neck", "back", "badge"].sort((a,b) => Number(b === nextReward?.slot) - Number(a === nextReward?.slot));
-    const visible = new Set(rewards.getRewards().filter(reward => profile.unlockedRewards.includes(reward.id)).map(reward => reward.id));
-    rewards.getRewards().filter(reward => !visible.has(reward.id)).slice(0, 1).forEach(reward => visible.add(reward.id));
-    scroller.innerHTML = (nextReward ? `<p class="wardrobe-next">${copy.nextGoal(nextReward.xp-profile.totalXp, rewardName(nextReward))}</p>` : "") + slots.filter(slot => rewards.getRewards().some(reward => reward.slot === slot && visible.has(reward.id))).map(slot => `<section class="wardrobe-slot" aria-label="${copy.wardrobeSlots[slot]}"><h3>${copy.wardrobeSlots[slot]}</h3><div class="wardrobe-options">
-      <button class="wardrobe-item wardrobe-none" type="button" data-unequip="${slot}" aria-label="${copy.wardrobeSlots[slot]} · ${copy.noItem}" aria-pressed="${profile.equippedOutfit[slot] === null}"><span aria-hidden="true">⊘</span></button>
+    const slots = ["hat", "glasses", "neck", "back", "badge"];
+    const visible = new Set(profile.unlockedRewards);
+    const ru = language === "ru";
+    const nextAsset = nextReward && (window.KapiJourney.variant(profile, nextReward.id)?.asset || nextReward.asset);
+    scroller.innerHTML = (nextReward ? `<section class="wardrobe-next"><img src="assets/cosmetics/${nextAsset}.svg" alt=""><div><small>${ru ? "Ближайшая награда" : "Nächste Belohnung"}</small><h3>${rewardName(nextReward)}</h3><p>${ru ? "Ещё " : "Noch "}${pointCount(nextReward.xp-profile.totalXp)}</p></div></section>` : `<h3 class="wardrobe-collection">${ru ? "Твоя коллекция" : "Deine Sammlung"}</h3>`) + slots.filter(slot => rewards.getRewards().some(reward => reward.slot === slot && visible.has(reward.id))).map(slot => `<section class="wardrobe-slot" aria-label="${copy.wardrobeSlots[slot]}"><h3>${copy.wardrobeSlots[slot]}</h3><div class="wardrobe-options">
       ${rewards.getRewards().filter(reward => reward.slot === slot && visible.has(reward.id)).map(reward => {
-        const unlocked = profile.unlockedRewards.includes(reward.id);
         const variants = window.KapiJourney.variants[reward.id] || [{id: '', asset: reward.asset, [language]: rewardName(reward)}];
         return variants.map(variant => {
           const selected = profile.equippedOutfit[slot] === reward.id && (!variant.id || profile.cosmeticVariants[reward.id] === variant.id);
-          return `<button class="wardrobe-item" type="button" data-equip="${reward.id}" data-variant="${variant.id}" aria-label="${variant[language]} · ${unlocked ? selected ? copy.selected : copy.unlocked : copy.locked(reward.xp)}" aria-pressed="${selected}" ${unlocked ? '' : 'disabled'}><img src="assets/cosmetics/${variant.asset}.svg" alt="">${unlocked ? '' : `<small>${pointCount(reward.xp)}</small>`}</button>`;
+          const action = ru ? (selected ? "Снять" : "Надеть") : (selected ? "Ablegen" : "Anziehen");
+          return `<button class="wardrobe-item" type="button" data-equip="${reward.id}" data-variant="${variant.id}" aria-label="${variant[language]} · ${action}" aria-pressed="${selected}"><img src="assets/cosmetics/${variant.asset}.svg" alt=""><span>${action}</span></button>`;
         }).join('');
       }).join('')}</div></section>`).join('');
     scroller.scrollTop = scrollTop;
@@ -860,7 +861,7 @@
       const exampleStage = chosen ? selected : active ? stage : chapter.first;
       const reinforced = chapter.status === 'completed' && Array.from({length:chapter.last-chapter.first+1},(_,i)=>chapter.first+i).every(step=>['secure','stable'].includes(mastery.getMasteryStatus(profile.skillMastery[mastery.skillIdForProblem({curriculumStage:step})])));
 
-      return `<details class="map-chapter ${chosen&&!appSettings.automatic?'selected':chapter.status}" ${chosen||active?'open':''}><summary>${active?'<img src="assets/kapi-rig-v2/head.png" width="28" height="28" alt="">':''}<strong>${chapter[language]}</strong><span class="map-status">${label}</span></summary><p>${chapter[ru?'detailRu':'detailDe']}</p><p>${STAGE_EXAMPLES[exampleStage-1]}</p>${active?`<small>${copy.mapSteps(chapter.step,chapter.total)}</small>`:""}${reinforced?`<small>✓ ${copy.mapReinforced}</small>`:""}${chosen||active||chapter.status==='completed'?`<button type="button" class="text-button" data-map-practice="${exampleStage}">${ru?'Тренироваться':'Üben'}</button>`:''}</details>`;
+      return `<details class="map-chapter ${chosen&&!appSettings.automatic?'selected':chapter.status}" ${chosen||active?'open':''}><summary>${active?'<img src="assets/kapi-rig-v2/head.png" width="28" height="28" alt="">':''}<strong>${chapter[language]}</strong><span class="map-status">${label}</span></summary><p>${chapter[ru?'detailRu':'detailDe']}</p><p>${STAGE_EXAMPLES[exampleStage-1]}</p>${!chosen&&!active&&chapter.status!=='completed'?`<p class="map-condition">${ru ? (appSettings.automatic ? "Откроется, когда освоены предыдущие темы." : "Можно выбрать в настройках, если позволяет диапазон.") : (appSettings.automatic ? "Wird nach den vorherigen Themen freigeschaltet." : "In den Einstellungen wählbar, wenn der Zahlenraum passt.")}</p>`:""}${active?`<small>${copy.mapSteps(chapter.step,chapter.total)}</small>`:""}${reinforced?`<small>✓ ${copy.mapReinforced}</small>`:""}${chosen||active||chapter.status==='completed'?`<button type="button" class="text-button" data-map-practice="${exampleStage}">${ru?'Тренироваться':'Üben'}</button>`:''}</details>`;
     };
     const near = chapters.filter(c => c.status==='current'||selected>=c.first&&selected<=c.last);
     $("mapChapters").innerHTML = near.map(render).join('') + `<details class="map-full-plan"><summary>${ru?'Весь учебный план — для родителей':'Gesamter Lernplan — für Eltern'}</summary>${chapters.filter(c=>!near.includes(c)).map(render).join('')}</details>`;
@@ -1625,6 +1626,7 @@ function makePowerProblem(max, mastered) {
 
   function renderProblem(problem) {
     document.querySelector(".play-card").classList.toggle("math-focused", (problem.curriculumStage || state.stage) >= 31);
+    document.querySelector(".play-card").classList.toggle("count-focused", problem.operation === "count");
     const display = tasks.display(problem, language);
     $("problemText").textContent = display.text;
     $("problemText").classList.toggle("problem-wide", display.text.length > 12 || problem.taskType === "microStory");
@@ -2426,13 +2428,19 @@ function makePowerProblem(max, mastered) {
       $("resultNote").textContent += ` ${copy.chapterFinished} ${copy.newChapter(chapterAfter[language])}`;
     }
     const trouble = state.results.find(item => !item.firstTry && item.problem);
-    const nextTopic = trouble?.problem || {curriculumStage: freshProfile.currentStage};
+    const nextTopic = trouble?.problem || {curriculumStage: appSettings.automatic ? freshProfile.currentStage : appSettings.manualStage};
     const topicName = nextTopic.operation === 'count' ? (language === 'ru' ? 'подсчёт предметов' : 'das Zählen von Gegenständen') : copy.stageNames[(nextTopic.curriculumStage || freshProfile.currentStage)-1];
     $("resultNote").textContent = language === 'ru'
-      ? `${state.correct} из ${TOTAL}. ${trouble ? 'Ещё потренируем' : 'Следующая тема:'} ${topicName}.`
-      : `${state.correct} von ${TOTAL}. ${trouble ? 'Wir üben noch' : 'Nächstes Thema:'} ${topicName}.`;
+      ? `${state.correct} из ${TOTAL}. ${trouble ? 'Ещё потренируем' : 'Продолжим тему:'} ${topicName}.`
+      : `${state.correct} von ${TOTAL}. ${trouble ? 'Wir üben noch' : 'Wir üben weiter:'} ${topicName}.`;
     if (freshProfile.curriculumCompleted && !state.trainingStartedCompleted) $("resultNote").textContent += ` ${copy.curriculumComplete}`;
     else if (advanced && chapterBefore?.id !== chapterAfter?.id && chapterAfter) $("resultNote").textContent += ` ${copy.chapterFinished} ${copy.newChapter(chapterAfter[language])}`;
+    const progressExplanation = $("resultProgressExplanation");
+    progressExplanation.hidden = !!storage.getItem("kapi-progress-explained-v2");
+    progressExplanation.textContent = language === "ru"
+      ? "Завершённое занятие открывает следующее место, пока маршрут не пройден. Очки за верные ответы открывают вещи для Капи. " + (appSettings.automatic ? "Когда тема освоена, задания становятся сложнее." : "В ручном режиме тему выбираешь ты — она не меняется автоматически.")
+      : "Eine abgeschlossene Übung öffnet den nächsten Ort, bis die Reise vollständig ist. Punkte für richtige Antworten schalten Kapis Sachen frei. " + (appSettings.automatic ? "Wenn du ein Thema beherrschst, werden die Aufgaben schwieriger." : "Im manuellen Modus wählst du das Thema selbst. Es wechselt nicht automatisch.");
+    storage.setItem("kapi-progress-explained-v2", "1");
     $("resultRepeatButton").hidden = !trouble;
     $("resultRepeatButton").textContent = language === 'ru' ? 'Повторить трудное' : 'Schwieriges wiederholen';
     $("resultNewButton").textContent = language === 'ru' ? 'Начать новое занятие' : 'Neue Übung starten';
@@ -2462,8 +2470,7 @@ function makePowerProblem(max, mastered) {
         saveProfile(profile);
         updateMascotOutfit(profile);
         $("rewardReveal").innerHTML = `<strong>${weeklyGoalComplete && earned.length ? copy.weeklyAndReward : earned.length ? copy.newThings(earned.length) : copy.weeklyDone}</strong>${earned.length ? `<div>${earned.map((reward) =>
-          `<img src="assets/cosmetics/${reward.asset}.svg" alt="">${rewardName(reward)} ${copy.rewardUnlocked}<button type="button" class="text-button" data-equip-now="${reward.id}">${language === "ru" ? "Надеть сейчас" : "Jetzt anziehen"}</button>`).join(" · ")}</div>` : ""}${weeklyGoalComplete && earned.length ? `<div>${copy.weeklyDone}</div>` : ""}`;
-        if (earned.some(reward => reward.id === "badge-star")) $("rewardReveal").innerHTML += `<p>${language === "ru" ? "За верные ответы ты получаешь очки. Они открывают вещи для Капи." : "Für richtige Antworten bekommst du Punkte. Damit werden Kapis Sachen freigeschaltet."}</p>`;
+          `<img src="assets/cosmetics/${reward.asset}.svg" alt="">${language === "ru" ? "Открыто:" : "Freigeschaltet:"} ${rewardName(reward)}<button type="button" class="text-button" data-equip-now="${reward.id}">${language === "ru" ? "Надеть сейчас" : "Jetzt anziehen"}</button>`).join(" · ")}</div>` : ""}${weeklyGoalComplete && earned.length ? `<div>${copy.weeklyDone}</div>` : ""}`;
         $("rewardReveal").classList.remove("hidden");
         if (animate) kapi.trigger("rewardReveal", { surface: "result", rewardAsset: earned[0]?.asset });
         rewardGoalTimer = window.setTimeout(() => {
@@ -3226,15 +3233,7 @@ function makePowerProblem(max, mastered) {
     else $("skipResultShow").focus();
   });
   $("skipResultShow").addEventListener("click", () => { endResultShow(); $("againButton").focus(); });
-  $("startButton").addEventListener("click", () => {
-    if (!storage.getItem('kapi-journey-explained-v1')) {
-      $("journeyExplanationTitle").textContent = language === 'ru' ? 'Учимся и путешествуем' : 'Lernen und reisen';
-      $("journeyExplanationText").textContent = language === 'ru' ? 'Закончи занятие — откроешь место. Собирай очки — получишь вещи для Капи. Когда тема станет лёгкой, появится следующая.' : 'Beende eine Übung und entdecke einen Ort. Sammle Punkte für Kapis Sachen. Wenn ein Thema leicht wird, kommt das nächste.';
-      $("journeyExplanationStart").textContent = language === 'ru' ? `Начать · ${appSettings.problemCount} заданий` : `Starten · ${appSettings.problemCount} Aufgaben`;
-      $("journeyExplanation").showModal();
-    } else startTrainingWithIntro();
-  });
-  $("journeyExplanationStart").addEventListener('click', () => { storage.setItem('kapi-journey-explained-v1', '1'); $("journeyExplanation").close(); startTrainingWithIntro(); });
+  $("startButton").addEventListener("click", () => startTrainingWithIntro());
   $("resultScreen").addEventListener('click', event => {
     const button = event.target.closest('[data-equip-now]'); if (!button) return;
     const profile = getProfile(); rewards.equip(profile, button.dataset.equipNow); saveProfile(profile); updateMascotOutfit(profile);
@@ -3255,7 +3254,8 @@ function makePowerProblem(max, mastered) {
     const stage = Number(button.dataset.mapPractice), profile = getProfile();
     if (stage > Math.max(profile.currentStage, appSettings.automatic ? 0 : appSettings.manualStage)) return;
     $("mapDialog").close();
-    startTraining({}, {profile, targeted:{skillId:skills.KAPI_SKILLS.find(s=>s.stage===stage).id,historyPractice:true,taskType:'equation'}, trainingStage:stage});
+    if (stage === (appSettings.automatic ? profile.currentStage : appSettings.manualStage)) startTrainingWithIntro();
+    else startTraining({}, {profile, targeted:{skillId:skills.KAPI_SKILLS.find(s=>s.stage===stage).id,historyPractice:true,taskType:'equation'}, trainingStage:stage});
   });
   $("againButton").addEventListener("click", () => { showScreen($("startScreen")); updateHomeStats(); });
   $("shareButton").addEventListener("click", shareResult);
@@ -3269,7 +3269,9 @@ function makePowerProblem(max, mastered) {
     const unequip = event.target.closest("[data-unequip]");
     if (!equip && !unequip) return;
     const profile = getProfile();
-    if (equip ? !rewards.equip(profile, equip.dataset.equip) : !rewards.unequip(profile, unequip.dataset.unequip)) return;
+    const selected = equip?.getAttribute("aria-pressed") === "true";
+    const slot = equip && rewards.getRewards().find(reward => reward.id === equip.dataset.equip)?.slot;
+    if (equip ? !(selected ? rewards.unequip(profile, slot) : rewards.equip(profile, equip.dataset.equip)) : !rewards.unequip(profile, unequip.dataset.unequip)) return;
     if (equip?.dataset.variant && window.KapiJourney.variants[equip.dataset.equip]?.some(option => option.id === equip.dataset.variant)) {
       profile.cosmeticVariants[equip.dataset.equip] = equip.dataset.variant;
     }

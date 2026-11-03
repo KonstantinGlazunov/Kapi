@@ -85,7 +85,7 @@ async function run() {
       await page.locator('[data-settings-section="history"]').click();
       assert.equal(await page.locator('#statsDialog').isVisible(), true);
       await page.locator('#closeStatsButton').click(); if (await page.locator('#settingsDialog').isVisible()) await page.locator('#closeSettingsButton').click();
-      await page.locator('#startButton').click();if (await page.locator('#journeyExplanation').isVisible()) await page.locator('#journeyExplanationStart').click();
+      await page.locator('#startButton').click();
       await page.locator('#gameScreen').waitFor({state:'visible'});
       assert.equal(await page.locator('#gameScreen').isVisible(), true, 'tap starts training');
       // A real first answer must pass through the visible choice/keypad and advance the app.
@@ -204,7 +204,7 @@ async function run() {
         mascotVisible: getComputedStyle(document.querySelector('#homeMascot')).visibility }));
       assert.ok(updatedHomeLayout.mapHeight > 0 && updatedHomeLayout.mapBottom <= height - 2,
         `${width}: completed curriculum home clips map entry: ${JSON.stringify(updatedHomeLayout)}`);
-      await page.locator('#startButton').click();if (await page.locator('#journeyExplanation').isVisible()) await page.locator('#journeyExplanationStart').click();
+      await page.locator('#startButton').click();
       await page.locator('#gameScreen').waitFor({state:'visible'});
       await page.evaluate(() => {
         const api = window.__e2e;
@@ -253,7 +253,7 @@ async function run() {
         assert.ok(titleHeight <= 35, `History title wraps on ${width}px: ${titleHeight}`);
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-due-skill-history.png`) });
         await page.locator('#closeStatsButton').click(); if (await page.locator('#settingsDialog').isVisible()) await page.locator('#closeSettingsButton').click();
-        await page.locator('#startButton').click();if (await page.locator('#journeyExplanation').isVisible()) await page.locator('#journeyExplanationStart').click();
+        await page.locator('#startButton').click();
         await page.locator('#gameScreen').waitFor({state:'visible'});
         const firstReviewSlot = await page.evaluate(() => window.__e2e.state.sessionPlan.slots.findIndex(slot => slot.type === 'spacedReview'));
         assert.ok(firstReviewSlot > 0, 'due skill must have a planned slot');
@@ -311,7 +311,7 @@ async function run() {
         assert.ok((await page.locator('#statsContent').innerText()).includes('Einmaleins-Reihen'), 'late skill needs a human History label');
         if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-late-skill-history.png`) });
         await page.locator('#closeStatsButton').click(); if (await page.locator('#settingsDialog').isVisible()) await page.locator('#closeSettingsButton').click();
-        await page.locator('#startButton').click();if (await page.locator('#journeyExplanation').isVisible()) await page.locator('#journeyExplanationStart').click();
+        await page.locator('#startButton').click();
         await page.locator('#gameScreen').waitFor({state:'visible'});
         const lateReviewSlot = await page.evaluate(() => window.__e2e.state.sessionPlan.slots.findIndex(slot => slot.type === 'spacedReview'));
         assert.ok(lateReviewSlot > 0, 'late due skill must have a planned slot');
@@ -398,7 +398,7 @@ async function run() {
           window.KapiMasterySystem.markStageMastered(profile, 12, new Date('2020-01-01T12:00:00Z'));
           api.saveProfile(profile);
         });
-        await page.locator('#startButton').click();if (await page.locator('#journeyExplanation').isVisible()) await page.locator('#journeyExplanationStart').click();
+        await page.locator('#startButton').click();
         await page.locator('#gameScreen').waitFor({state:'visible'});
         const planned = await page.evaluate(() => ({ mode: window.__e2e.state.sessionMode,
           slots: window.__e2e.state.sessionPlan.slots.map(slot => slot.type),

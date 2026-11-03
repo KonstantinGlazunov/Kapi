@@ -219,9 +219,9 @@ test('home state and wardrobe distinguish locked, unlocked, equipped with locali
   app.showWardrobe();
   const html = env.elements.get('wardrobeItems').innerHTML;
   assert.ok(html.includes('Mein Kapi') === false);
-  assert.ok(html.includes('🔒 20 Punkte'));
-  assert.ok(html.includes('disabled'));
-  assert.ok(html.includes('aria-pressed'));
+  assert.ok(html.includes('20 Punkte'));
+  assert.ok(html.includes('Nächste Belohnung'));
+  assert.ok(!html.includes('wardrobe-none'));
   assert.ok(html.includes('assets/cosmetics/'));
 });
 

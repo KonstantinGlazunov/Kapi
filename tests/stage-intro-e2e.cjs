@@ -28,7 +28,7 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
    const before=await page.evaluate(()=>JSON.stringify(window.__introTest.getProfile()));
    await page.clock.install();
    await page.clock.pauseAt(new Date(Date.now()+1000));
-   await page.locator('#startButton').click({force:true});if (await page.locator('#journeyExplanation').isVisible()) await page.locator('#journeyExplanationStart').click();
+   await page.locator('#startButton').click({force:true});
    assert.equal(await page.locator('#stageIntroScreen').isVisible(), true);
    assert.equal(await page.locator('#stageIntroLabel').innerText(), `${language==='ru'?'СТУПЕНЬ':'STUFE'} ${stage}`);
    assert.equal(await page.locator('#gameScreen').isVisible(), false);

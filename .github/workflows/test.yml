@@ -53,6 +53,10 @@ jobs:
         run: npm run test:usability
         env:
           KAPI_E2E_SCREENSHOTS: artifacts/usability
+      - name: Journey UX in Russian and German
+        run: npm run test:journey
+        env:
+          KAPI_E2E_SCREENSHOTS: artifacts/journey
       - name: Detailed hints and worked solutions
         run: npm run test:guidance
         env:
