@@ -41,9 +41,11 @@ test('unfinished fractions, zero denominators and unfinished decimals never auto
     for(const digit of value) key(digit);
     env.advance(5000); assert.equal(app.state.results.length,0,value); assert.equal(app.state.attempt,1);
   }
-  const {env,app,key}=setup(1,'decimal');
-  for(const digit of '1,0') key(digit);
-  env.advance(800); assert.equal(app.state.results.length,1);
+  for(const [answer,value] of [[1,'1,0'],[.5,',5'],[.5,'0,5']]) {
+    const {env,app,key}=setup(answer,'decimal');
+    for(const digit of value) key(digit);
+    env.advance(800); assert.equal(app.state.results.length,1,value);
+  }
 });
 test('clear, next render and leaving the exercise cancel queued acceptance',()=>{
   for(const cancel of ['clear','render','leave']) {

@@ -1719,7 +1719,7 @@ function makePowerProblem(max, mastered) {
     window.clearTimeout(autoAnswerTimer);
     const problem = state.problem, value = state.enteredAnswer;
     const complete = problem.answerType === "fraction"
-      ? !parseFractionAnswer(value).error : /^-?\d+(?:[.,]\d+)?$/.test(value);
+      ? !parseFractionAnswer(value).error : /^-?(?:\d+(?:[.,]\d+)?|[.,]\d+)$/.test(value);
     if (state.locked || problem.mode === "choice" || !complete ||
         !answersEqual(value, tasks.response(problem), problem.answerType)) return;
     const answeredAt = performance.now();
