@@ -102,7 +102,7 @@
           <div class="result-average"><strong id="averageValue">6,2 c</strong><span id="averageLabel">в среднем</span></div>
           <div><strong id="starsValue">48 очков</strong><span id="xpLabel">опыта</span></div>
         </div>
-        <p class="result-note" id="resultNote"></p>
+        <p class="result-note" id="resultNote"></p><p class="result-progress-explanation" id="resultProgressExplanation" hidden></p>
         <div class="weekly-result hidden" id="weeklyResult" role="status"></div>
         <div class="reward-goal result-reward" id="resultRewardGoal" aria-live="polite"><div id="rewardReveal" class="reward-reveal hidden"></div><div id="resultRewardProgress"><strong id="resultRewardText"></strong><span class="reward-track"><span id="resultRewardFill"></span></span><small id="resultRewardNext"></small></div></div>
         <button class="primary-button result-extra-action" id="resultRepeatButton" type="button" hidden></button>
@@ -114,7 +114,6 @@
     </section>
   </main>
 
-  <dialog id="journeyExplanation" aria-labelledby="journeyExplanationTitle"><h2 id="journeyExplanationTitle"></h2><p id="journeyExplanationText"></p><button type="button" class="primary-button" id="journeyExplanationStart"></button></dialog>
   <dialog id="journeyAlbum" class="journey-picker" aria-labelledby="journeyAlbumTitle"><div id="journeyAlbumContent"></div></dialog>
   <dialog id="journeyViewer" class="journey-viewer" aria-labelledby="journeyViewerTitle"><header><h2 id="journeyViewerTitle"></h2><button id="closeJourneyViewer" class="icon-button" type="button">×</button></header><img id="journeyViewerImage" alt="" draggable="false"><nav class="journey-viewer-nav"><button id="journeyViewerPrevious" class="icon-button" type="button">←</button><span id="journeyViewerCount" role="status" aria-live="polite"></span><button id="journeyViewerNext" class="icon-button" type="button">→</button></nav></dialog>
   <dialog id="journeyPicker" class="journey-picker"><div id="journeyPickerContent"></div></dialog>
