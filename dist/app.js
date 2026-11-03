@@ -315,7 +315,6 @@
     dismissMotivation();
     $("resultScreen").dataset.showPhase = "summary";
     $("journeyChoice").classList.add("hidden");
-    $("againButton").textContent = language === "ru" ? "На главную" : "Zur Startseite";
     $("skipResultShow").classList.add("hidden");
     $("resultRewardProgress").classList.remove("hidden");
     $("confetti").innerHTML = "";
@@ -359,7 +358,6 @@
     $("correctLabel").textContent = copy.correctOfTotal(TOTAL);
     $("averageLabel").textContent = copy.average;
     $("xpLabel").textContent = language === "ru" ? "за занятие" : "für die Übung";
-    $("againButton").textContent = copy.again;
     $("shareButton").textContent = copy.share;
     $("resultStatsButton").textContent = copy.viewHistory;
     $("updateButton").textContent = copy.updateReady;
@@ -490,6 +488,7 @@
             <label class="form-field"><span>${copy.feedbackMessage}</span><textarea name="feedbackMessage" rows="5" maxlength="1000" required placeholder="${copy.feedbackPlaceholder}"></textarea></label>
             <button class="feedback-submit" type="submit">${copy.sendWhatsApp}</button>
           </form>
+          <p class="settings-note music-credit">♪ <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400011" target="_blank" rel="noopener">Monkeys Spinning Monkeys — Kevin MacLeod</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></p>
         </section>`;
       return;
     }
@@ -3251,10 +3250,10 @@ function makePowerProblem(max, mastered) {
     continueArrival = null;
     if (!next) return;
     next();
-    if ($("resultScreen").dataset.showPhase === "summary") $("againButton").focus();
+    if ($("resultScreen").dataset.showPhase === "summary") $("resultNewButton").focus();
     else $("skipResultShow").focus();
   });
-  $("skipResultShow").addEventListener("click", () => { endResultShow(); $("againButton").focus(); });
+  $("skipResultShow").addEventListener("click", () => { endResultShow(); $("resultNewButton").focus(); });
   $("startButton").addEventListener("click", () => startTrainingWithIntro());
   $("resultScreen").addEventListener('click', event => {
     const button = event.target.closest('[data-equip-now]'); if (!button) return;
@@ -3279,7 +3278,6 @@ function makePowerProblem(max, mastered) {
     if (stage === (appSettings.automatic ? profile.currentStage : appSettings.manualStage)) startTrainingWithIntro();
     else startTraining({}, {profile, targeted:{skillId:skills.KAPI_SKILLS.find(s=>s.stage===stage).id,historyPractice:true,taskType:'equation'}, trainingStage:stage});
   });
-  $("againButton").addEventListener("click", () => { showScreen($("startScreen")); updateHomeStats(); });
   $("shareButton").addEventListener("click", shareResult);
   $("wardrobeButton").addEventListener("click", showWardrobe);
   $("mapButton").addEventListener("click", showCurriculumMap);
@@ -3347,7 +3345,7 @@ function makePowerProblem(max, mastered) {
   });
   $("homeButton").addEventListener("click", () => {
     if (state.index > 0 && state.index < TOTAL && !window.confirm(copy.leaveConfirm)) return;
-    showScreen($("startScreen"));
+    showScreen($("startScreen")); updateHomeStats();
   });
   $("settingsContent").addEventListener("click", (event) => {
     if (event.target.closest("[data-backup-export]")) exportProgress();
