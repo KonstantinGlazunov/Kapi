@@ -843,3 +843,8 @@ PWA safe update production root+/kapi/ PASS; отдельно проверен �
 Beta PR#1 merged981e20a, workflow41702230304 SUCCESS. По HTTPS на
 konstantinglazunov.github.io/Kapi-beta/ index.html, styles.css, app.js и worker
 beta-dynamic-mascot-v104 побайтно совпадают с проверенными файлами.
+
+v104 опубликован в production: PR#42 merged26509cc, workflow41708266639
+SUCCESS. HTML, styles.css, app.js и worker v104 после выкладки побайтно
+совпали с проверенной версией на Pages и основном /kapi/. Локальные
+проверки PWA safe update сохраняют данные; физический телефон не проверен.
