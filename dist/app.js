@@ -623,11 +623,11 @@
   function renderJourneyHome(profile) {
     const step = profile.journey.step, words = journeyCopy();
     setJourneyScene(step);
-    $("journeyTitle").textContent = window.KapiJourney.chapters[window.KapiJourney.chapter(step)][language === "ru" ? 1 : 2];
+    $("journeyTitle").textContent = words.places[Math.min(step + 1, window.KapiJourney.MAX_STEP)];
     $("journeyAlbumButton").textContent = words.album;
     $("journeyAlbumButton").setAttribute("aria-label", `${words.album} · ${step + 1} / 24`);
-    $("journeyPlace").textContent = words.places[step];
-    $("journeyNext").textContent = step < window.KapiJourney.MAX_STEP ? (language === "ru" ? "После занятия: " : "Nach der Übung: ") + words.places[step + 1] : words.next[step];
+    $("journeyPlace").textContent = (language === "ru" ? "Сейчас: " : "Jetzt: ") + words.places[step];
+    $("journeyNext").textContent = step < window.KapiJourney.MAX_STEP ? (language === "ru" ? "После завершённого занятия" : "Nach einer abgeschlossenen Übung") : words.next[step];
     $("journeyStops").innerHTML = words.places.slice(window.KapiJourney.chapter(step) * 4, window.KapiJourney.chapter(step) * 4 + 4).map((place, local) => { const i = window.KapiJourney.chapter(step) * 4 + local; return `<span class="${i <= step ? 'reached' : ''}" aria-label="${place}" title="${place}">${i < step ? '✓' : i === step ? '●' : '○'}</span>`; }).join('<i></i>');
     const first = profile.totalXp === 0 && getHistory().length === 0 && step === 0;
     $("startButton").textContent = first ? (language === 'ru' ? 'Начать первое занятие' : 'Erste Übung starten') : (language === 'ru' ? 'Начать следующее занятие' : 'Nächste Übung starten');

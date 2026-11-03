@@ -52,6 +52,7 @@ async function seed(page, xp, step=0) {
       await page.waitForTimeout(300);
       assert.match(await page.locator('#startButton').innerText(),lang==='ru'?/первое/:/Erste/);
       assert.match(await page.locator('#homeTaskCount').innerText(),/10/);
+      assert.equal(await page.locator('#journeyTitle').innerText(),lang==='ru'?'Лесной мостик':'Waldbrücke');
       await fits(page,'#startButton');
       await shot(page,lang+'-'+width+'x'+height+'-first');
       if(width===390) {
@@ -92,6 +93,7 @@ async function seed(page, xp, step=0) {
       }
       for(const step of [0,3,6,23]) {
         await seed(page,0,step);
+        assert.equal(await page.locator('#journeyTitle').innerText(),await page.evaluate(({step,lang})=>KapiJourney.copy[lang].places[Math.min(step+1,23)],{step,lang}));
         await page.locator('#journeyAlbumButton').click();
         assert.equal(await page.locator('[data-album-view]').count(),step+1);
         assert.equal(await page.locator('.album-next').count(),step===23?0:1);
