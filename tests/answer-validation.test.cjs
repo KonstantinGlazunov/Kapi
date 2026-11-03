@@ -28,7 +28,7 @@ test('invalid fraction notation preserves input and learning evidence until corr
   }
   app.submitAnswer('1');assert.equal(app.state.results[0].firstTry,true);
 });
-test('fraction typing waits for explicit Check even when the prefix is correct',()=>{
+test('fraction typing can finish a correct prefix before the automatic check',()=>{
   const {app}=setup('0/1');
   for(const key of ['0','/','5'])app.handleKeypadClick({target:{closest:()=>({dataset:{key}})}});
   assert.equal(app.state.enteredAnswer,'0/5');assert.equal(app.state.locked,false);assert.equal(app.state.results.length,0);

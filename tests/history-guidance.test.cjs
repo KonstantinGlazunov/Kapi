@@ -35,7 +35,7 @@ test('solution steps wait indefinitely and support previous/next before leaving 
  for(let i=0;i<20&&next.dataset.lastStep!=='true';i++)next.listeners.click();assert.equal(next.dataset.lastStep,'true');assert.equal(next.textContent,'Nächste Aufgabe');
  const index=app.state.index;next.listeners.click();assert.equal(app.state.index,index+1);
 });
-test('empty entry disables Check and numeric typing waits for explicit submission',()=>{
+test('empty entry disables Check and clearing cancels a pending correct answer',()=>{
  const {env,app}=setup();app.state.problem={...app.state.problem,mode:'input',operation:'add',a:1,b:1,answer:2,taskType:'equation'};app.renderAnswer();
  const submit=env.elements.get('answerArea').querySelector('[data-action="submit"]');assert.equal(submit.disabled,true);
  app.handleKeypadClick({target:{closest:()=>({dataset:{key:'2'}})}});assert.equal(submit.disabled,false);assert.equal(app.state.results.length,0);
