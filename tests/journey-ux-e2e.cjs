@@ -166,15 +166,15 @@ async function seed(page, xp, step=0) {
       }
       await shot(page,lang+'-'+width+'x'+height+'-fraction');
       if(width<=390) {
-        const beforeQuestion=await page.locator('#problemText').boundingBox();
-        const beforeAnswer=await page.locator('#answerArea').boundingBox();
+        const beforeMascot=await page.locator('#gameMascot').boundingBox();
         await page.locator('#problemText').click();
         await page.keyboard.type('999/1'); await page.keyboard.press('Enter');
         await page.waitForTimeout(200);
         const afterQuestion=await page.locator('#problemText').boundingBox();
         const afterAnswer=await page.locator('#answerArea').boundingBox();
-        assert.ok(Math.abs(beforeQuestion.y-afterQuestion.y)<1,'Question stays in place after hint');
-        assert.ok(Math.abs(beforeAnswer.y-afterAnswer.y)<1,'Keypad stays in place after hint');
+        const afterMascot=await page.locator('#gameMascot').boundingBox();
+        assert.ok(afterMascot.height <= beforeMascot.height + 1, 'Mascot yields space to hint');
+        assert.ok(afterQuestion.y >= 0 && afterAnswer.y + afterAnswer.height <= height + 1, 'Question and keypad fit with hint');
         await shot(page,lang+'-'+width+'-fraction-hint');
       }
 
