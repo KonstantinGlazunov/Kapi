@@ -1811,3 +1811,6 @@ body.game-active .play-card #answerArea { margin-top: 8px; }
   body.game-active .play-card #hint { grid-row: 5; }
   body.game-active .play-card #answerArea { grid-row: 1 / 6; }
 }
+
+.about-panel .music-credit { margin: 0; color: #5c7771; font-size: .85rem; line-height: 1.4; }
+.about-panel .music-credit a { color: inherit; }

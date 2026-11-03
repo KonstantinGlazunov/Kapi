@@ -75,7 +75,7 @@ async function seed(page, xp, step=0) {
         await page.locator('#continueArrival').click();
         await page.waitForFunction(()=>document.querySelector('#resultScreen').dataset.showPhase==='summary');
         assert.equal(await page.locator('#resultProgressExplanation').isVisible(),true);
-        await page.locator('#againButton').click();
+        await page.locator('#homeButton').click();
         assert.match(await page.locator('#startButton').innerText(),lang==='ru'?/следующее/:/Nächste/);
         await page.locator('#journeyAlbumButton').click();
         await page.locator('[data-album-view="1"]').click();

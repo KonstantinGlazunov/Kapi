@@ -220,7 +220,7 @@ async function run() {
       assert.ok((await page.locator('#weeklyResult').innerText()).includes('Wochenziel geschafft'));
       if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-weekly-reveal.png`) });
       await page.locator('#resultStatsButton').scrollIntoViewIfNeeded();
-      const resultLayout = await page.evaluate(() => ({ nextBottom: document.querySelector('#againButton').getBoundingClientRect().bottom,
+      const resultLayout = await page.evaluate(() => ({ nextBottom: document.querySelector('#resultNewButton').getBoundingClientRect().bottom,
         historyBottom: document.querySelector('#resultStatsButton').getBoundingClientRect().bottom,
         screenHeight: document.querySelector('#resultScreen').clientHeight,
         contentHeight: document.querySelector('#resultScreen').scrollHeight }));
