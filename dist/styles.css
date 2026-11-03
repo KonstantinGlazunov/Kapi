@@ -1790,3 +1790,24 @@ body.game-active .count-focused #problemText { font-size: clamp(1.5rem, 6vw, 2.3
 }
 .result-screen[data-show-phase="summary"] #rewardReveal:not(.hidden):has([data-equip-now]) { display: block; margin-bottom: 12px; }
 #rewardReveal [data-equip-now] { display: block; min-height: 44px; margin: 5px auto; }
+
+/* Reserve task and controls first, and give Kapi the space left over. */
+body.game-active .play-card #gameMascot {
+  position: relative; inset: auto; align-self: center; display: block;
+  flex: 1 1 0; width: 100%; height: auto; min-height: 0; max-height: none;
+  margin: 0; overflow: hidden;
+}
+body.game-active .play-card.count-focused #taskVisual { flex: 0 0 auto; }
+body.game-active .play-card #feedback { position: static; width: auto; min-height: 24px; }
+body.game-active .play-card #answerArea { margin-top: 8px; }
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 500px) {
+  body.game-active .play-card #gameMascot { grid-column: 1; grid-row: 3; align-self: stretch; height: 100%; }
+  body.game-active .play-card #feedback { position: absolute; width: calc(50% - 86px); }
+}
+@media (min-width: 600px) and (orientation: landscape) and (max-height: 500px) {
+  body.game-active .play-card { grid-template-rows: 0 auto minmax(0, 1fr) auto auto; }
+  body.game-active .play-card #gameMascot { grid-row: 3; }
+  body.game-active .play-card #taskVisual { grid-row: 4; }
+  body.game-active .play-card #hint { grid-row: 5; }
+  body.game-active .play-card #answerArea { grid-row: 1 / 6; }
+}
