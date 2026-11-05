@@ -1814,3 +1814,33 @@ body.game-active .play-card #answerArea { margin-top: 8px; }
 
 .about-panel .music-credit { margin: 0; color: #5c7771; font-size: .85rem; line-height: 1.4; }
 .about-panel .music-credit a { color: inherit; }
+
+/* Parent report: compact overview first, details on demand. */
+.parent-report { display: grid; gap: 14px; color: var(--teal-dark); }
+.parent-intro { margin: 0; color: #526e69; line-height: 1.45; }
+.parent-overview { display: grid; gap: 8px; }
+.parent-overview-item { padding: 11px 13px; border-radius: 14px; background: #e5f6ef; }
+.parent-overview-item:nth-child(2) { background: #fff2c9; }
+.parent-overview-item strong, .parent-week strong { display: block; }
+.parent-overview-item p, .parent-week p { margin: 5px 0 0; line-height: 1.4; overflow-wrap: anywhere; }
+.parent-week { padding: 12px; border: 1px solid #c5ded6; border-radius: 14px; }
+.parent-topics { display: grid; gap: 9px; }
+.parent-topic { background: #fff; border: 1px solid #c9dfd8; border-radius: 14px; padding: 12px; overflow-wrap: anywhere; }
+.parent-topic summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 7px; font-weight: 800; }
+.parent-topic summary::before { content: "▸"; color: #16897e; }
+.parent-topic[open] summary::before { content: "▾"; }
+.parent-topic summary span { flex: 1 1 110px; }
+.parent-topic summary strong { font-size: .82rem; background: #e3f5ef; border-radius: 12px; padding: 5px 8px; }
+.parent-topic p { line-height: 1.4; margin: 10px 0; }
+.parent-topic .parent-refresh { color: #805400; background: #fff3cb; border-radius: 9px; padding: 8px; }
+.parent-details { display: grid; gap: 4px; margin: 10px 0; }
+.parent-details div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #edf2ee; padding: 4px 0; }
+.parent-details dt { min-width: 0; }
+.parent-details dd { margin: 0; font-weight: 800; text-align: right; flex-shrink: 0; }
+.parent-topic summary:focus-visible, .parent-report button:focus-visible { outline: 3px solid #e4a70c; outline-offset: 2px; }
+@media(max-width:360px) { .parent-details { font-size: .88rem; } }
+
+.parent-subtopics { display: grid; gap: 8px; margin: 8px 0 12px; }
+.parent-subtopic { border-left: 3px solid #8bc8b7; padding: 8px 10px; background: #f4faf6; border-radius: 8px; }
+.parent-subtopic summary { font-size: .94rem; }
+.parent-subtopic .parent-details { font-size: .9rem; }
