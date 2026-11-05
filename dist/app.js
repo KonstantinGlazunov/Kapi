@@ -6,6 +6,11 @@
     const notice = document.getElementById("storageNotice");
     if (notice) { notice.hidden = false; notice.textContent = copy.storageWarning; }
   });
+  const reportStore = window.KapiStorage.createReportStore(() => {
+    const notice = document.getElementById("storageNotice");
+    if (notice) { notice.hidden = false; notice.textContent = copy.storageWarning; }
+  });
+  let reportTask = null, reportRefreshGeneration = 0;
   let TOTAL = 20;
   const HISTORY_KEY = "capy-count-history-v1";
   const SETTINGS_KEY = "capy-count-settings-v1";
@@ -439,6 +444,7 @@
       ["counting", "±", copy.settingsCounting, copy.settingsCountingMenu],
       ["general", "A", copy.settingsGeneral, copy.settingsGeneralMenu],
       ["data", "⇄", language === "ru" ? "Данные и перенос" : "Daten und Umzug", copy.backupHelp],
+      ["parents", "♡", language === "ru" ? "Для родителей" : "Für Eltern", language === "ru" ? "Успехи ребёнка" : "Lernfortschritt des Kindes"],
       ["history", "◷", copy.homeHistory, language === "ru" ? "Результаты прошлых тренировок" : "Ergebnisse vergangener Trainings"],
       ["about", "i", copy.settingsAbout, copy.settingsAboutMenu]
     ];
@@ -448,8 +454,15 @@
       </nav>`;
       return;
     }
-    const sectionLabel = items.find(([key]) => key === settingsSection)?.[2] || copy.settings;
+    const sectionLabel = settingsSection === "parents"
+      ? (language === "ru" ? "Успехи ребёнка" : "Lernfortschritt des Kindes")
+      : items.find(([key]) => key === settingsSection)?.[2] || copy.settings;
     const navigation = `<div class="settings-section-head"><button type="button" data-settings-back><span aria-hidden="true">←</span> ${copy.backToSettings}</button><h3>${sectionLabel}</h3></div>`;
+    if (settingsSection === "parents") {
+      content.innerHTML = `${navigation}<section aria-label="${language === "ru" ? "Успехи ребёнка" : "Lernfortschritt des Kindes"}"><div id="parentReportHost" aria-live="off"><p>${language === "ru" ? "Загружаем отчёт…" : "Bericht wird geladen…"}</p></div></section>`;
+      renderParentReport();
+      return;
+    }
     if (settingsSection === "general") {
       const selectedWeeklyGoal = getProfile().weeklyGoal;
       content.innerHTML = `${navigation}
@@ -876,6 +889,106 @@
     startTraining({}, { profile, targeted:{...target,historyPractice:true,taskType:p.taskType}, trainingStage:skills.stageForSkill(target.skillId) });
   }
 
+  // This clock is separate from the existing learning/pace logic. It measures
+  // only time before the first valid answer while the exercise is visible.
+  function reportClockCanRun() {
+    return !!reportTask && !$("settingsDialog").open && !document.hidden &&
+      (typeof document.hasFocus !== "function" || document.hasFocus()) &&
+      $("gameScreen").classList.contains("active") && !state.locked &&
+      !document.querySelectorAll("dialog[open]").length;
+  }
+  function pauseReportClock(at = performance.now()) {
+    if (!reportTask || reportTask.since === null) return;
+    reportTask.activeMs += Math.max(0, at - reportTask.since);
+    reportTask.since = null;
+  }
+  function resumeReportClock() {
+    if (reportTask && reportTask.firstCorrect === null && reportTask.since === null && reportClockCanRun()) {
+      reportTask.since = performance.now(); reportTask.everActive = true;
+    }
+  }
+  function reportActiveSeconds(at = performance.now()) {
+    if (!reportTask || !reportTask.everActive) return null;
+    const ms = reportTask.activeMs + (reportTask.since === null ? 0 : Math.max(0, at - reportTask.since));
+    return ms > 0 && ms <= 86400000 ? Math.round(ms / 10) / 100 : null;
+  }
+  function startReportTask() {
+    const executionId = window.crypto?.randomUUID?.() || String(state.index);
+    reportTask = {problem:state.problem,id:`${state.sessionId}:${state.index}:${executionId}`,
+      sessionId:state.sessionId,firstCorrect:null,errors:0,hint:false,
+      activeMs:0,since:null,everActive:false,firstSeconds:null,saved:false};
+    resumeReportClock();
+  }
+  function observeValidAttempt(correct, answeredAt, inputSeconds) {
+    if (!reportTask || reportTask.problem !== state.problem) startReportTask();
+    if (reportTask.firstCorrect === null) {
+      reportTask.firstCorrect = correct;
+      reportTask.firstSeconds = inputSeconds === undefined ? reportActiveSeconds(answeredAt) : inputSeconds;
+      pauseReportClock(answeredAt);
+    }
+    if (!correct) reportTask.errors++;
+  }
+  function saveParentObservation(success) {
+    const tracking = reportTask, problem = state.problem;
+    if (!tracking || tracking.problem !== problem || tracking.saved || tracking.firstCorrect === null) return;
+    // Old review entries may not contain their original stage. Do not turn
+    // the currently selected level into a fabricated skill attribution.
+    const rememberedSkill = problem.reviewSkillId && skills.getSkill(problem.reviewSkillId);
+    const stage = Number.isInteger(problem.curriculumStage) ? problem.curriculumStage : (rememberedSkill?.stage || null);
+    const skill = stage && skills.skillForStage(stage);
+    const classified = skill && skill.operations.includes(problem.operation)
+      ? skills.classifyProblem({...problem,curriculumStage:stage}) : {skillId:"unclassified",subskillId:null};
+    tracking.saved = true;
+    const now=new Date(), solution=!success, hint=tracking.hint;
+    // Hash the operands so a later different example can support a modest
+    // "similar example" observation without storing the written answer.
+    let fact=2166136261;
+    for (const character of `${problem.operation}|${problem.a}|${problem.b}`)
+      fact=Math.imul(fact ^ character.codePointAt(0),16777619) >>> 0;
+    const row={id:tracking.id,sessionId:tracking.sessionId,date:now.toISOString(),day:weekly.getLocalDateKey(now),
+      skillId:classified.skillId,subskillId:classified.subskillId,stage:classified.skillId === "unclassified" ? null : stage,
+      operation:problem.operation || "unknown",fact,taskType:problem.taskType || "equation",format:problem.mode === "choice" ? "choice" : "input",
+      firstCorrect:tracking.firstCorrect,errors:tracking.errors,hint,solution,
+      outcome:solution ? "solution" : hint ? "supported" : tracking.errors ? "corrected" : "independent",
+      activeSeconds:tracking.firstSeconds};
+    reportStore.append(row).catch(() => {
+      const notice=$("storageNotice"); notice.hidden=false; notice.textContent=copy.storageWarning;
+    });
+  }
+  function canPracticeParentSkill(skill, profile = getProfile(), subskillId = null) {
+    if (subskillId && (!skill.subskills.includes(subskillId) ||
+        !subskills.availableSubskills(skill.id,profile).includes(subskillId) ||
+        (!appSettings.automatic && !appSettings.operations.includes(skills.getSubskill(subskillId)?.operation)))) return false;
+    const reached=appSettings.automatic ? profile.currentStage : Math.max(profile.currentStage,appSettings.manualStage);
+    return skill.stage <= reached && skill.stage <= maximumAllowedStage() &&
+      (appSettings.automatic || skill.stage === 1 || skill.operations.some(op=>appSettings.operations.includes(op)));
+  }
+  async function renderParentReport() {
+    const host=$("parentReportHost"), dialog=$("settingsDialog");
+    if (!host || settingsSection !== "parents" || !dialog.open) return;
+    const generation=++reportRefreshGeneration;
+    let snapshot;
+    try { snapshot=await reportStore.snapshot(); }
+    catch {
+      if (generation===reportRefreshGeneration && settingsSection==="parents")
+        host.textContent=language==="ru" ? "Не удалось открыть отчёт. Проверьте доступ к хранилищу браузера." : "Der Bericht konnte nicht geöffnet werden. Bitte den Browserspeicher prüfen.";
+      return;
+    }
+    if (generation!==reportRefreshGeneration || settingsSection!=="parents" || !dialog.open || !host.isConnected) return;
+    const open = new Set([...host.querySelectorAll("details[open]")].map(el=>el.dataset.reportTopic));
+    const scrollTop=dialog.scrollTop, contentScroll=$("settingsContent").scrollTop;
+    const focused=document.activeElement?.closest?.("[data-report-topic], [data-report-practice], [data-report-history]");
+    const focusTopic=focused?.dataset.reportTopic, focusPractice=focused?.dataset.reportPractice, focusSubskill=focused?.dataset.reportSubskill, focusHistory=focused?.hasAttribute("data-report-history");
+    const profile=getProfile();
+    host.innerHTML=window.KapiParentReportView.render(snapshot,language,{canPractice:(skill,subskillId)=>canPracticeParentSkill(skill,profile,subskillId)});
+    for(const element of host.querySelectorAll("details[data-report-topic]")) if(open.has(element.dataset.reportTopic)) element.open=true;
+    const focusTarget=[...host.querySelectorAll("[data-report-topic], [data-report-practice], [data-report-history]")].find(el=>
+      (focusTopic && el.dataset.reportTopic===focusTopic) || (focusPractice && el.dataset.reportPractice===focusPractice && el.dataset.reportSubskill===focusSubskill) ||
+      (focusHistory && el.hasAttribute("data-report-history")));
+    if (focusTarget) (focusTarget.matches("details") ? focusTarget.querySelector("summary") : focusTarget)?.focus({preventScroll:true});
+    dialog.scrollTop=scrollTop; $("settingsContent").scrollTop=contentScroll;
+  }
+
   function showCurriculumMap() {
     renderCurriculumMap();
     $("mapDialog").showModal();
@@ -890,6 +1003,7 @@
   }
 
   function showScreen(target) {
+    if (target !== $("gameScreen")) pauseReportClock();
     window.clearTimeout(stageIntroTimer);
     stageIntroSoundTimers.forEach((timer) => window.clearTimeout(timer));
     stageIntroSoundTimers = [];
@@ -1605,6 +1719,7 @@ function makePowerProblem(max, mastered) {
     state.recentFacts = state.recentFacts.slice(-4);
     state.previousTaskType = state.problem.taskType;
     state.startedAt = performance.now();
+    startReportTask();
     $("problemNumber").textContent = String(state.index + 1);
     $("scoreValue").textContent = String(state.score);
     $("scoreUnit").textContent = pointCount(state.score).split(" ").slice(1).join(" ");
@@ -1722,10 +1837,11 @@ function makePowerProblem(max, mastered) {
     if (state.locked || problem.mode === "choice" || !complete ||
         !answersEqual(value, tasks.response(problem), problem.answerType)) return;
     const answeredAt = performance.now();
+    const reportInputSeconds = reportActiveSeconds(answeredAt);
     autoAnswerTimer = window.setTimeout(() => {
       if (state.problem !== problem || state.enteredAnswer !== value || state.locked ||
           !$("gameScreen").classList.contains("active") || document.querySelectorAll("dialog[open]").length) return;
-      submitAnswer(value, answeredAt);
+      submitAnswer(value, answeredAt, reportInputSeconds);
     }, 800);
   }
 
@@ -1841,7 +1957,7 @@ function makePowerProblem(max, mastered) {
     return [...values].slice(0, 4).sort(() => Math.random() - .5);
   }
 
-  function submitAnswer(value, answeredAt = performance.now()) {
+  function submitAnswer(value, answeredAt = performance.now(), reportInputSeconds = undefined) {
     window.clearTimeout(autoAnswerTimer);
     if (state.locked) return;
     if (state.problem.mode === "choice" && choicesFor(state.problem).rejected.has(String(value))) return;
@@ -1855,6 +1971,11 @@ function makePowerProblem(max, mastered) {
         return;
       }
     }
+    if (state.problem.mode !== "choice" && state.problem.answerType !== "fraction" &&
+        !/^-?(?:\d+(?:[.,]\d+)?|[.,]\d+)$/.test(String(value).trim())) {
+      $("feedback").textContent = language === "ru" ? "Заверши запись числа" : "Vervollständige die Zahl";
+      return;
+    }
     const responses = answerAttempts.get(state.problem) || [];
     responses.push(String(value));
     answerAttempts.set(state.problem, responses);
@@ -1863,6 +1984,7 @@ function makePowerProblem(max, mastered) {
     state.paceUpdate = null;
     const elapsed = Math.max(.2, (answeredAt - state.startedAt) / 1000);
     const isCorrect = answersEqual(value, tasks.response(state.problem), state.problem.answerType);
+    observeValidAttempt(isCorrect, answeredAt, reportInputSeconds);
     const operationMessage = state.attempt === 1 && !state.problem.isReview && !state.problem.isSpacedReview && !state.targeted
       ? recordOperationAttempt(state.problem.operation, isCorrect)
       : "";
@@ -1936,9 +2058,11 @@ function makePowerProblem(max, mastered) {
     recordResult(false, elapsed, 2);
     $("feedback").textContent = copy.finalAnswer(displayProblemResponse(state.problem));
     showSolution();
+    saveParentObservation(false);
   }
 
   function showDetailedHint() {
+    if (reportTask && reportTask.problem === state.problem) reportTask.hint = true;
     const plan = guidance.build(state.problem, language);
     const card = document.querySelector(".play-card");
     card.classList.add("detailed-hint", "has-task-visual");
@@ -2001,6 +2125,7 @@ function makePowerProblem(max, mastered) {
   }
 
   function recordResult(success, elapsed, attempt) {
+    if (success) saveParentObservation(true);
     const item = {
       problem: JSON.parse(JSON.stringify(state.problem)),
       responses: [...(answerAttempts.get(state.problem) || [])],
@@ -3053,8 +3178,11 @@ function makePowerProblem(max, mastered) {
     window.location.href = `https://wa.me/4915110974353?text=${encodeURIComponent(lines.join("\n"))}`;
   }
 
-  function exportProgress() {
-    const data = { profile: getProfile(), settings: { ...appSettings }, history: getHistory() };
+  async function exportProgress() {
+    let report;
+    try { report = await reportStore.snapshot(); }
+    catch { const status=$("backupStatus"); if(status) status.textContent=copy.backupFailed; return; }
+    const data = { profile: getProfile(), settings: { ...appSettings }, history: getHistory(), report };
     const url = URL.createObjectURL(new Blob([storage.exportBackup(data)], { type: "application/json" }));
     const link = document.createElement("a");
     link.href = url; link.download = `kapi-backup-${new Date().toISOString().slice(0, 10)}.json`;
@@ -3071,9 +3199,30 @@ function makePowerProblem(max, mastered) {
       if (file.size > window.KapiStorage.MAX_BYTES) throw new Error("Too large");
       data = storage.validateBackup(await file.text(), getProfile());
     } catch { status.textContent = copy.backupInvalid; return; }
-    if (!window.confirm(copy.backupConfirm)) return;
-    if (!storage.importBackup(data)) { status.textContent = copy.backupFailed; return; }
-    $("storageNotice").hidden = true;
+    const currentReport = await reportStore.snapshot();
+    if (currentReport.partial) { status.textContent = copy.backupFailed; return; }
+    const partialWarning = data.report?.partial
+      ? (language === "ru" ? "\n\nВнимание: отчёт в этой копии неполный." : "\n\nAchtung: Der Bericht in dieser Sicherung ist unvollständig.")
+      : "";
+    if (!window.confirm(copy.backupConfirm + partialWarning)) return;
+    const checkpoint = storage.checkpoint();
+    if (!checkpoint.ok) { status.textContent = copy.backupFailed; return; }
+    let localCommitted = false;
+    try {
+      await reportStore.replace(data.report || window.KapiParentReport.emptySnapshot(), () => {
+        localCommitted = storage.importBackup(data); return localCommitted;
+      }, currentReport.revision);
+    } catch (error) {
+      if (localCommitted && !storage.restoreCheckpoint(checkpoint)) {
+        $("storageNotice").hidden = false; $("storageNotice").textContent = copy.storageWarning;
+      }
+      status.textContent = error?.message === "REPORT_CHANGED"
+        ? (language === "ru" ? "Данные отчёта изменились в другой вкладке. Проверьте их и повторите восстановление." : "Der Bericht wurde in einem anderen Tab geändert. Bitte prüfe die Daten und versuche die Wiederherstellung erneut.")
+        : copy.backupFailed;
+      return;
+    }
+    $("storageNotice").hidden = false;
+    if (!storage.failed) $("storageNotice").hidden = true;
     loadSettings(); applyLanguage(); updateHomeStats();
     $("backupStatus").textContent = copy.backupDone;
   }
@@ -3356,13 +3505,26 @@ function makePowerProblem(max, mastered) {
     }
   });
   $("settingsButton").addEventListener("click", () => {
+    pauseReportClock();
     settingsSection = "menu";
     renderSettingsContent();
     $("settingsDialog").showModal();
   });
   $("closeSettingsButton").addEventListener("click", () => $("settingsDialog").close());
+  $("settingsDialog").addEventListener("close", resumeReportClock);
   $("settingsContent").addEventListener("change", handleSettingsChange);
   $("settingsContent").addEventListener("click", (event) => {
+    if (event.target.closest("[data-report-history]")) { showStats(); return; }
+    const practice = event.target.closest("[data-report-practice]");
+    if (practice) {
+      const skill=skills.getSkill(practice.dataset.reportPractice), profile=getProfile();
+      const subskillId=practice.dataset.reportSubskill || null;
+      if (!skill || !canPracticeParentSkill(skill, profile, subskillId)) return;
+      if (trainingInProgress() && !window.confirm(copy.leaveConfirm)) return;
+      $("settingsDialog").close();
+      startTraining({}, {profile,targeted:{skillId:skill.id,...(subskillId ? {subskillId} : {}),historyPractice:true},trainingStage:skill.stage});
+      return;
+    }
     const sectionButton = event.target.closest("[data-settings-section]");
     if (sectionButton?.dataset.settingsSection === "history") {
       showStats();
@@ -3425,7 +3587,13 @@ function makePowerProblem(max, mastered) {
   }, 360);
   window.addEventListener("resize", syncViewportSize, { passive: true });
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) soundManager.stopAll();
+    if (document.hidden) { pauseReportClock(); soundManager.stopAll(); }
+    else resumeReportClock();
+  });
+  window.addEventListener("blur", pauseReportClock);
+  window.addEventListener("focus", resumeReportClock);
+  window.addEventListener("kapi-parent-report-change", () => {
+    if (settingsSection === "parents" && $("settingsDialog").open) renderParentReport();
   });
   window.visualViewport?.addEventListener("resize", syncViewportSize, { passive: true });
   window.visualViewport?.addEventListener("scroll", syncViewportSize, { passive: true });
