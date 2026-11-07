@@ -340,6 +340,10 @@ async function run() {
         const tableChapter=page.locator('.topic-chapter').filter({hasText:'Teilen & Einmaleins'});
         if (await tableChapter.getAttribute('open')===null) await tableChapter.locator('summary').first().click();
         await page.locator('[data-pick-stage="23"]').click();
+        await page.evaluate(()=>{const api=window.__e2e, profile=api.getProfile(); profile.multiplicationSequence={phase:11,item:10,mixed:true}; api.saveProfile(profile)});
+        await page.locator('#closeSettingsButton').click();
+        await page.locator('#settingsButton').click();
+        await page.locator('[data-settings-section="counting"]').click();
         await page.locator('.topic-skill details summary').click();
         await page.locator('[data-pick-subskill="multiply:table:7"]').click();
         await page.locator('[data-start-selected]').click();
@@ -382,6 +386,10 @@ async function run() {
           window.KapiMasterySystem.markStageMastered(profile, 12, new Date('2020-01-01T12:00:00Z'));
           api.saveProfile(profile);
         });
+        await page.locator('#settingsButton').click();
+        await page.locator('[data-settings-section="counting"]').click();
+        await page.locator('input[name=automatic][value=auto]').check();
+        await page.locator('#closeSettingsButton').click();
         await page.locator('#startButton').click();
         await page.locator('#gameScreen').waitFor({state:'visible'});
         const planned = await page.evaluate(() => ({ mode: window.__e2e.state.sessionMode,
