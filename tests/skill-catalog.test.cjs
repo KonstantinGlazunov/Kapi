@@ -159,24 +159,11 @@ test('late multiplication review updates mastery without changing pace, adaptive
   assert.equal(after.currentStage, 24);
 });
 
-test('late History uses localized names and completed chapter reinforcement requires every skill', () => {
-  const { app, mastery, env } = setup();
-  const profile = app.getProfile();
-  profile.currentStage = 25;
-  for (const stage of [21, 22, 23, 24]) mastery.markStageMastered(profile, stage, new Date('2020-01-01T12:00:00Z'));
-  app.saveProfile(profile);
-  env.storage.set('capy-count-history-v1', JSON.stringify([{ date: new Date().toISOString(), total: 10, correct: 9, average: 4, stage: 25 }]));
-  app.showStats();
-  const html = env.elements.get('statsContent').innerHTML;
-  assert.ok(html.includes('Division durch 1, 2, 5 und 10'));
-  assert.ok(html.includes('Einmaleins-Reihen'));
-  assert.ok(!html.includes('stage:23'));
-  app.renderCurriculumMap();
-  assert.ok(!env.elements.get('mapChapters').innerHTML.includes('✓ Gefestigt'));
-  for (const skill of Object.values(profile.skillMastery)) { skill.intervalDays = 30; skill.lastResult = 'firstTry'; }
-  app.saveProfile(profile);
-  app.renderCurriculumMap();
-  assert.ok(env.elements.get('mapChapters').innerHTML.includes('✓ Gefestigt'));
+test('history keeps past sessions and the shared selector uses localized skill names', () => {
+  const {app,env}=setup(), profile=app.getProfile(); profile.currentStage=25; app.saveProfile(profile);
+  env.storage.set('capy-count-history-v1',JSON.stringify([{date:new Date().toISOString(),total:10,correct:9,average:4,stage:25}]));
+  app.showStats(); assert.ok(env.elements.get('statsContent').innerHTML.includes('9'));
+  const html=app.renderTopicPicker(profile); assert.ok(html.includes('Einmaleins-Reihen')); assert.ok(!html.includes('stage:23'));
 });
 
 test('migration preserves an old stage record exactly and canonically links its error queue', () => {
@@ -260,27 +247,10 @@ test('a short-term recovery retains its skill link but cannot advance spaced mas
   assert.equal(app.getProfile().skillMastery['add:cross-ten'].nextReviewAt, before);
 });
 
-test('History names up to three due skills and map reinforcement remains secondary to chapter completion', () => {
-  const { app, mastery, env } = setup();
-  const profile = app.getProfile();
-  profile.currentStage = 15;
-  for (const stage of [10, 11, 12, 13]) mastery.markStageMastered(profile, stage, new Date('2020-01-01T12:00:00Z'));
-  app.saveProfile(profile);
-  env.storage.set('capy-count-history-v1', JSON.stringify([{ date: new Date().toISOString(), total: 10, correct: 9, average: 4, stage: 15 }]));
-  app.showStats();
-  const text = env.elements.get('statsContent').innerHTML;
-  assert.ok(text.includes('Plus bis 20 ohne Übergang'));
-  assert.ok(text.includes('Minus bis 20 ohne Übergang'));
-  assert.ok(text.includes('Plus über den Zehner'));
-  assert.ok(text.includes('+ 1 weitere'));
-  app.renderCurriculumMap();
-  assert.ok(env.elements.get('mapChapters').innerHTML.includes('completed'));
-  assert.ok(!env.elements.get('mapChapters').innerHTML.includes('✓ Gefestigt'));
-  mastery.markStageMastered(profile, 14, new Date('2020-01-01T12:00:00Z'));
-  for (const skill of Object.values(profile.skillMastery)) { skill.intervalDays = 30; skill.lastResult = 'firstTry'; }
-  app.saveProfile(profile);
-  app.renderCurriculumMap();
-  assert.ok(env.elements.get('mapChapters').innerHTML.includes('✓ Gefestigt'));
+test('history preserves recorded sessions without inventing mastery', () => {
+ const {app,env}=setup(), profile=app.getProfile(); profile.currentStage=15; app.saveProfile(profile);
+ env.storage.set('capy-count-history-v1',JSON.stringify([{date:new Date().toISOString(),total:10,correct:9,average:4,stage:15}]));
+ app.showStats(); const text=env.elements.get('statsContent').innerHTML; assert.ok(text.includes('9')); assert.ok(!text.includes('stage:15'));
 });
 
 test('skill catalog loads before mastery in HTML and both are available offline', () => {

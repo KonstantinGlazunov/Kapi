@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/*.test.cjs",
+    "test:navigation": "node tests/navigation-e2e.cjs && node tests/navigation-scenarios-e2e.cjs",
     "test:parent": "node tests/parent-report-e2e.cjs",
     "test:journey": "node tests/journey-ux-e2e.cjs",
     "test:usability": "node tests/usability-e2e.cjs",

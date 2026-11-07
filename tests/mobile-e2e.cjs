@@ -48,7 +48,7 @@ async function run() {
         const source = await response.text();
         const marker = /\}\)\(\);\s*$/;
         assert.match(source, marker);
-        const exposure = 'window.__e2e = {state, tasks, renderProblem, renderAnswer, getProfile, saveProfile, updateHomeStats, finishTraining, renderCurriculumMap, makeCurriculumProblem};\n})();';
+        const exposure = 'window.__e2e = {state, tasks, renderProblem, renderAnswer, getProfile, saveProfile, updateHomeStats, finishTraining, makeCurriculumProblem};\n})();';
         await route.fulfill({ response, body: source.replace(marker, exposure) });
       });
       await page.goto(baseUrl, { waitUntil: 'load' });
@@ -60,20 +60,20 @@ async function run() {
       assert.equal(await page.locator('#speechBubble').count(), 0, 'home greeting must not obscure the castle');
       assert.equal(await page.locator('#homeMascot').isVisible(), true);
       assert.equal(await page.locator('.home-stage-card').count(), 0);
-      assert.equal(await page.locator('.home-nav .text-button').count(), 3);
+      assert.equal(await page.locator('.home-nav .text-button').count(), 1);
       const navBounds = await page.locator('.home-nav .text-button').evaluateAll(buttons =>
         buttons.map(button => { const { top, bottom } = button.getBoundingClientRect(); return { top, bottom }; }));
       assert.ok(navBounds.every(box => Math.abs(box.top - navBounds[0].top) < 1 && Math.abs(box.bottom - navBounds[0].bottom) < 1),
         `${width}: home navigation buttons must share top and bottom edges: ${JSON.stringify(navBounds)}`);
       const homeLayout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth,
         viewport: document.documentElement.clientWidth, bottom: document.querySelector('#startButton').getBoundingClientRect().bottom,
-        navigationTop: document.querySelector('#mapButton').getBoundingClientRect().top,
-        mapBottom: document.querySelector('#mapButton').getBoundingClientRect().bottom,
-        wardrobeBottom: document.querySelector('#wardrobeButton').getBoundingClientRect().bottom,
+        navigationTop: document.querySelector('#journeyAlbumButton').getBoundingClientRect().top,
+        mapBottom: document.querySelector('#journeyAlbumButton').getBoundingClientRect().bottom,
+        wardrobeBottom: document.querySelector('#journeyAlbumButton').getBoundingClientRect().bottom,
         settingsBottom: document.querySelector('#settingsButton').getBoundingClientRect().bottom,
         heroHeight: document.querySelector('#homeMascot').getBoundingClientRect().height,
         startHeight: document.querySelector('#startButton').getBoundingClientRect().height,
-        navHeight: document.querySelector('#mapButton').getBoundingClientRect().height }));
+        navHeight: document.querySelector('#journeyAlbumButton').getBoundingClientRect().height }));
       assert.equal(homeLayout.width, homeLayout.viewport, `${width}: home horizontal overflow`);
       assert.ok(homeLayout.bottom <= height, `${width}: start button below viewport: ${JSON.stringify(homeLayout)}`);
       assert.ok(homeLayout.heroHeight >= 145 && homeLayout.startHeight >= 44 && homeLayout.navHeight >= 44,
@@ -82,9 +82,9 @@ async function run() {
         homeLayout.mapBottom <= height - 2 && homeLayout.wardrobeBottom <= height - 2,
         `${width}: home actions overlap or leave viewport: ${JSON.stringify(homeLayout)}`);
       await page.locator('#settingsButton').click();
-      await page.locator('[data-settings-section="history"]').click();
-      assert.equal(await page.locator('#statsDialog').isVisible(), true);
-      await page.locator('#closeStatsButton').click(); if (await page.locator('#settingsDialog').isVisible()) await page.locator('#closeSettingsButton').click();
+      await page.locator('[data-settings-section="parents"]').click();
+      await page.locator('#parentHistory').waitFor();
+      await page.locator('#closeSettingsButton').click();
       await page.locator('#startButton').click();
       await page.locator('#gameScreen').waitFor({state:'visible'});
       assert.equal(await page.locator('#gameScreen').isVisible(), true, 'tap starts training');
@@ -167,24 +167,16 @@ async function run() {
       });
       page.once('dialog', dialog => dialog.accept());
       await page.locator('#homeButton').click();
-      await page.locator('#mapButton').click();
-      if (screenshots) {
-        await page.locator('#mapChapters .map-chapter').last().scrollIntoViewIfNeeded();
-        await page.screenshot({ path: path.join(screenshots, `${width}x${height}-completed-map.png`) });
-      }
-      assert.equal(await page.locator('#mapChapters .completed').count(), 13);
-      assert.equal(await page.locator('#mapChapters .current').count(), 0);
-      assert.ok((await page.locator('#mapIntro').innerText()).includes('Alle Kapitel geschafft'), `${width}: completed curriculum text`);
-      await page.locator('#closeMapButton').click();
       await page.locator('#settingsButton').click();
-      await page.locator('[data-settings-section="general"]').click();
+      await page.locator('[data-settings-section="parents"]').click();
+      await page.locator('.parent-week details summary').click();
       await page.locator('input[name="weeklyGoal"][value="4"]').check();
-      if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-weekly-settings.png`) });
-      assert.equal(await page.locator('input[name="weeklyGoal"]:checked').inputValue(), '4');
+      await page.waitForFunction(()=>document.querySelector('.parent-week')?.textContent.includes('/ 4'));
       await page.locator('#closeSettingsButton').click();
       await page.locator('#settingsButton').click();
-      await page.locator('[data-settings-section="general"]').click();
-      assert.equal(await page.locator('input[name="weeklyGoal"]:checked').inputValue(), '4', `${width}: weekly setting not persistent`);
+      await page.locator('[data-settings-section="parents"]').click();
+      await page.locator('.parent-week details summary').click();
+      assert.equal(await page.locator('input[name="weeklyGoal"]:checked').inputValue(), '4');
       await page.locator('input[name="weeklyGoal"][value="3"]').check();
       await page.locator('#closeSettingsButton').click();
       await page.evaluate(() => {
@@ -198,8 +190,8 @@ async function run() {
       await page.waitForTimeout(350);
       if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-weekly-2-of-3.png`) });
       assert.ok((await page.locator('#weeklyDetail').innerText()).includes('2 von 3'));
-      const updatedHomeLayout = await page.evaluate(() => ({ mapBottom: document.querySelector('#mapButton').getBoundingClientRect().bottom,
-        mapHeight: document.querySelector('#mapButton').getBoundingClientRect().height,
+      const updatedHomeLayout = await page.evaluate(() => ({ mapBottom: document.querySelector('#journeyAlbumButton').getBoundingClientRect().bottom,
+        mapHeight: document.querySelector('#journeyAlbumButton').getBoundingClientRect().height,
         mascotHeight: document.querySelector('#homeMascot').getBoundingClientRect().height,
         mascotVisible: getComputedStyle(document.querySelector('#homeMascot')).visibility }));
       assert.ok(updatedHomeLayout.mapHeight > 0 && updatedHomeLayout.mapBottom <= height - 2,
@@ -228,14 +220,14 @@ async function run() {
       assert.ok(resultLayout.historyBottom <= height - 2, `${width}: result actions not visible: ${JSON.stringify(resultLayout)}`);
       await page.locator('#resultStatsButton').click();
       const historyText = await page.locator('#statsContent').innerText();
-      assert.ok(historyText.includes('Übungen diese Woche'), `${width}: weekly history summary missing: ${historyText}; errors=${JSON.stringify(errors)}`);
-      assert.ok(historyText.includes('letzten 4 Wochen'), `${width}: four-week history summary missing: ${historyText}`);
+      assert.ok((await page.locator('.parent-week').innerText()).includes('3 / 3'), `${width}: weekly history summary missing: ${historyText}; errors=${JSON.stringify(errors)}`);
+
       if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-weekly-history.png`) });
-      const dialogLayout = await page.evaluate(() => { const dialog = document.querySelector('#statsDialog');
+      const dialogLayout = await page.evaluate(() => { const dialog = document.querySelector('#settingsDialog');
         return { scrollWidth: dialog.scrollWidth, clientWidth: dialog.clientWidth, scrollLeft: dialog.scrollLeft }; });
       assert.ok(dialogLayout.scrollWidth <= dialogLayout.clientWidth + 1, `${width}: history dialog horizontal clipping: ${JSON.stringify(dialogLayout)}`);
       if (width === 390) {
-        await page.locator('#closeStatsButton').click(); if (await page.locator('#settingsDialog').isVisible()) await page.locator('#closeSettingsButton').click();
+        await page.locator('#closeSettingsButton').click();
         await page.locator('#homeButton').click();
         await page.evaluate(() => {
           const api = window.__e2e;
@@ -246,13 +238,7 @@ async function run() {
           window.KapiMasterySystem.markStageMastered(profile, 12, new Date('2020-01-01T12:00:00Z'));
           api.saveProfile(profile);
         });
-        await page.locator('#settingsButton').click();
-      await page.locator('[data-settings-section="history"]').click();
-        assert.ok((await page.locator('#statsContent').innerText()).includes('Plus über den Zehner'), 'History names due canonical skill');
-        const titleHeight = await page.locator('#historyTitle').evaluate(element => element.getBoundingClientRect().height);
-        assert.ok(titleHeight <= 35, `History title wraps on ${width}px: ${titleHeight}`);
-        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-due-skill-history.png`) });
-        await page.locator('#closeStatsButton').click(); if (await page.locator('#settingsDialog').isVisible()) await page.locator('#closeSettingsButton').click();
+
         await page.locator('#startButton').click();
         await page.locator('#gameScreen').waitFor({state:'visible'});
         const firstReviewSlot = await page.evaluate(() => window.__e2e.state.sessionPlan.slots.findIndex(slot => slot.type === 'spacedReview'));
@@ -306,11 +292,7 @@ async function run() {
           window.KapiMasterySystem.markStageMastered(profile, 23, new Date('2020-01-01T12:00:00Z'));
           api.saveProfile(profile);
         });
-        await page.locator('#settingsButton').click();
-      await page.locator('[data-settings-section="history"]').click();
-        assert.ok((await page.locator('#statsContent').innerText()).includes('Einmaleins-Reihen'), 'late skill needs a human History label');
-        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-late-skill-history.png`) });
-        await page.locator('#closeStatsButton').click(); if (await page.locator('#settingsDialog').isVisible()) await page.locator('#closeSettingsButton').click();
+
         await page.locator('#startButton').click();
         await page.locator('#gameScreen').waitFor({state:'visible'});
         const lateReviewSlot = await page.evaluate(() => window.__e2e.state.sessionPlan.slots.findIndex(slot => slot.type === 'spacedReview'));
@@ -353,12 +335,18 @@ async function run() {
           api.saveProfile(profile);
         });
         await page.locator('#settingsButton').click();
-      await page.locator('[data-settings-section="history"]').click();
-        const targetButton = page.locator('[data-target-subskill="multiply:table:7"]');
-        assert.equal(await targetButton.isVisible(), true, 'History should offer the 7er-Reihe as targeted practice');
-        await targetButton.scrollIntoViewIfNeeded();
-        if (screenshots) await page.screenshot({ path: path.join(screenshots, `${width}x${height}-subskill-history.png`) });
-        await targetButton.click();
+        await page.locator('[data-settings-section="counting"]').click();
+        await page.locator('input[name=automatic][value=manual]').check();
+        const tableChapter=page.locator('.topic-chapter').filter({hasText:'Teilen & Einmaleins'});
+        if (await tableChapter.getAttribute('open')===null) await tableChapter.locator('summary').first().click();
+        await page.locator('[data-pick-stage="23"]').click();
+        await page.evaluate(()=>{const api=window.__e2e, profile=api.getProfile(); profile.multiplicationSequence={phase:11,item:10,mixed:true}; api.saveProfile(profile)});
+        await page.locator('#closeSettingsButton').click();
+        await page.locator('#settingsButton').click();
+        await page.locator('[data-settings-section="counting"]').click();
+        await page.locator('.topic-skill details summary').click();
+        await page.locator('[data-pick-subskill="multiply:table:7"]').click();
+        await page.locator('[data-start-selected]').click();
         await page.locator('#gameScreen').waitFor({ state: 'visible' });
         const targetStart = await page.evaluate(() => ({ target: window.__e2e.state.targeted,
           stage: window.__e2e.state.stage, total: document.querySelector('#problemTotal').textContent,
@@ -398,6 +386,10 @@ async function run() {
           window.KapiMasterySystem.markStageMastered(profile, 12, new Date('2020-01-01T12:00:00Z'));
           api.saveProfile(profile);
         });
+        await page.locator('#settingsButton').click();
+        await page.locator('[data-settings-section="counting"]').click();
+        await page.locator('input[name=automatic][value=auto]').check();
+        await page.locator('#closeSettingsButton').click();
         await page.locator('#startButton').click();
         await page.locator('#gameScreen').waitFor({state:'visible'});
         const planned = await page.evaluate(() => ({ mode: window.__e2e.state.sessionMode,

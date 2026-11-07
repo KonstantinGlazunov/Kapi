@@ -341,16 +341,12 @@
     $("weeklyLabel").textContent = copy.thisWeek;
     $("totalXpLabel").textContent = copy.homeXp;
     $("startButton").innerHTML = `<span class="home-start-icon" aria-hidden="true">▶</span> ${copy.start}`;
-    $("wardrobeButton").textContent = copy.meinKapi;
-    $("mapButton").textContent = copy.learningPath;
-    $("mapTitle").textContent = copy.learningPath;
-    $("mapIntro").textContent = copy.mapIntro;
-    $("closeMapButton").setAttribute("aria-label", copy.close);
+    $("homeWardrobeLabel").textContent = copy.meinKapi;
     $("wardrobeTitle").textContent = copy.meinKapi;
     $("wardrobeIntro").textContent = copy.wardrobeIntro;
     $("closeWardrobeButton").setAttribute("aria-label", copy.close);
     currentHomeGreeting = copy.homeGreetings[0];
-    $("homeMascot").setAttribute("aria-label", copy.homeMascotAction);
+    $("homeMascot").setAttribute("aria-label", copy.meinKapi);
     $("homeStats").setAttribute("aria-label", copy.gameProgress);
     $("homeButton").setAttribute("aria-label", copy.home);
     $("settingsButton").setAttribute("aria-label", copy.settings);
@@ -366,10 +362,11 @@
     $("shareButton").textContent = copy.share;
     $("resultStatsButton").textContent = copy.viewHistory;
     $("updateButton").textContent = copy.updateReady;
-    $("parentEyebrow").textContent = copy.forParents;
-    $("historyTitle").textContent = copy.history;
-    $("closeStatsButton").setAttribute("aria-label", copy.close);
     $("clearStatsButton").textContent = copy.clearHistory;
+    $("historyData").setAttribute("aria-label", language === "ru" ? "Данные и перенос" : "Daten und Übertragung");
+    $("historyBackupHelp").textContent = copy.backupHelp;
+    $("historyBackupExport").textContent = language === "ru" ? "Сохранить копию" : "Sicherung speichern";
+    $("historyBackupImportLabel").textContent = language === "ru" ? "Восстановить копию" : "Sicherung wiederherstellen";
     $("settingsTitle").textContent = copy.settings;
     $("settingsHint").textContent = copy.settingsHint;
     if (storage.failed) $("storageNotice").textContent = copy.storageWarning;
@@ -396,7 +393,7 @@
       appSettings.problemCount = [10, 20, 30].includes(Number(value.problemCount)) ? Number(value.problemCount) : 10;
       const currentCurriculum = value.curriculumVersion === CURRICULUM_VERSION;
       appSettings.automatic = value.automatic !== false;
-      appSettings.rangeLocked = value.rangeLocked === true;
+      appSettings.rangeLocked = true;
       appSettings.range = ["10", "20", "100", "above100"].includes(String(value.range)) ? String(value.range) : "above100";
       appSettings.operations = Array.isArray(value.operations)
         ? OPERATION_ORDER.filter((operation) => value.operations.includes(operation))
@@ -424,7 +421,9 @@
     const advanced = $("settingsContent").querySelector("details.settings-advanced");
     if (advanced) advancedSettingsOpen = advanced.open;
     const changed = settingsRenderedSection !== settingsSection;
+    const openFolds = new Set([...$("settingsContent").querySelectorAll("details[data-fold][open]")].map(el=>el.dataset.fold));
     renderSettingsBody();
+    if (!changed) for (const el of $("settingsContent").querySelectorAll("details[data-fold]")) if(openFolds.has(el.dataset.fold)) el.open=true;
     settingsRenderedSection = settingsSection;
     if (!$("settingsDialog").open) return;
     if (!changed && identity) {
@@ -436,17 +435,21 @@
     else $("settingsContent").querySelector('button')?.focus();
   }
 
+  function parkSettingsElements() {
+    const stash = $("settingsStash");
+    for (const id of ["statsContent", "clearStatsButton", "historyData"]) {
+      const el = $(id); if (el && el.parentElement !== stash) stash.appendChild(el);
+    }
+  }
   function renderSettingsBody() {
     const content = $("settingsContent");
     if (!content) return;
+    parkSettingsElements();
     $("settingsHint").hidden = settingsSection !== "menu";
     const items = [
-      ["counting", "±", copy.settingsCounting, copy.settingsCountingMenu],
-      ["general", "A", copy.settingsGeneral, copy.settingsGeneralMenu],
-      ["data", "⇄", language === "ru" ? "Данные и перенос" : "Daten und Umzug", copy.backupHelp],
-      ["parents", "♡", language === "ru" ? "Для родителей" : "Für Eltern", language === "ru" ? "Успехи ребёнка" : "Lernfortschritt des Kindes"],
-      ["history", "◷", copy.homeHistory, language === "ru" ? "Результаты прошлых тренировок" : "Ergebnisse vergangener Trainings"],
-      ["about", "i", copy.settingsAbout, copy.settingsAboutMenu]
+      ["counting", "±", language === "ru" ? "Занятие" : "Übung", language === "ru" ? "Темы и задания" : "Themen und Aufgaben"],
+      ["parents", "♡", language === "ru" ? "Успехи ребёнка" : "Lernfortschritt des Kindes", language === "ru" ? "Отчёт и история" : "Überblick und Verlauf"],
+      ["general", "⚙", language === "ru" ? "Приложение" : "App", language === "ru" ? "Язык, звук и данные" : "Sprache, Ton und Daten"]
     ];
     if (settingsSection === "menu") {
       content.innerHTML = `<nav class="settings-menu" aria-label="${copy.settings}">
@@ -464,70 +467,48 @@
       return;
     }
     if (settingsSection === "general") {
-      const selectedWeeklyGoal = getProfile().weeklyGoal;
-      content.innerHTML = `${navigation}
-        <section class="settings-panel">
-          <fieldset><legend>${copy.language}</legend>
-            <label><input type="radio" name="language" value="de" ${language === "de" ? "checked" : ""}> Deutsch</label>
-            <label><input type="radio" name="language" value="ru" ${language === "ru" ? "checked" : ""}> Русский</label>
-          </fieldset>
-          <fieldset><legend>${copy.sound}</legend>
-            <button class="setting-toggle" id="soundButton" type="button" aria-pressed="${state.sound}">${state.sound ? `🔊 ${copy.soundEnabled}` : `🔇 ${copy.soundDisabled}`}</button>
-          </fieldset>
-          <fieldset><legend>${copy.weeklyGoal}</legend>
-            ${weekly.GOALS.map((goal) => `<label><input type="radio" name="weeklyGoal" value="${goal}" ${selectedWeeklyGoal === goal ? "checked" : ""}> ${copy.weeklyOption(goal)}</label>`).join("")}
-          </fieldset>
-        </section>`;
+      const ru = language === "ru";
+      content.innerHTML = `${navigation}<section class="settings-panel">
+        <fieldset><legend>${copy.language}</legend><label><input type="radio" name="language" value="de" ${language === "de" ? "checked" : ""}> Deutsch</label><label><input type="radio" name="language" value="ru" ${language === "ru" ? "checked" : ""}> Русский</label></fieldset>
+        <fieldset><legend>${copy.sound}</legend><button class="setting-toggle" id="soundButton" type="button" aria-pressed="${state.sound}">${state.sound ? `🔊 ${copy.soundEnabled}` : `🔇 ${copy.soundDisabled}`}</button></fieldset>
+        <details class="settings-fold" data-fold="backup"><summary>${ru ? "Сохранение и перенос прогресса" : "Fortschritt sichern und übertragen"}</summary><div id="backupHost"></div></details>
+        <details class="settings-fold" data-fold="about"><summary>${ru ? "О приложении" : "Über die App"}</summary><div class="about-panel"><p class="about-copy">${copy.aboutText}</p><p class="about-copy">${copy.localPrivacy}</p><a class="author-link" href="https://erstellen-websiten.de/ueber-mich" target="_blank" rel="noopener noreferrer">${copy.author} ↗</a>
+          <form class="feedback-form" id="feedbackForm"><h3>${copy.feedbackTitle}</h3><p>${copy.feedbackIntro}</p><label class="form-field"><span>${copy.feedbackMessage}</span><textarea name="feedbackMessage" rows="5" maxlength="1000" required placeholder="${copy.feedbackPlaceholder}"></textarea></label><button class="feedback-submit" type="submit">${copy.sendWhatsApp}</button></form></div></details>
+        <details class="settings-fold" data-fold="licenses"><summary>${ru ? "Авторы и лицензии" : "Urheber und Lizenzen"}</summary><p class="settings-note music-credit">♪ <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400011" target="_blank" rel="noopener">Monkeys Spinning Monkeys — Kevin MacLeod</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a><br>${ru ? "Аудио преобразовано в моно WAV; громкость изменена." : "Audio in Mono-WAV umgewandelt; Lautstärke angepasst."}</p><p class="settings-note">${ru ? "Звуковые эффекты" : "Soundeffekte"}: <a href="https://opengameart.org/content/interface-sounds" target="_blank" rel="noopener">Kenney</a>, <a href="https://opengameart.org/content/85-short-music-jingles" target="_blank" rel="noopener">Kenney Jingles</a>, <a href="https://bigsoundbank.com/party-horn-6-s1558.html" target="_blank" rel="noopener">Joseph SARDIN</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0</a></p></details>
+      </section>`;
+      $("backupHost").appendChild($("historyData"));
       return;
     }
-    if (settingsSection === "data") {
-      content.innerHTML = `${navigation}<section class="settings-panel">          <fieldset class="backup-controls"><legend>${copy.backupTitle}</legend>
-            <p class="settings-note">${copy.backupHelp}</p>
-            <button class="setting-toggle" type="button" data-backup-export>${copy.backupExport}</button>
-            <label class="backup-file">${copy.backupImport}<input type="file" data-backup-import accept="application/json,.json"></label>
-            <p id="backupStatus" role="status"></p>
-          </fieldset>
-</section>`;
-      return;
-    }
-    if (settingsSection === "about") {
-      content.innerHTML = `${navigation}
-        <section class="settings-panel about-panel">
-          <p class="about-copy">${copy.aboutText}</p><p class="about-copy">${copy.localPrivacy}</p>
-          <a class="author-link" href="https://erstellen-websiten.de/ueber-mich" target="_blank" rel="noopener noreferrer">${copy.author} ↗</a>
-          <form class="feedback-form" id="feedbackForm">
-            <h3>${copy.feedbackTitle}</h3>
-            <p>${copy.feedbackIntro}</p>
-            <label class="form-field"><span>${copy.feedbackMessage}</span><textarea name="feedbackMessage" rows="5" maxlength="1000" required placeholder="${copy.feedbackPlaceholder}"></textarea></label>
-            <button class="feedback-submit" type="submit">${copy.sendWhatsApp}</button>
-          </form>
-          <p class="settings-note music-credit">♪ <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400011" target="_blank" rel="noopener">Monkeys Spinning Monkeys — Kevin MacLeod</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></p>
-        </section>`;
-      return;
-    }
-    const ru = language === 'ru', profile = getProfile();
+    const ru = language === "ru", profile = getProfile();
     const selectedStage = appSettings.automatic ? profile.currentStage : appSettings.manualStage;
-    const limit = appSettings.rangeLocked ? maximumAllowedStage() : CURRICULUM_STAGE_COUNT;
-    const chapters = curriculumMap.getChapters().filter(c => c.first <= limit);
-    const chosenChapter = curriculumMap.chapterForStage(selectedStage);
-    const rangeHint = ru ? 'Для выбранной темы диапазон:' : 'Zahlenraum für das gewählte Thema:';
     content.innerHTML = `${navigation}<section class="settings-panel">
-      <fieldset><legend>${ru ? 'Как заниматься?' : 'Wie möchtest du üben?'}</legend>
-        <label class="setting-wide"><input type="radio" name="automatic" value="auto" ${appSettings.automatic ? 'checked' : ''}>${ru ? 'Подбирай задания сам' : 'Aufgaben automatisch auswählen'}</label>
-        <label class="setting-wide"><input type="radio" name="automatic" value="manual" ${!appSettings.automatic ? 'checked' : ''}>${ru ? 'Хочу потренировать тему' : 'Ich möchte ein Thema üben'}</label>
-      </fieldset>
-      ${appSettings.automatic ? `<p class="settings-note">${copy.automaticHint}</p>` : `<label class="topic-picker">${ru ? 'Тема' : 'Thema'}<select name="topic">${chapters.map(c => `<option value="${c.first}" ${c.id === chosenChapter?.id ? 'selected' : ''}>${c[language]}${!appSettings.rangeLocked && rangeForStage(c.first) !== appSettings.range ? " — " + (ru ? "диапазон изменится на " : "Zahlenraum wechselt zu ") + copy.rangeNames[rangeForStage(c.first)] : ""}</option>`).join('')}</select></label>
-        <p class="topic-example"><strong>${copy.stageNames[selectedStage-1]}</strong><br>${STAGE_EXAMPLES[selectedStage-1]}</p>
-        <p class="settings-note">${rangeHint} ${copy.rangeNames[rangeForStage(selectedStage)]}. ${ru ? 'Выбор другой темы может изменить диапазон. Жёсткую границу можно задать ниже.' : 'Ein anderes Thema kann den Zahlenraum ändern. Eine feste Grenze lässt sich unten setzen.'}</p>`}
+      <fieldset><legend>${ru ? "Как заниматься?" : "Wie üben?"}</legend>
+        <label class="setting-wide"><input type="radio" name="automatic" value="auto" ${appSettings.automatic ? "checked" : ""}>${ru ? "Капи подбирает задания" : "Kapi wählt Aufgaben"}</label>
+        <label class="setting-wide"><input type="radio" name="automatic" value="manual" ${!appSettings.automatic ? "checked" : ""}>${ru ? "Выбрать тему" : "Thema auswählen"}</label></fieldset>
+      <fieldset><legend>${copy.examples}</legend>${[10,20,30].map(n=>`<label><input type="radio" name="problemCount" value="${n}" ${appSettings.problemCount===n?"checked":""}>${n}</label>`).join("")}</fieldset>
+      ${appSettings.automatic ? `<p class="settings-note">${copy.automaticHint}</p>` : `<p class="topic-example"><strong>${copy.stageNames[selectedStage-1]}</strong><br>${STAGE_EXAMPLES[selectedStage-1]}</p><button class="setting-toggle" type="button" data-start-selected>${ru ? "Начать занятие" : "Übung starten"}</button>${renderTopicPicker(profile)}`}
       <p id="settingsNotice" role="status">${settingsNotice}</p>
-      <details class="settings-advanced" ${advancedSettingsOpen ? 'open' : ''}><summary>${ru ? 'Дополнительные параметры' : 'Weitere Einstellungen'}</summary>
-        <fieldset><legend>${copy.examples}</legend>${[10,20,30].map(n=>`<label><input type="radio" name="problemCount" value="${n}" ${appSettings.problemCount===n?'checked':''}>${n}</label>`).join('')}</fieldset>
-        <fieldset><legend>${copy.range}</legend>${['10','20','100','above100'].map(value=>`<label><input type="radio" name="range" value="${value}" ${appSettings.range===value?'checked':''}>${copy.rangeNames[value]}</label>`).join('')}
-        <label class="setting-wide"><input type="checkbox" name="rangeLocked" ${appSettings.rangeLocked?'checked':''}>${ru?'Не выходить за выбранный диапазон':'Diesen Zahlenraum nicht überschreiten'}</label></fieldset>
-        <fieldset class="stage-settings"><legend>${copy.chooseStage}</legend><select name="manualStage" aria-label="${copy.chooseStage}">${Array.from({length:limit},(_,i)=>`<option value="${i+1}" ${selectedStage===i+1?'selected':''}>${i+1}. ${copy.stageNames[i]}${!appSettings.rangeLocked&&rangeForStage(i+1)!==appSettings.range?' — '+copy.rangeNames[rangeForStage(i+1)]:''}</option>`).join('')}</select>
-        <p>${STAGE_EXAMPLES[selectedStage-1]}</p></fieldset>
-        <fieldset class="operation-settings"><legend>${copy.operations}</legend><p class="settings-note">${ru?'Действия доступны для выбранной темы. Должно остаться хотя бы одно.':'Rechenarten hängen vom Thema ab. Mindestens eine muss ausgewählt bleiben.'}</p>${OPERATION_ORDER.map(operation=>{const available=operationAvailableAtStage(operation,selectedStage);return `<label><input type="checkbox" name="operation" value="${operation}" ${appSettings.automatic?available?'checked':'':appSettings.operations.includes(operation)?'checked':''} ${appSettings.automatic||!available?'disabled':''}>${copy.operationNames[operation]}</label>`}).join('')}</fieldset>
+      <details class="settings-advanced" ${advancedSettingsOpen ? "open" : ""}><summary>${ru ? "Дополнительные ограничения" : "Zusätzliche Einschränkungen"}</summary>
+        <fieldset><legend>${copy.range}</legend>${["10","20","100","above100"].map(value=>`<label><input type="radio" name="range" value="${value}" ${appSettings.range===value?"checked":""}>${copy.rangeNames[value]}</label>`).join("")}</fieldset>
+        ${appSettings.automatic ? "" : `<fieldset class="operation-settings"><legend>${copy.operations}</legend><p class="settings-note">${ru ? "Действия доступны для выбранной темы." : "Rechenarten hängen vom Thema ab."}</p>${OPERATION_ORDER.map(operation=>{const available=operationAvailableAtStage(operation,selectedStage);return `<label><input type="checkbox" name="operation" value="${operation}" ${appSettings.operations.includes(operation)?"checked":""} ${!available?"disabled":""}>${copy.operationNames[operation]}</label>`}).join("")}</fieldset>`}
       </details></section>`;
+  }
+
+  let selectedManualSubskill = null, openParentHistory = false;
+  function renderTopicPicker(profile, snapshot = null) {
+    const ru=language === "ru", selected=appSettings.automatic ? profile.currentStage : appSettings.manualStage, limit=maximumAllowedStage();
+    const autoName=copy.stageNames[profile.currentStage-1], chosenName=copy.stageNames[selected-1];
+    const context=selected===profile.currentStage ? `${ru ? "Текущая тема" : "Aktuelles Thema"}: ${chosenName}` : `${ru ? "Автоматическая тема" : "Automatisches Thema"}: ${autoName}. ${ru ? "Выбрано" : "Ausgewählt"}: ${chosenName}`;
+    return `${snapshot || selected!==profile.currentStage ? `<p class="settings-note">${context}</p>` : ""}<div class="topic-list">${curriculumMap.getChapters().map(chapter=>{
+      const contains=selected>=chapter.first && selected<=chapter.last;
+      const stages=skills.KAPI_SKILLS.filter(skill=>skill.stage>=chapter.first && skill.stage<=chapter.last);
+      return `<details class="topic-chapter" ${contains ? "open" : ""}><summary>${chapter[language]}</summary><p>${chapter[ru?"detailRu":"detailDe"]}</p>${stages.map(skill=>{
+        const active=skill.stage===selected, allowed=skill.stage<=limit;
+        const parts=active ? subskills.availableSubskills(skill.id,profile) : [];
+        const reported=snapshot?.summaries[skill.id]?.total ? window.KapiParentReportView.labels[ru ? "ru" : "de"].status[snapshot.states[skill.id]?.status || "new"] : (ru ? "Пока нет данных" : "Noch keine Daten");
+        return `<div class="topic-skill"><button type="button" data-pick-stage="${skill.stage}" ${allowed ? "" : "disabled"} aria-pressed="${active}">${skill[language]}</button>${active ? `<small>${STAGE_EXAMPLES[skill.stage-1]}${snapshot ? ` · ${reported}` : ""}</small>${parts.length ? `<details ${selectedManualSubskill ? "open" : ""}><summary>${ru ? "Конкретный навык" : "Teilfertigkeit"}</summary>${parts.map(id=>`<button type="button" data-pick-subskill="${id}" aria-pressed="${selectedManualSubskill===id}">${skills.subskillLabel(id,language)}</button>`).join("")}</details>` : ""}` : ""}</div>`;
+      }).join("")}</details>`;
+    }).join("")}</div>`;
   }
 
   function getProfile() {
@@ -637,7 +618,7 @@
     const step = profile.journey.step, words = journeyCopy();
     setJourneyScene(step);
     $("journeyTitle").textContent = words.places[Math.min(step + 1, window.KapiJourney.MAX_STEP)];
-    $("journeyAlbumButton").textContent = words.album;
+    $("journeyAlbumButton").textContent = language === "ru" ? "Путешествие" : "Reise";
     $("journeyAlbumButton").setAttribute("aria-label", `${words.album} · ${step + 1} / 24`);
     $("journeyPlace").textContent = (language === "ru" ? "Сейчас: " : "Jetzt: ") + words.places[step];
     $("journeyNext").textContent = step < window.KapiJourney.MAX_STEP ? (language === "ru" ? "После завершённого занятия" : "Nach einer abgeschlossenen Übung") : words.next[step];
@@ -670,7 +651,7 @@
     window.history.pushState({ ...window.history.state, kapiAlbumDepth: albumLayers.length }, '');
     dialog.showModal();
   }
-  for (const id of ['journeyAlbum', 'journeyViewer']) {
+  for (const id of ['journeyAlbum', 'journeyViewer', 'wardrobeDialog']) {
     $(id).addEventListener('close', () => {
       if (backClosing.has($(id))) { backClosing.delete($(id)); return; }
       const index = albumLayers.indexOf($(id));
@@ -679,7 +660,27 @@
       window.history.back();
     });
   }
+  let settingsDepth=0, settingsHistoryClosing=false;
+  function showSettingsDialog(section="menu") {
+    settingsSection=section; pauseReportClock();
+    if (!$("settingsDialog").open) {
+      settingsDepth=1;
+      window.history.pushState({...window.history.state,kapiSettings:true,kapiSettingsSection:section},"");
+      renderSettingsContent(); $("settingsDialog").showModal();
+    } else renderSettingsContent();
+  }
+  function navigateSettings(section) {
+    settingsSection=section; settingsDepth++;
+    window.history.pushState({...window.history.state,kapiSettings:true,kapiSettingsSection:section},"");
+    renderSettingsContent();
+  }
   window.addEventListener('popstate', event => {
+    if ($("settingsDialog").open) {
+      if (event.state?.kapiSettings) {
+        settingsDepth=Math.max(1,settingsDepth-1);
+        settingsSection=event.state.kapiSettingsSection || "menu"; renderSettingsContent();
+      } else { settingsHistoryClosing=true; $("settingsDialog").close(); }
+    }
     const depth = Math.max(0, Math.min(albumLayers.length, Number(event.state?.kapiAlbumDepth) || 0));
     while (albumLayers.length > depth) {
       const dialog = albumLayers.pop(); backClosing.add(dialog); dialog.close();
@@ -746,9 +747,8 @@
 
   function openJourneyAlbum() {
     const profile = getProfile(), words = journeyCopy(), step = profile.journey.step;
-    const nextStop = step < window.KapiJourney.MAX_STEP ? `<aside class="album-next"><strong>${language === 'ru' ? 'Следующая остановка' : 'Nächster Halt'}: ${words.places[step+1]}</strong><span>${language === 'ru' ? 'Откроется после следующего завершённого занятия' : 'Wird nach der nächsten abgeschlossenen Übung freigeschaltet'}</span></aside>` : '';
-    $("journeyAlbumContent").innerHTML = `<div class="album-header"><h2 id="journeyAlbumTitle">${words.album}</h2><button class="text-button" id="closeJourneyAlbum">${words.close}</button></div><div class="album-scroll"><p>${step + 1} / 24</p>${nextStop}` + window.KapiJourney.chapters.map((chapter, c) => {
-      return `<details class="album-chapter" ${c <= window.KapiJourney.chapter(step) ? "open" : ""}><summary>${chapter[language === 'ru' ? 1 : 2]}</summary><div class="album-places">` + words.places.slice(c * 4, c * 4 + 4).map((name, n) => {
+    $("journeyAlbumContent").innerHTML = `<div class="album-header"><h2 id="journeyAlbumTitle">${words.album}</h2><button class="text-button" id="closeJourneyAlbum">${words.close}</button></div><div class="album-scroll"><p>${step + 1} / 24</p>` + window.KapiJourney.chapters.map((chapter, c) => {
+      return `<details class="album-chapter" ${c <= window.KapiJourney.chapter(Math.min(step + 1, window.KapiJourney.MAX_STEP)) ? "open" : ""}><summary>${chapter[language === 'ru' ? 1 : 2]}</summary><div class="album-places">` + words.places.slice(c * 4, c * 4 + 4).map((name, n) => {
         const i = c * 4 + n, scene = window.KapiJourney.scene(i), unlocked = i <= step;
         return `<figure class="album-place ${unlocked ? 'visited' : 'locked'} ${i === step + 1 ? 'nearest' : ''}"><div class="album-picture" ${unlocked ? `style='background-image:url("assets/journey/${scene.asset}");background-position:${scene.position};background-size:${scene.size}'` : ''}>${unlocked ? '' : '<span class="album-unvisited">🔒</span>'}</div><figcaption>${i + 1}. ${name}${i === step ? ' ●' : unlocked ? ' ✓' : ''}${i === step + 1 ? `<small class="next-stop-help">${language === 'ru' ? 'Откроется после следующего занятия' : 'Öffnet sich nach der nächsten Übung'}</small>` : ''}</figcaption>${albumViewButton(i, name, unlocked)}</figure>`;
       }).join('') + `</div></details>`;
@@ -852,7 +852,7 @@
   function showWardrobe() {
     renderWardrobe();
 
-    $("wardrobeDialog").showModal();
+    openAlbumLayer($("wardrobeDialog"));
     kapi?.animator?.play("idle", { surface: "wardrobe" });
   }
 
@@ -861,31 +861,12 @@
     kapi?.animator?.pause("wardrobe");
   }
 
-  function renderCurriculumMap() {
-    const profile = getProfile(), ru = language === 'ru';
-    const stage = profile.currentStage, selected = appSettings.automatic ? stage : appSettings.manualStage;
-    $("mapIntro").textContent = `${profile.curriculumCompleted ? copy.mapAllComplete + " " : ""}${ru ? 'Автоматическое обучение' : 'Automatischer Lernweg'}: ${copy.stageNames[stage-1]}. ${ru ? 'Выбрано для следующего занятия' : 'Für die nächste Übung gewählt'}: ${copy.stageNames[selected-1]}.`;
-    $("mapIntro").classList.toggle('map-complete', profile.curriculumCompleted);
-    const chapters = curriculumMap.chaptersAt(stage, profile.curriculumCompleted);
-    const render = chapter => {
-      const chosen = selected >= chapter.first && selected <= chapter.last;
-      const active = chapter.status === 'current';
-      const label = chosen ? (ru?'Выбрано для следующего занятия':'Für die nächste Übung gewählt') : chapter.status === 'completed' ? (ru?'Освоено автоматически':'Automatisch abgeschlossen') : active ? (ru?'Изучаем автоматически':'Automatisch in Arbeit') : (ru?'Будущая тема':'Zukünftiges Thema');
-      const exampleStage = chosen ? selected : active ? stage : chapter.first;
-      const reinforced = chapter.status === 'completed' && Array.from({length:chapter.last-chapter.first+1},(_,i)=>chapter.first+i).every(step=>['secure','stable'].includes(mastery.getMasteryStatus(profile.skillMastery[mastery.skillIdForProblem({curriculumStage:step})])));
-
-      return `<details class="map-chapter ${chosen&&!appSettings.automatic?'selected':chapter.status}" ${chosen||active?'open':''}><summary>${active?'<img src="assets/kapi-rig-v2/head.png" width="28" height="28" alt="">':''}<strong>${chapter[language]}</strong><span class="map-status">${label}</span></summary><p>${chapter[ru?'detailRu':'detailDe']}</p><p>${STAGE_EXAMPLES[exampleStage-1]}</p>${!chosen&&!active&&chapter.status!=='completed'?`<p class="map-condition">${ru ? (appSettings.automatic ? "Откроется, когда освоены предыдущие темы." : "Можно выбрать в настройках, если позволяет диапазон.") : (appSettings.automatic ? "Wird nach den vorherigen Themen freigeschaltet." : "In den Einstellungen wählbar, wenn der Zahlenraum passt.")}</p>`:""}${active?`<small>${copy.mapSteps(chapter.step,chapter.total)}</small>`:""}${reinforced?`<small>✓ ${copy.mapReinforced}</small>`:""}${chosen||active||chapter.status==='completed'?`<button type="button" class="text-button" data-map-practice="${exampleStage}">${ru?'Тренироваться':'Üben'}</button>`:''}</details>`;
-    };
-    const near = chapters.filter(c => c.status==='current'||selected>=c.first&&selected<=c.last);
-    $("mapChapters").innerHTML = near.map(render).join('') + `<details class="map-full-plan"><summary>${ru?'Весь учебный план — для родителей':'Gesamter Lernplan — für Eltern'}</summary>${chapters.filter(c=>!near.includes(c)).map(render).join('')}</details>`;
-  }
-
   function practiceHistoryProblem(p) {
     if (!tasks.isValidReviewProblem({ ...p, correctStreak:0, lastShown:0 })) return;
     const target = skills.classifyProblem(p), profile = getProfile();
     if (!target.skillId) return;
     if (target.subskillId && !subskills.availableSubskills(target.skillId, profile).includes(target.subskillId)) return;
-    $("statsDialog").close(); $("settingsDialog").close();
+    $("settingsDialog").close();
     startTraining({}, { profile, targeted:{...target,historyPractice:true,taskType:p.taskType}, trainingStage:skills.stageForSkill(target.skillId) });
   }
 
@@ -979,19 +960,31 @@
     const scrollTop=dialog.scrollTop, contentScroll=$("settingsContent").scrollTop;
     const focused=document.activeElement?.closest?.("[data-report-topic], [data-report-practice], [data-report-history]");
     const focusTopic=focused?.dataset.reportTopic, focusPractice=focused?.dataset.reportPractice, focusSubskill=focused?.dataset.reportSubskill, focusHistory=focused?.hasAttribute("data-report-history");
-    const profile=getProfile();
-    host.innerHTML=window.KapiParentReportView.render(snapshot,language,{canPractice:(skill,subskillId)=>canPracticeParentSkill(skill,profile,subskillId)});
+    const focusGoal=document.activeElement?.name === "weeklyGoal" ? document.activeElement.value : null;
+    const profile=getProfile(), ru=language === "ru";
+    const historyOpen=openParentHistory || !!host.querySelector("#parentHistory[open]");
+    const weeklyOpen=!!host.querySelector(".parent-week details[open]");
+    const allOpen=!!host.querySelector("#parentAllTopics[open]");
+    parkSettingsElements();
+    const progress=weekly.getWeeklyProgress(profile,new Date()).count;
+    const weeklyHTML=`<section class="parent-week"><strong>${ru ? "Цель на неделю" : "Wochenziel"}: ${progress} / ${profile.weeklyGoal}</strong><details ${weeklyOpen ? "open" : ""}><summary>${ru ? "Изменить цель" : "Ziel ändern"}</summary>${weekly.GOALS.map(goal=>`<label><input type="radio" name="weeklyGoal" value="${goal}" ${goal===profile.weeklyGoal?"checked":""}> ${copy.weeklyOption(goal)}</label>`).join("")}</details></section>`;
+    const afterCards=`<details id="parentAllTopics" ${allOpen?"open":""}><summary>${ru ? "Все темы" : "Alle Themen"}</summary>${renderTopicPicker(profile,snapshot)}</details><details id="parentHistory" ${historyOpen?"open":""}><summary>${ru ? "История занятий" : "Trainingsverlauf"}</summary><div id="embeddedHistory"></div></details>`;
+    host.innerHTML=window.KapiParentReportView.render(snapshot,language,{canPractice:(skill,subskillId)=>canPracticeParentSkill(skill,profile,subskillId),afterOverview:weeklyHTML,afterCards});
+    showStats(); openParentHistory=false;
     for(const element of host.querySelectorAll("details[data-report-topic]")) if(open.has(element.dataset.reportTopic)) element.open=true;
     const focusTarget=[...host.querySelectorAll("[data-report-topic], [data-report-practice], [data-report-history]")].find(el=>
       (focusTopic && el.dataset.reportTopic===focusTopic) || (focusPractice && el.dataset.reportPractice===focusPractice && el.dataset.reportSubskill===focusSubskill) ||
       (focusHistory && el.hasAttribute("data-report-history")));
-    if (focusTarget) (focusTarget.matches("details") ? focusTarget.querySelector("summary") : focusTarget)?.focus({preventScroll:true});
+    if (focusGoal) host.querySelector(`input[name="weeklyGoal"][value="${focusGoal}"]`)?.focus({preventScroll:true});
+    else if (focusTarget) (focusTarget.matches("details") ? focusTarget.querySelector("summary") : focusTarget)?.focus({preventScroll:true});
     dialog.scrollTop=scrollTop; $("settingsContent").scrollTop=contentScroll;
   }
 
-  function showCurriculumMap() {
-    renderCurriculumMap();
-    $("mapDialog").showModal();
+  function openParentReport(history = false) {
+    openParentHistory=history;
+    if (!$("settingsDialog").open) showSettingsDialog("parents");
+    else { settingsSection="parents"; renderSettingsContent(); }
+    renderParentReport();
   }
 
   function updateSoundButton() {
@@ -1036,32 +1029,14 @@
     scheduleFitCheck();
   }
 
-  let homeReactionLockedUntil = 0;
-  let lastHomeReaction = "";
   let homeGreetingIndex = 0;
   let currentHomeGreeting = "";
-  const HOME_REACTION_COOLDOWN = 5000;
-  const homeReactionScenes = ["flag", "horn", "dance", "levelUp"];
-
-  function clearHomeReaction() {
-    if (kapi?.surface === "home") kapi.trigger("idle", { surface: "home" });
-  }
 
   function restartHomeGreeting() {
     if (!kapi) return;
     currentHomeGreeting = copy.homeGreetings[homeGreetingIndex++ % copy.homeGreetings.length];
     kapi.setSurface("home", "idle");
     kapi.trigger("hey", { surface: "home" });
-  }
-
-  function playHomeReaction() {
-    soundManager?.unlock();
-    if (!$("startScreen").classList.contains("active") || Date.now() < homeReactionLockedUntil) return;
-    const candidates = homeReactionScenes.filter((scene) => scene !== lastHomeReaction);
-    const scene = pick(candidates);
-    lastHomeReaction = scene;
-    homeReactionLockedUntil = Date.now() + HOME_REACTION_COOLDOWN;
-    kapi.trigger(scene, { surface: "home", onComplete: () => clearHomeReaction() });
   }
 
   function speakHomeGreeting() {
@@ -2725,45 +2700,13 @@ function makePowerProblem(max, mastered) {
   function showStats() {
     const history = getHistory();
     const content = $("statsContent");
-    $("clearStatsButton").classList.toggle("hidden", history.length === 0);
+    $("clearStatsButton").disabled = history.length === 0;
     if (!history.length) {
       content.innerHTML = `<div class="empty-state">${copy.emptyHistory}</div>`;
     } else {
-      const profile = getProfile();
-      const summary = weekly.getHistorySummary(profile, history);
-      const dueSkills = mastery.getDueSkills(profile, new Date());
-      const targetLimit = Math.min(maximumAllowedStage(), appSettings.automatic ? profile.currentStage : Math.max(profile.currentStage, appSettings.manualStage));
-      const focusTargets = skills.KAPI_SKILLS.filter((skill) => skill.stage <= targetLimit)
-        .flatMap((skill) => subskills.availableSubskills(skill.id, profile)
-          .filter((id) => profile.subskillMastery[id]?.attempts > 0 && subskills.status(profile.subskillMastery[id]) !== "secure" &&
-            (appSettings.automatic || appSettings.operations.includes(skills.getSubskill(id)?.operation)))
-          .map((id) => ({ skillId: skill.id, subskillId: id })))
-        .filter((item, index, all) => all.findIndex((other) => other.subskillId === item.subskillId) === index)
-        .sort((a, b) => {
-          const left = profile.subskillMastery[a.subskillId];
-          const right = profile.subskillMastery[b.subskillId];
-          return (left.firstTryCorrect / left.attempts) - (right.firstTryCorrect / right.attempts) ||
-            b.skillId.localeCompare(a.skillId);
-        }).slice(0, 3);
-      const stableSkills = Object.values(profile.skillMastery).filter((skill) => mastery.getMasteryStatus(skill) === "stable").length;
-      const practicingSkills = Object.values(profile.skillMastery).filter((skill) => mastery.getMasteryStatus(skill) === "inPractice").length;
       const hasTrouble = history.some(item => item.mistakes?.length || item.trouble?.length);
       content.innerHTML = `
-        <div class="summary-stats">
-          <div><strong>${summary.thisWeek}</strong><span>${language === "ru" ? `из ${profile.weeklyGoal} тренировок на этой неделе` : `von ${profile.weeklyGoal} Übungen diese Woche`}</span></div>
-          <div><strong>${summary.lastFourWeeks}</strong><span>${copy.lastFourWeeks}</span></div>
-          <div><strong>${profile.currentStage}</strong><span>${copy.currentLevel}</span></div>
-        </div>
-        ${summary.stageStart && summary.stageEnd && summary.stageEnd > summary.stageStart ? `<p class="learning-summary"><strong>${copy.learningProgress}:</strong> ${copy.stageNames[summary.stageStart - 1]} → ${copy.stageNames[summary.stageEnd - 1]}</p>` : ""}
-        ${dueSkills.length || stableSkills || practicingSkills ? `<div class="learning-summary skill-summary"><p>${[
-          dueSkills.length ? copy.dueAreas(dueSkills.length) : "",
-          stableSkills ? copy.stableAreas(stableSkills) : "",
-          practicingSkills ? copy.practiceAreas(practicingSkills) : ""
-        ].filter(Boolean).join(" · ")}</p>${dueSkills.length ? `<ul class="due-skill-list">${dueSkills.slice(0, 3).map(({ skillId }) =>
-          `<li>${skills.label(skillId, language, copy.stageNames[skills.stageForSkill(skillId) - 1] || "")}</li>`).join("")}${dueSkills.length > 3 ? `<li>${copy.moreAreas(dueSkills.length - 3)}</li>` : ""}</ul>` : ""}</div>` : ""}
-        ${focusTargets.length ? `<div class="subskill-summary"><strong>${copy.subskillsToPractice}</strong><div class="subskill-actions">${focusTargets.map(({ skillId, subskillId }) =>
-          `<button class="target-skill-button" type="button" data-target-skill="${skillId}" data-target-subskill="${subskillId}" aria-label="${skills.subskillLabel(subskillId, language)}: ${copy.targetedPractice}"><span>${skills.subskillLabel(subskillId, language)}</span><small>${copy.targetedPractice} →</small></button>`).join("")}</div></div>` : ""}
-        <div class="history-list">${history.slice(0, 10).map((item, sessionIndex) => {
+        <div class="history-list">${history.map((item, sessionIndex) => {
           const stage = Math.min(CURRICULUM_STAGE_COUNT, Math.max(1, Number(item.stage) || 1));
           const currentScale = item.curriculumVersion === CURRICULUM_VERSION || new Date(item.date).getTime() >= Date.parse("2026-09-27T18:11:52Z");
           const help = currentScale
@@ -2781,7 +2724,8 @@ function makePowerProblem(max, mastered) {
         }).join("")}</div>
         ${hasTrouble ? "" : `<p class="trouble-note no-errors"><strong>${copy.noErrors}</strong></p>`}`;
     }
-    $("statsDialog").showModal();
+    const embedded = $("embeddedHistory");
+    if (embedded) { embedded.appendChild(content); embedded.appendChild($("clearStatsButton")); }
   }
 
   function escapeHistory(value) {
@@ -3078,7 +3022,7 @@ function makePowerProblem(max, mastered) {
       profile.weeklyGoal = weekly.GOALS.includes(Number(input.value)) ? Number(input.value) : 3;
       profile.weeklySessions.goal = profile.weeklyGoal;
       saveProfile(profile);
-      renderSettingsContent();
+      if (settingsSection === "parents") renderParentReport(); else renderSettingsContent();
       updateHomeStats();
       return;
     }
@@ -3096,16 +3040,13 @@ function makePowerProblem(max, mastered) {
       updateHomeStats();
       return;
     }
-    if (input.name === "rangeLocked") {
-      appSettings.rangeLocked = input.checked; saveSettings(); renderSettingsContent(); return;
-    }
     if (input.name === "topic") {
       handleSettingsChange({target:{name:'manualStage',value:input.value}}); return;
     }
     if (input.name === "range") {
       appSettings.rangeLocked = true;
       appSettings.range = input.value;
-      settingsNotice = language === 'ru' ? 'Жёсткая граница включена. Показаны только совместимые темы.' : 'Feste Grenze aktiviert. Es werden nur passende Themen angezeigt.';
+      settingsNotice = language === 'ru' ? 'Показаны темы в пределах выбранного диапазона.' : 'Es werden Themen innerhalb des gewählten Zahlenraums angezeigt.';
       const profile = getProfile();
       if (appSettings.automatic) setAdaptiveStage(profile, Math.min(profile.currentStage, maximumAllowedStage()));
       else {
@@ -3409,28 +3350,13 @@ function makePowerProblem(max, mastered) {
     const profile = getProfile(); rewards.equip(profile, button.dataset.equipNow); saveProfile(profile); updateMascotOutfit(profile);
     button.textContent = language === 'ru' ? 'Надето' : 'Angezogen'; button.disabled = true;
   });
-  $("homeMascot").addEventListener("click", playHomeReaction);
-  document.querySelector(".app-shell").addEventListener("pointerdown", (event) => {
-    if (kapi?.surface === "home" && !kapi.state.startsWith("idle") && !event.target.closest("#homeMascot")) clearHomeReaction();
-  });
+  $("homeMascot").addEventListener("click", showWardrobe);
   $("resultRepeatButton").addEventListener('click', () => {
     const problem = state.results.find(item => !item.firstTry && item.problem)?.problem;
     if (problem) practiceHistoryProblem(problem);
   });
   $("resultNewButton").addEventListener('click', () => startTrainingWithIntro());
-  $("mapChapters").addEventListener('click', event => {
-    const button = event.target.closest('[data-map-practice]');
-    if (!button) return;
-    const stage = Number(button.dataset.mapPractice), profile = getProfile();
-    if (stage > Math.max(profile.currentStage, appSettings.automatic ? 0 : appSettings.manualStage)) return;
-    $("mapDialog").close();
-    if (stage === (appSettings.automatic ? profile.currentStage : appSettings.manualStage)) startTrainingWithIntro();
-    else startTraining({}, {profile, targeted:{skillId:skills.KAPI_SKILLS.find(s=>s.stage===stage).id,historyPractice:true,taskType:'equation'}, trainingStage:stage});
-  });
   $("shareButton").addEventListener("click", shareResult);
-  $("wardrobeButton").addEventListener("click", showWardrobe);
-  $("mapButton").addEventListener("click", showCurriculumMap);
-  $("closeMapButton").addEventListener("click", () => $("mapDialog").close());
   $("closeWardrobeButton").addEventListener("click", closeWardrobe);
   $("wardrobeDialog").addEventListener("close", () => kapi?.animator?.pause("wardrobe"));
   $("wardrobeItems").addEventListener("click", (event) => {
@@ -3466,7 +3392,7 @@ function makePowerProblem(max, mastered) {
     handleKeypadClick({ target: { closest: () => ({ dataset }) } });
   });
 
-  $("resultStatsButton").addEventListener("click", showStats);
+  $("resultStatsButton").addEventListener("click", () => openParentReport(true));
   $("statsContent").addEventListener("click", (event) => {
     const repeat = event.target.closest("[data-history-repeat]");
     if (repeat) {
@@ -3483,10 +3409,9 @@ function makePowerProblem(max, mastered) {
     if (!skill || skill.stage > targetLimit ||
       (!appSettings.automatic && !appSettings.operations.includes(skills.getSubskill(button.dataset.targetSubskill)?.operation)) ||
       !subskills.availableSubskills(skill.id, profile).includes(button.dataset.targetSubskill)) return;
-    $("statsDialog").close(); $("settingsDialog").close();
+    $("settingsDialog").close();
     startTrainingWithIntro({ targetSkillId: skill.id, targetSubskillId: button.dataset.targetSubskill });
   });
-  $("closeStatsButton").addEventListener("click", () => $("statsDialog").close());
   $("clearStatsButton").addEventListener("click", () => {
     if (!window.confirm(copy.deleteConfirm)) return;
     storage.removeItem(HISTORY_KEY);
@@ -3504,17 +3429,42 @@ function makePowerProblem(max, mastered) {
       importProgress(event.target.files?.[0]); event.target.value = "";
     }
   });
-  $("settingsButton").addEventListener("click", () => {
-    pauseReportClock();
-    settingsSection = "menu";
-    renderSettingsContent();
-    $("settingsDialog").showModal();
-  });
+  $("settingsButton").addEventListener("click", () => showSettingsDialog("menu"));
+  $("settingsDialog").addEventListener("cancel", event => { event.preventDefault(); window.history.back(); });
   $("closeSettingsButton").addEventListener("click", () => $("settingsDialog").close());
-  $("settingsDialog").addEventListener("close", resumeReportClock);
+  $("settingsDialog").addEventListener("close", () => {
+    resumeReportClock();
+    if (settingsHistoryClosing) { settingsHistoryClosing=false; settingsDepth=0; return; }
+    if (settingsDepth) { const depth=settingsDepth; settingsDepth=0; window.history.go(-depth); }
+  });
   $("settingsContent").addEventListener("change", handleSettingsChange);
   $("settingsContent").addEventListener("click", (event) => {
-    if (event.target.closest("[data-report-history]")) { showStats(); return; }
+    const stageButton=event.target.closest("[data-pick-stage]");
+    if (stageButton) {
+      const stage=Number(stageButton.dataset.pickStage);
+      if (appSettings.automatic) handleSettingsChange({target:{name:"automatic",value:"manual"}});
+      selectedManualSubskill=null;
+      handleSettingsChange({target:{name:"manualStage",value:String(stage)}});
+      if (settingsSection !== "counting") navigateSettings("counting");
+      $("settingsContent").querySelector(`[data-pick-stage="${stage}"]`)?.focus({preventScroll:true});
+      return;
+    }
+    const subskillButton=event.target.closest("[data-pick-subskill]");
+    if (subskillButton) {
+      const chosen=subskillButton.dataset.pickSubskill;
+      if (appSettings.automatic) handleSettingsChange({target:{name:"automatic",value:"manual"}});
+      selectedManualSubskill=chosen;
+      if (settingsSection !== "counting") navigateSettings("counting"); else renderSettingsContent();
+      $("settingsContent").querySelector(`[data-pick-subskill="${chosen}"]`)?.focus({preventScroll:true});
+      return;
+    }
+    if (event.target.closest("[data-start-selected]")) {
+      if (trainingInProgress() && !window.confirm(copy.leaveConfirm)) return;
+      const skill=skills.skillForStage(appSettings.manualStage);
+      const options=selectedManualSubskill && skill ? {targetSkillId:skill.id,targetSubskillId:selectedManualSubskill} : {};
+      $("settingsDialog").close(); startTrainingWithIntro(options); return;
+    }
+    if (event.target.closest("[data-report-history]")) { $("parentHistory").open = true; $("parentHistory").scrollIntoView({block:"start"}); return; }
     const practice = event.target.closest("[data-report-practice]");
     if (practice) {
       const skill=skills.getSkill(practice.dataset.reportPractice), profile=getProfile();
@@ -3527,17 +3477,16 @@ function makePowerProblem(max, mastered) {
     }
     const sectionButton = event.target.closest("[data-settings-section]");
     if (sectionButton?.dataset.settingsSection === "history") {
-      showStats();
+      openParentReport(true);
       return;
     }
     if (sectionButton) {
-      settingsSection = sectionButton.dataset.settingsSection;
-      renderSettingsContent();
+      navigateSettings(sectionButton.dataset.settingsSection);
       return;
     }
     if (event.target.closest("[data-settings-back]")) {
-      settingsSection = "menu";
-      renderSettingsContent();
+      if (settingsDepth > 1) window.history.back();
+      else $("settingsDialog").close();
       return;
     }
     if (event.target.closest("#soundButton")) {

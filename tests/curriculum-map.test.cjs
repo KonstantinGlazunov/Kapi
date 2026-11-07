@@ -46,8 +46,6 @@ test('final stage requires the existing mastery threshold before showing a fully
   app.saveProfile(profile);
   app.state.stage = 41;
   const problem = { curriculumStage: 41, operation: 'root', taskType: 'equation' };
-  app.showCurriculumMap();
-  assert.equal((env.elements.get('mapChapters').innerHTML.match(/map-chapter current/g) || []).length, 1);
   assert.equal(app.updateAdaptiveProgress(problem, true, true, 5), '', 'pending review blocks mastery');
   assert.equal(app.getProfile().curriculumCompleted, false);
   const reviewed = app.getProfile();
@@ -55,10 +53,6 @@ test('final stage requires the existing mastery threshold before showing a fully
   app.saveProfile(reviewed);
   assert.equal(app.updateAdaptiveProgress(problem, true, true, 5), 'Der ganze Lernweg ist geschafft! Kapi ist stolz auf dich.');
   assert.equal(app.getProfile().curriculumCompleted, true);
-  app.showCurriculumMap();
-  assert.equal((env.elements.get('mapChapters').innerHTML.match(/map-chapter current/g) || []).length, 0);
-  assert.equal((env.elements.get('mapChapters').innerHTML.match(/map-chapter completed/g) || []).length, 13);
-  assert.ok(env.elements.get('mapIntro').textContent.includes('Alle Kapitel geschafft!'));
   assert.equal(app.updateAdaptiveProgress(problem, true, true, 5), '', 'completion announced once');
   app.state.trainingStartedCompleted = false;
   app.state.trainingStartStage = 41;
@@ -67,21 +61,13 @@ test('final stage requires the existing mastery threshold before showing a fully
   assert.ok(env.elements.get('resultNote').textContent.includes('Der ganze Lernweg ist geschafft!'));
 });
 
-test('map dialog shows Kapi at the current chapter without XP gating', () => {
-  const env = environment({ app: true });
-  const app = env.sandbox.__app;
-  const profile = app.getProfile();
-  profile.currentStage = 12;
-  profile.totalXp = 0;
-  app.saveProfile(profile);
-  app.showCurriculumMap();
-  const html = env.elements.get('mapChapters').innerHTML;
+test('shared topic selector shows the current chapter and all stages', () => {
+  const env = environment({app:true}), app=env.sandbox.__app, profile=app.getProfile();
+  profile.currentStage=12; profile.totalXp=0; app.saveProfile(profile);
+  const html=app.renderTopicPicker(profile);
   assert.ok(html.includes('Plus & Minus bis 20'));
-  assert.ok(html.includes('3 von 5 Schritten'));
-  assert.ok(html.includes('class="map-chapter current"'));
-  assert.ok(html.includes('class="map-chapter completed"'));
-  assert.ok(html.includes('class="map-chapter locked"'));
-  assert.ok(html.includes('assets/kapi-rig-v2/head.png'));
+  assert.ok(html.includes('data-pick-stage="12"'));
+  assert.equal((html.match(/data-pick-stage=/g)||[]).length,41);
   assert.ok(!html.includes('XP'));
 });
 

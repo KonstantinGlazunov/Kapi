@@ -96,8 +96,8 @@ async function seed(page, xp, step=0) {
         assert.equal(await page.locator('#journeyTitle').innerText(),await page.evaluate(({step,lang})=>KapiJourney.copy[lang].places[Math.min(step+1,23)],{step,lang}));
         await page.locator('#journeyAlbumButton').click();
         assert.equal(await page.locator('[data-album-view]').count(),step+1);
-        assert.equal(await page.locator('.album-next').count(),step===23?0:1);
-        if(step<23) assert.match(await page.locator('.album-next').innerText(),lang==='ru'?/завершённого/:/abgeschlossenen/);
+        assert.equal(await page.locator('.next-stop-help').count(),step===23?0:1);
+        if(step<23) assert.match(await page.locator('.next-stop-help').innerText(),lang==='ru'?/следующего занятия/:/nächsten Übung/);
         await page.locator('#closeJourneyAlbum').click(); await page.waitForTimeout(100);
       }
       if(width===390) {
@@ -120,7 +120,7 @@ async function seed(page, xp, step=0) {
       }
       for(const xp of [0,19,20,21,500]) {
         await seed(page,xp);
-        await page.locator('#wardrobeButton').click();
+        await page.locator('#homeMascot').click();
         await fits(page,'#wardrobeDialog');
         assert.equal(await page.locator('.wardrobe-next').count(),xp===500?0:1);
         if(xp===19) { assert.match(await page.locator('.wardrobe-next').innerText(),lang==='ru'?/1 очко/:/1 Punkt/); await shot(page,lang+'-'+width+'x'+height+'-reward'); }
@@ -132,11 +132,11 @@ async function seed(page, xp, step=0) {
           assert.match(await star.innerText(),lang==='ru'?/Снять/:/Ablegen/);
           await page.reload(); await page.waitForFunction(()=>!!window.__journeyTest);
           assert.equal(await page.evaluate(()=>__journeyTest.getProfile().equippedOutfit.badge),'badge-star');
-          await page.locator('#wardrobeButton').click();
+          await page.locator('#homeMascot').click();
           await page.locator('[data-equip="badge-star"]').click();
           assert.equal(await page.evaluate(()=>__journeyTest.getProfile().equippedOutfit.badge),null);
         }
-        await page.locator('#closeWardrobeButton').click();
+        await page.locator('#closeWardrobeButton').click(); await page.waitForTimeout(150);
       }
       await seed(page,21);
       await page.evaluate(()=>{
@@ -146,8 +146,9 @@ async function seed(page, xp, step=0) {
       });
       await page.reload(); await page.waitForFunction(()=>!!window.__journeyTest);
       assert.match(await page.locator('#homeTaskCount').innerText(),/20/,'Explicit length survives');
-      await page.locator('#mapButton').click();
-      await page.locator('.map-chapter.selected [data-map-practice]').click();
+      await page.locator('#settingsButton').click();
+      await page.locator('[data-settings-section=counting]').click();
+      await page.locator('[data-start-selected]').click();
       await page.locator('#gameScreen').waitFor({state:'visible'});
       assert.equal(await page.evaluate(()=>__journeyTest.state.stage),32);
       assert.equal(await page.locator('#problemTotal').innerText(),'20');
