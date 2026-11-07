@@ -23,7 +23,7 @@
       <div class="journey-heading"><small id="journeyPlace"></small><h1 id="journeyTitle"></h1><p id="journeyNext"></p><div id="journeyStops"></div></div>
       <div class="home-hero" aria-hidden="false">
         <div class="mascot-stage start-mascot">
-          <button class="home-mascot-sprite kapi-host" id="homeMascot" type="button" aria-label="Kapi reagieren lassen"><canvas class="kapi-rive-canvas" id="homeMascotCanvas" aria-hidden="true"></canvas></button>
+          <button class="home-mascot-sprite kapi-host" id="homeMascot" type="button" aria-label="Kapi reagieren lassen"><canvas class="kapi-rive-canvas" id="homeMascotCanvas" aria-hidden="true"></canvas><span class="home-wardrobe-label" id="homeWardrobeLabel">Мой Капи</span></button>
         </div>
       </div>
       <div class="start-copy">
@@ -38,8 +38,6 @@
         <button class="primary-button" id="startButton" type="button"><span class="home-start-icon" aria-hidden="true">▶</span> Training starten</button>
         <nav class="home-nav" aria-label="Kapi">
 <button class="text-button journey-album-button" id="journeyAlbumButton" type="button">Альбом путешествия</button>
-          <button class="text-button" id="wardrobeButton" type="button"><span aria-hidden="true">◈</span> Mein Kapi</button>
-          <button class="text-button" id="mapButton" type="button"><span aria-hidden="true">◇</span> Lernweg</button>
         </nav>
         <div class="home-maintenance"><button class="install-home-button hidden" id="installHomeButton" type="button">App installieren</button><button class="update-button hidden" id="updateButton" type="button">Update verfügbar</button></div>
       </div>
@@ -116,14 +114,18 @@
   <dialog id="journeyAlbum" class="journey-picker" aria-labelledby="journeyAlbumTitle"><div id="journeyAlbumContent"></div></dialog>
   <dialog id="journeyViewer" class="journey-viewer" aria-labelledby="journeyViewerTitle"><header><h2 id="journeyViewerTitle"></h2><button id="closeJourneyViewer" class="icon-button" type="button">×</button></header><img id="journeyViewerImage" alt="" draggable="false"><nav class="journey-viewer-nav"><button id="journeyViewerPrevious" class="icon-button" type="button">←</button><span id="journeyViewerCount" role="status" aria-live="polite"></span><button id="journeyViewerNext" class="icon-button" type="button">→</button></nav></dialog>
   <dialog id="journeyPicker" class="journey-picker"><div id="journeyPickerContent"></div></dialog>
-  <dialog class="stats-dialog" id="statsDialog">
-    <div class="dialog-head">
-      <div><span class="eyebrow" id="parentEyebrow">Для родителей</span><h2 id="historyTitle">История занятий</h2></div>
-      <button class="icon-button" id="closeStatsButton" type="button" aria-label="Закрыть">×</button>
-    </div>
+  <div id="settingsStash" hidden>
     <div id="statsContent"></div>
-    <button class="danger-text-button" id="clearStatsButton" type="button">Удалить историю</button>
-  </dialog>
+    <section class="history-data" id="historyData" aria-label="Данные и перенос">
+      <p id="historyBackupHelp" class="settings-note"></p>
+      <div class="history-data-actions">
+        <button class="setting-toggle" id="historyBackupExport" type="button" data-backup-export>Сохранить историю</button>
+        <button class="danger-text-button" id="clearStatsButton" type="button">Удалить историю</button>
+        <label class="backup-file"><span id="historyBackupImportLabel">Восстановить историю</span><input type="file" data-backup-import accept="application/json,.json"></label>
+      </div>
+      <p id="backupStatus" role="status"></p>
+    </section>
+  </div>
 
   <dialog class="wardrobe-dialog" id="wardrobeDialog" aria-labelledby="wardrobeTitle">
     <div class="dialog-head"><h2 id="wardrobeTitle">Mein Kapi</h2><button class="icon-button" id="closeWardrobeButton" type="button" aria-label="Schließen">×</button></div>
@@ -131,10 +133,6 @@
     <p id="wardrobeIntro"></p><div id="wardrobeItems" class="wardrobe-items"></div>
   </dialog>
 
-  <dialog class="map-dialog" id="mapDialog" aria-labelledby="mapTitle">
-    <div class="dialog-head"><h2 id="mapTitle">Lernweg</h2><button class="icon-button" id="closeMapButton" type="button" aria-label="Schließen">×</button></div>
-    <p id="mapIntro"></p><div id="mapChapters" class="map-chapters"></div>
-  </dialog>
 
   <dialog class="settings-dialog" id="settingsDialog">
     <div class="dialog-head">

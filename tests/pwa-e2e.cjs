@@ -15,7 +15,8 @@ async function run() {
   let proxy;
   const originalFetch = global.fetch;
   async function resource(file) {
-    let bytes = await readFile(path.join(ROOT, file));
+    const source = release === 1 && process.env.KAPI_PREVIOUS_SITE ? process.env.KAPI_PREVIOUS_SITE : ROOT;
+    let bytes = await readFile(path.join(source, file));
     if (file === 'sw.js') bytes = Buffer.from(bytes.toString().replace(/^(const CACHE = )(.+);$/m, `$1($2) + "-test${release}";`));
     if (file === 'index.html') bytes = Buffer.from(bytes.toString().replace('<head>', `<head><meta name="test-release" content="${release}">`));
     return new Response(bytes, { headers: { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' } });
@@ -87,6 +88,28 @@ async function run() {
         localStorage.setItem(key, JSON.stringify(profile));
       });
       await page.reload();
+      // A pre-existing report database must survive a service-worker update.
+      await page.evaluate(() => new Promise((resolve,reject)=>{
+        const dbname="kapi-parent-report-v1:" + new URL(".",location.href).pathname;
+        const request=indexedDB.open(dbname,1);
+        request.onupgradeneeded=()=>{
+          const db=request.result, records=db.createObjectStore("records",{keyPath:"id"});
+          records.createIndex("skill","skillId",{unique:false});
+          const seen=db.createObjectStore("seen",{keyPath:"id"});seen.createIndex("date","date",{unique:false});
+          db.createObjectStore("summaries",{keyPath:"id"});db.createObjectStore("states",{keyPath:"id"});
+        };
+        request.onerror=()=>reject(request.error);
+        request.onsuccess=()=>{
+          const db=request.result, tx=db.transaction(["records","seen","summaries","states"],"readwrite");
+          const row={id:"pwa:0",sessionId:"pwa",date:"2026-11-01T12:00:00Z",day:"2026-11-01",
+            skillId:"count:to5",subskillId:null,stage:1,operation:"count",fact:1,taskType:"equation",format:"input",
+            firstCorrect:true,errors:0,hint:false,solution:false,outcome:"independent",activeSeconds:2};
+          tx.objectStore("records").put(row);tx.objectStore("seen").put({id:row.id,date:row.date});
+          tx.objectStore("summaries").put({id:row.skillId,total:1,independent:1,corrected:0,supported:0,solution:0,choice:0,input:1,independentChoice:0,independentInput:1,last:row.date});
+          tx.objectStore("states").put({id:row.skillId,status:"new",recent:[false],refresh:false});
+          tx.oncomplete=()=>{db.close();resolve()};tx.onabort=()=>reject(tx.error);
+        };
+      }));
       // Cache has finished installation (ready/claim). Close and cold-start offline.
       if (offlineSupported) await context.setOffline(true);
       await page.close();
@@ -135,6 +158,10 @@ async function run() {
       await offline.locator('#updateButton').click();
       await offline.waitForFunction(() => document.querySelector('meta[name=test-release]').content === '2');
       assert.equal(await offline.locator('#totalXpValue').innerText(), '246');
+      assert.equal(await offline.evaluate(() => new Promise((resolve,reject)=>{
+        const req=indexedDB.open("kapi-parent-report-v1:" + new URL(".",location.href).pathname,1);
+        req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result, get=db.transaction("records").objectStore("records").get("pwa:0");get.onsuccess=()=>{resolve(get.result?.id);db.close()};get.onerror=()=>reject(get.error)};
+      })),'pwa:0','report observation survives worker update');
       assert.equal(await training.evaluate(() => window.trainingIdentity), 'unfinished-training', 'another tab must not reload');
       assert.equal(await training.locator('#problemText').innerText(), identity);
       assert.equal(await training.locator('#gameScreen').isVisible(), true);
@@ -155,12 +182,14 @@ async function run() {
       await context.setOffline(false);
       // Export/import UI: cancellation and malformed files cannot replace progress.
       await offline.locator('#settingsButton').click();
-      await offline.locator('[data-settings-section=data]').click();
+      await offline.locator('[data-settings-section=general]').click();await offline.locator('[data-fold=backup] > summary').click();
       const downloadPromise = offline.waitForEvent('download');
       await offline.locator('[data-backup-export]').click();
       const download = await downloadPromise;
       const backup = JSON.parse(await readFile(await download.path(), 'utf8'));
       assert.equal(backup.data.profile.totalXp, 246);
+      assert.equal(backup.version, 2);
+      assert.ok(backup.data.report.records.some(row=>row.id==="pwa:0"),"report survives database upgrade and is included in backup");
       backup.data.profile.totalXp = 333;
       const upload = () => offline.locator('[data-backup-import]').setInputFiles({ name: 'kapi.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup)) });
       const cancelled = offline.waitForEvent('dialog').then(dialog => dialog.dismiss());
@@ -187,15 +216,14 @@ async function run() {
       assert.equal(await offline.locator('#gameScreen').isVisible(), true, 'training still starts after rejected import');
       await offline.locator('#homeButton').click();
       await offline.locator('#settingsButton').click();
-      await offline.locator('[data-settings-section=data]').click();
+      await offline.locator('[data-settings-section=general]').click();await offline.locator('[data-fold=backup] > summary').click();
       await offline.locator('[data-backup-import]').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
       await offline.waitForFunction(() => document.querySelector('#backupStatus').textContent.includes('beschädigt'));
       assert.equal(await offline.locator('#totalXpValue').innerText(), '333');
       const screenshotDir = process.env.KAPI_E2E_SCREENSHOTS;
       if (screenshotDir) {
         await mkdir(screenshotDir, { recursive: true });
-        await offline.locator('[data-settings-back]').click();
-        await offline.locator('[data-settings-section=general]').click();
+        await offline.locator('[data-fold=backup] > summary').click();
         for (const lang of ['de', 'ru']) {
           await offline.locator(`input[name=language][value=${lang}]`).check();
           for (const width of [320, 390]) {
@@ -205,7 +233,7 @@ async function run() {
         }
         await offline.locator('#closeSettingsButton').click();
         await offline.locator('#settingsButton').click();
-        await offline.locator('[data-settings-section=about]').click();
+        await offline.locator('[data-settings-section=general]').click();await offline.locator('[data-fold=about] > summary').click();
         await offline.screenshot({ path: path.join(screenshotDir, `parents-${prefix === '/' ? 'root' : 'kapi'}-ru.png`) });
       }
       assert.deepEqual(errors, []);

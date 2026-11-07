@@ -89,11 +89,11 @@
     }).join("");
     const weekHTML=week?`<section class="parent-week"><strong>${t.week}: ${week.count} ${t.observationsShort}</strong>${week.improvement?`<p>${t.weekImproved} ${escape(week.subskillId ? catalog.subskillLabel(week.subskillId,language) : catalog.label(week.skillId,language))} · ${week.format==="choice"?t.choices:t.typed}.</p>`:""}</section>`:"";
     const partial=snapshot.partial ? `<p class="parent-refresh" role="alert">${ru ? "Сохранённый отчёт сейчас недоступен. Показаны только новые данные этой вкладки; резервная копия будет неполной." : "Der gespeicherte Bericht ist nicht verfügbar. Nur neue Daten dieses Tabs werden angezeigt; die Sicherung ist unvollständig."}</p>` : "";
-    return `<div class="parent-report">${partial}<p class="parent-intro">${t.intro}</p><section class="parent-overview" aria-label="${t.title}">${boxes}</section>${weekHTML}
+    return `<div class="parent-report">${partial}<p class="parent-intro">${t.intro}</p><section class="parent-overview" aria-label="${t.title}">${boxes}</section>${options.afterOverview || ""}${weekHTML}
       <section aria-label="${ru?"Темы":"Themen"}" class="parent-topics">${cards}</section>
-      <details class="parent-method"><summary>${t.method}</summary><p>${t.stability}</p></details>
+      ${options.afterCards || ""}<details class="parent-method"><summary>${t.method}</summary><p>${t.stability}</p></details>
       ${unknown ? `<p class="settings-note">${unknown} ${ru ? "завершённых примеров без точной темы не влияют на оценку навыков." : "abgeschlossene Aufgaben ohne bekanntes Thema beeinflussen die Einschätzung der Fertigkeiten nicht."}</p>` : ""}
-      <p class="settings-note">${t.legacy}</p><button type="button" class="text-button" data-report-history>${t.previous}</button></div>`;
+      <p class="settings-note">${t.legacy}</p></div>`;
   }
   window.KapiParentReportView=Object.freeze({render,labels});
 })();

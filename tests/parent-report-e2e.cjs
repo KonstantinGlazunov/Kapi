@@ -189,7 +189,7 @@ async function seedReport(page) {
   await page.evaluate(()=>__parentTest.reportStore.replace(KapiParentReport.emptySnapshot()));
   assert.equal((await data(page)).records.length,0);
   page.once('dialog',d=>d.accept());await page.locator('#homeButton').click();
-  await page.locator('#settingsButton').click();await page.locator('[data-settings-section=data]').click();
+  await page.locator('#settingsButton').click();await page.locator('[data-settings-section=general]').click();await page.locator('[data-fold=backup] > summary').click();
   page.once('dialog',d=>d.accept());await page.locator('[data-backup-import]').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:Buffer.from(backup)});
   await page.waitForFunction(()=>document.querySelector('#backupStatus')?.textContent.includes('восстановлена'));
   assert.equal((await data(page)).summaries['add:to5'].total,67);
@@ -199,7 +199,7 @@ async function seedReport(page) {
   const legacy=JSON.parse(backup);legacy.version=1;delete legacy.data.report;
   assert.equal(await page.evaluate(text=>!('report' in __parentTest.storage.validateBackup(text)),JSON.stringify(legacy)),true);
   legacy.data.history=[{date:'2026-11-01T12:00:00Z',correct:9,total:10,average:2,score:10,stage:1,trouble:['count:legacy']}];
-  await page.locator('#settingsButton').click();await page.locator('[data-settings-section=data]').click();
+  await page.locator('#settingsButton').click();await page.locator('[data-settings-section=general]').click();await page.locator('[data-fold=backup] > summary').click();
   page.once('dialog',d=>d.accept());await page.locator('[data-backup-import]').setInputFiles({name:'legacy.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(legacy))});
   await page.waitForFunction(()=>document.querySelector('#backupStatus')?.textContent.includes('восстановлена'));
   assert.equal((await data(page)).records.length,0);assert.equal(await page.evaluate(()=>__parentTest.getHistory().length),1);

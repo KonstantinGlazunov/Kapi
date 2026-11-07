@@ -53,6 +53,10 @@ jobs:
         run: npm run test:usability
         env:
           KAPI_E2E_SCREENSHOTS: artifacts/usability
+      - name: Unified navigation
+        run: npm run test:navigation
+        env:
+          KAPI_E2E_SCREENSHOTS: artifacts/navigation
       - name: Parent report and backup in Russian and German
         run: npm run test:parent
         env:

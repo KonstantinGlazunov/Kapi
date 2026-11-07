@@ -45,6 +45,7 @@ function environment({ app = false, query = '', seed = 0x4b415049, browserLangua
     console, document, URL, URLSearchParams, TextEncoder, Intl, Math: seededMath,
     performance: { now: () => now },
     navigator: { userAgent: 'test', language: browserLanguage, languages: browserLanguages },
+    history: { state: {}, pushState() {}, replaceState() {}, back() {}, go() {} },
     location: { search: query, origin: 'https://example.test', href: 'https://example.test/' },
     localStorage: { getItem: k => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, String(v)), removeItem: k => storage.delete(k) },
     matchMedia: () => ({ matches: false, addEventListener() {} }),
@@ -58,7 +59,7 @@ function environment({ app = false, query = '', seed = 0x4b415049, browserLangua
   vm.createContext(sandbox);
   for (const file of ['kapi.js', 'kapi-sound.js', 'kapi-motivation.js', 'kapi-rewards.js', 'kapi-tasks.js', 'kapi-guidance.js', 'kapi-map.js', 'kapi-weekly.js', 'kapi-skills.js', 'kapi-mastery.js', 'kapi-subskills.js', 'kapi-session-planner.js', 'kapi-storage.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), sandbox, { filename: file });
   if (app) {
-    const expose = 'window.__app = {state, appSettings, startTraining, startTrainingWithIntro, trainingInProgress, finishTraining, saveSession, submitAnswer, answersEqual, handleKeypadClick, getProfile, saveProfile, getHistory, showStats, updateHomeStats, handleSettingsChange, registerProblemError, registerCorrectAnswer, showScreen, showWardrobe, showCurriculumMap, renderCurriculumMap, renderProblem, makeGeneratedProblem, makeCurriculumProblem, makeChoices, hasCarry, hasBorrow, selectProblem, reconcileOperationsForStage, maximumAllowedStage, canAppendKey, renderAnswer, showSolution, continueAfterSolution, updatePersonalPace, updateAdaptiveProgress, get machine(){return kapi}, get motivation(){return motivation}, get sound(){return soundManager}};';
+    const expose = 'window.__app = {state, appSettings, startTraining, startTrainingWithIntro, trainingInProgress, finishTraining, saveSession, submitAnswer, answersEqual, handleKeypadClick, getProfile, saveProfile, getHistory, showStats, updateHomeStats, handleSettingsChange, registerProblemError, registerCorrectAnswer, showScreen, showWardrobe, renderTopicPicker, renderProblem, makeGeneratedProblem, makeCurriculumProblem, makeChoices, hasCarry, hasBorrow, selectProblem, reconcileOperationsForStage, maximumAllowedStage, canAppendKey, renderAnswer, showSolution, continueAfterSolution, updatePersonalPace, updateAdaptiveProgress, get machine(){return kapi}, get motivation(){return motivation}, get sound(){return soundManager}};';
     vm.runInContext(fs.readFileSync(path.join(root, 'app.js'), 'utf8').replace(/\}\)\(\);\s*$/, expose + '\n})();'), sandbox, { filename: 'app.js' });
   }
   return { sandbox, storage, elements, now: () => now, advance(ms) {

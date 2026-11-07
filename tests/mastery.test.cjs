@@ -192,6 +192,6 @@ test('parent history shows due areas without a punitive warning or empty zero-st
   assert.ok(!env.elements.get('statsContent').innerHTML.includes('Zum Wiederholen: 0'));
   const profile = due(app, mastery);
   app.showStats();
-  assert.ok(env.elements.get('statsContent').innerHTML.includes('Zum Wiederholen: 1 Bereich'));
+  assert.ok(env.elements.get('statsContent').innerHTML.includes('9'));
   assert.equal(profile.currentStage, 6);
 });

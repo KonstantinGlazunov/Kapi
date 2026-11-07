@@ -1844,3 +1844,23 @@ body.game-active .play-card #answerArea { margin-top: 8px; }
 .parent-subtopic { border-left: 3px solid #8bc8b7; padding: 8px 10px; background: #f4faf6; border-radius: 8px; }
 .parent-subtopic summary { font-size: .94rem; }
 .parent-subtopic .parent-details { font-size: .9rem; }
+
+.history-data { border-top: 1px solid #d9e6e1; margin-top: 24px; padding-top: 16px; }
+.history-data-actions { display: grid; gap: 10px; }
+.history-data-actions .setting-toggle, .history-data-actions .danger-text-button { min-height: 44px; width: 100%; }
+.history-data-actions .danger-text-button { margin: 0; }
+.history-data-actions .danger-text-button:disabled { opacity: .5; }
+
+/* Unified navigation, with the character retaining its existing dimensions. */
+.home-wardrobe-label { position:absolute; z-index:3; left:50%; bottom:18%; transform:translateX(-50%); white-space:nowrap; padding:5px 10px; border-radius:14px; color:#075b56; background:#fffdf1eF; font-size:.8rem; font-weight:900; box-shadow:0 2px 8px #164e4226; }
+body.start-active .home-nav { grid-template-columns: 1fr; }
+body.start-active .home-nav .journey-album-button { min-height:48px; flex-direction:row; gap:8px; }
+.settings-fold, .topic-chapter, #parentAllTopics, #parentHistory { border:1px solid #cfe5e1; border-radius:15px; padding:12px; margin:10px 0; }
+.settings-fold > summary, .topic-chapter > summary, #parentAllTopics > summary, #parentHistory > summary { color:#075b56; font-weight:850; cursor:pointer; }
+.topic-skill { display:grid; gap:4px; padding:8px 0; }
+.topic-skill button { min-height:44px; text-align:left; border:1px solid #c5dedd; border-radius:12px; background:white; color:#075b56; font:inherit; padding:8px; }
+.topic-skill button[aria-pressed="true"] { background:#dff5ef; border-color:#118b80; font-weight:800; }
+.topic-skill button:disabled { opacity:.5; }
+.topic-skill small { color:#59726c; }
+.parent-week label { display:inline-flex; align-items:center; gap:5px; padding:8px; }
+#parentHistory .history-data { margin-top:12px; }

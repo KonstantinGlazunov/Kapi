@@ -194,10 +194,10 @@ test('History presents a small localized targeted-practice choice and offline ca
   app.saveProfile(profile);
   env.storage.set('capy-count-history-v1', JSON.stringify([{ date: new Date().toISOString(), id: 'prior', total: 10, correct: 8, average: 5, stage: 23 }]));
   app.showStats();
-  const html = env.elements.get('statsContent').innerHTML;
+  app.appSettings.automatic=false; app.appSettings.manualStage=23;
+  const html = app.renderTopicPicker(profile);
   assert.ok(html.includes('7er-Reihe'));
-  assert.ok(html.includes('Gezielt üben'));
-  assert.ok(html.includes('data-target-subskill="multiply:table:7"'));
+  assert.ok(html.includes('data-pick-subskill="multiply:table:7"'));
   assert.ok(!html.includes('Schwach'));
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
   const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
